@@ -1,0 +1,33 @@
+{
+    "name": "fratily/container",
+    "keywords": [
+        "Fratily",
+        "PSR-11",
+        "container"
+    ],
+    "authors": [
+        {
+            "name": "Kento Oka",
+            "email": "oka.kento0311@gmail.com"
+        }
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^7.0",
+        "psr/container": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fratily\\Container\\": "src/"
+        },
+        "exclude-from-classmap": [
+            "src/Tests/"
+        ]
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
