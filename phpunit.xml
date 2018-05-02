@@ -13,7 +13,7 @@
     </php>
 
     <testsuites>
-        <testsuite name="fratily/framework test suite">
+        <testsuite name="fratily/container test suite">
             <directory>./src/Tests/</directory>
         </testsuite>
     </testsuites>
