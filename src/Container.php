@@ -118,7 +118,10 @@ class Container implements ContainerInterface{
 
         if(!array_key_exists($id, $this->instances)){
             if(!$this->has($id)){
-                throw new \LogicException;
+                $e  = new Exception\ServiceNotFoundException();
+                $e->setId($id);
+
+                throw $e;
             }
 
             if(!array_key_exists($id, $this->services)){
