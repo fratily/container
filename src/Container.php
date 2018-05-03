@@ -98,7 +98,7 @@ class Container implements ContainerInterface{
      * @param   ContainerInterface  $container
      * @param   int $priority
      *
-     * @return  void
+     * @return  $this
      */
     public function addDelegateContainer(ContainerInterface $container, int $priority = 1){
         if($this->delegate === null){
@@ -106,6 +106,8 @@ class Container implements ContainerInterface{
         }
 
         $this->delegate->insert($container, $priority);
+
+        return $this;
     }
 
     /**
