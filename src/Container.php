@@ -163,16 +163,18 @@ class Container implements ContainerInterface{
     }
 
     /**
-     * Sets a service definition by name. If you set a service as a Closure,
-     * it is automatically treated as a Lazy. (Note that is has to be a
-     * Closure, not just any callable, to be treated as a Lazy; this is
-     * because the actual service object itself might be callable via an
-     * __invoke() method.)
+     * コンテナにサービスを登録する
+     *
+     * 登録しようとしているサービスがクロージャだった場合、
+     * 遅延ロード用の匿名関数であると解釈されます。
      *
      * @param   string  $id
-     * @param   object|callable $val
+     * @param   object|\Closure|Injection\LazyInterface $val
      *
      * @return  $this
+     *
+     * @throws  Exception\LockedException
+     * @throws  \InvalidArgumentException
      */
     public function set(string $id, $val){
         if($this->isLocked()){
@@ -208,6 +210,8 @@ class Container implements ContainerInterface{
      * @param   mixed   ...$params
      *
      * @return  Injection\LazyCallable
+     *
+     * @throws  \InvalidArgumentException
      */
     public function lazyCallable($callable, ...$params){
         return new Injection\LazyCallable($callable, $params);
@@ -246,6 +250,8 @@ class Container implements ContainerInterface{
      * @param   mixed   $file
      *
      * @return  Injection\LazyInclude
+     *
+     * @throws  \InvalidArgumentException
      */
     public function lazyInclude($file){
         return new Injection\LazyInclude($file);
@@ -256,6 +262,8 @@ class Container implements ContainerInterface{
      * @param   mixed   $file
      *
      * @return  Injection\LazyRequire
+     *
+     * @throws  \InvalidArgumentException
      */
     public function lazyRequire($file){
         return new Injection\LazyRequire($file);
