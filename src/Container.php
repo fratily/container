@@ -303,7 +303,7 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function setSetter(string $class, string $method, $value){
-        $this->setSetter($class, $method, $value);
+        $this->resolver->setSetter($class, $method, $value);
 
         return $this;
     }
@@ -317,7 +317,7 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function setType(string $class, $value){
-        $this->setType($class, $value);
+        $this->resolver->setType($class, $value);
 
         return $this;
     }
@@ -332,7 +332,7 @@ class Container implements ContainerInterface{
      */
     public function setValue(string $name, $value){
         $this->resolver->setValue($name, $value);
-        
+
         return $this;
     }
 }
