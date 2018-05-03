@@ -176,7 +176,7 @@ class Container implements ContainerInterface{
      */
     public function set(string $id, $val){
         if($this->isLocked()){
-            throw new \LogicException;
+            throw new Exception\LockedException();
         }
 
         if(!is_object($val)){
