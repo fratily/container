@@ -60,7 +60,6 @@ class LazyInclude implements LazyInterface{
             throw new \LogicException();
         }
 
-
         return include(realpath($path));
     }
 }

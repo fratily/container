@@ -60,7 +60,6 @@ class LazyRequire implements LazyInterface{
             throw new \LogicException();
         }
 
-
         return require(realpath($path));
     }
 }
