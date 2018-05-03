@@ -76,14 +76,30 @@ class Container implements ContainerInterface{
         $this->locked   = false;
     }
 
+    /**
+     * コンテナをロックする
+     */
     public function lock(){
         $this->locked   = true;
     }
 
+    /**
+     * コンテナがロックされているか確認する
+     *
+     * @return  bool
+     */
     public function isLocked(){
         return $this->locked;
     }
 
+    /**
+     * デリゲートコンテナを追加する
+     *
+     * @param   ContainerInterface  $container
+     * @param   int $priority
+     *
+     * @return  void
+     */
     public function addDelegateContainer(ContainerInterface $container, int $priority = 1){
         if($this->delegate === null){
             $this->delegate = new \SplPriorityQueue();
