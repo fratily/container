@@ -214,7 +214,7 @@ class Resolver{
      * @return  $this
      */
     public function setType(string $class, $value){
-        if(!class_exists($class)){
+        if(!class_exists($class) && !interface_exists($class)){
             throw new \InvalidArgumentException();
         }
 
