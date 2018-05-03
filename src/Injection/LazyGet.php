@@ -13,11 +13,7 @@
  */
 namespace Fratily\Container\Injection;
 
-use Fratily\Container\Exception\ServiceNotFoundException;
-use Psr\Container\{
-    ContainerInterface,
-    NotFoundExceptionInterface
-};
+use Psr\Container\ContainerInterface;
 
 /**
  *
@@ -47,17 +43,8 @@ class LazyGet implements LazyInterface{
 
     /**
      * {@inheritdoc}
-     *
-     * @throws  ServiceNotFoundException
      */
     public function load(){
-        try{
-            return $this->container->get($this->id);
-        }catch(NotFoundExceptionInterface $e){
-            $e  = new ServiceNotFoundException(null, 0, $e);
-            $e->setId($this->id);
-
-            throw $e;
-        }
+        return $this->container->get($this->id);
     }
 }
