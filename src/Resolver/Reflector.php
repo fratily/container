@@ -86,31 +86,32 @@ class Reflector{
             throw new \InvalidArgumentException();
         }
 
-        if(!array_key_exists($class, $this->traits)){
-            $this->traits[$class]   = [];
+        $key    = $class;
 
+        if(!array_key_exists($key, $this->traits)){
+            $this->traits[$key] = [];
             do{
-                $this->traits[$class]   = array_merge(
-                    $this->traits[$class],
+                $this->traits[$key]   = array_merge(
+                    $this->traits[$key],
                     class_uses($class)
                 );
             }while($class = get_parent_class($class));
 
-            $traitsToSearch = $this->traits[$class];
+            $traitsToSearch = $this->traits[$key];
 
             while(!empty($traitsToSearch)){
-                $newTraits              = class_uses(array_pop($traitsToSearch));
-                $this->traits[$class]   += $newTraits;
-                $traitsToSearch         += $newTraits;
+                $newTraits          = class_uses(array_pop($traitsToSearch));
+                $this->traits[$key] += $newTraits;
+                $traitsToSearch     += $newTraits;
             }
 
-            foreach ($this->traits[$class] as $trait) {
-                $this->traits[$class]   += class_uses($trait);
+            foreach ($this->traits[$key] as $trait) {
+                $this->traits[$key] += class_uses($trait);
             }
 
-            $this->traits[$class] = array_unique($this->traits[$class]);
+            $this->traits[$key] = array_unique($this->traits[$key]);
         }
 
-        return $this->traits[$class];
+        return $this->traits[$key];
     }
 }
