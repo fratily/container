@@ -57,7 +57,7 @@ class LazyInclude implements LazyInterface{
         }
 
         if(!is_file($path)){
-            throw new \LogicException();
+            throw new \LogicException;
         }
 
         return include(realpath($path));

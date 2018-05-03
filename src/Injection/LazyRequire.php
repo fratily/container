@@ -57,7 +57,7 @@ class LazyRequire implements LazyInterface{
         }
 
         if(!is_file($path)){
-            throw new \LogicException();
+            throw new \LogicException;
         }
 
         return require(realpath($path));
