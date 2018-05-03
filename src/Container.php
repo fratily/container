@@ -13,7 +13,10 @@
  */
 namespace Fratily\Container;
 
-use Psr\Container\ContainerInterface;
+use Psr\Container\{
+    ContainerInterface,
+    ContainerExceptionInterface
+};
 
 /**
  *
@@ -125,13 +128,30 @@ class Container implements ContainerInterface{
             }
 
             if(!array_key_exists($id, $this->services)){
-                foreach($this->delegate as $container){
-                    if($container->has($id)){
-                        return $container->get($id);
+                try{
+                    $find       = false;
+                    $service    = null;
+
+                    foreach($this->delegate as $container){
+                        if($container->has($id)){
+                            $find       = true;
+                            $service    = $container->get($id);
+
+                            break;
+                        }
                     }
+                }catch(ContainerExceptionInterface $e){
+                    throw new Exception\DelegateContainerException(null, 0, $e);
                 }
 
-                throw new \LogicException;
+                if(!$find){
+                    $e  = new Exception\ServiceNotFoundException();
+                    $e->setId($id);
+
+                    throw $e;
+                }
+
+                return $service;
             }
 
             $this->instances[$id]   = Injection\LazyResolver::resolveLazy(
