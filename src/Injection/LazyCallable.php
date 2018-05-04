@@ -60,22 +60,16 @@ class LazyCallable implements LazyInterface{
      * @throw LogicException
      */
     public function load(){
-        if(is_array($this->callable)){
-            $this->callable = array_map(function($v) use ($this){
-                $this->resolveLazy($v);
-            }, $this->callable);
-        }else{
-            $this->callable = LazyResolver::resolveLazy($this->callable);
-        }
+        $this->params   = LazyResolver::resolveLazyArray($this->params);
+        $this->callable = is_array($this->callable)
+            ? LazyResolver::resolveLazyArray($this->callable)
+            : LazyResolver::resolveLazy($this->callable)
+        ;
 
-        if(!is_callable($callable)){
+        if(!is_callable($this->callable)){
             throw new \LogicException;
         }
 
-        foreach($this->params as $key => $val){
-            $params[$key]   = LazyResolver::resolveLazy($val);
-        }
-
-        return call_user_func_array($callable, $params);
+        return call_user_func_array($this->callable, $this->params);
     }
 }
