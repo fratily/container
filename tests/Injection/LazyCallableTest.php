@@ -34,6 +34,21 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
 
         $this->assertSame($expected, $lazy->load());
     }
+
+    /**
+     * newするときに不正な値が渡された場合はInvalidArgumentExceptionがスローされる
+     *
+     * @param   callable    $callback
+     * @param   mixed[] $params
+     *
+     * @dataProvider    invalidArgumentDataProvider
+     */
+    public function testInvalidArgument($callback, $params){
+        $this->expectException(\InvalidArgumentException::class);
+
+        new LazyCallable($callback, $params);
+    }
+
     public function loadDataProvider(){
         return [
             [
@@ -60,6 +75,23 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
                 "a,b,c",
                 [new LazyExpectedValue($this), new LazyExpectedValue("implode")],
                 [",", ["a", "b", "c"]],
+            ],
+        ];
+    }
+
+    public function invalidArgumentDataProvider(){
+        return [
+            [
+                "undefineFunctionQWERTY",
+                [],
+            ],
+            [
+                ["undefineClassQWERTY", "undefineMethodQWERTY"],
+                [],
+            ],
+            [
+                [new \SplQueue(), "undefineMethodQWERTY"],
+                [],
             ],
         ];
     }
