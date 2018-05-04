@@ -23,6 +23,6 @@ class LazyResolver{
     }
 
     public static function resolveLazyArray(array $vals){
-        return array_map([$this, "resolveLazy"], $vals);
+        return array_map([static::class, "resolveLazy"], $vals);
     }
 }
