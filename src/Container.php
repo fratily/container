@@ -176,9 +176,11 @@ class Container implements ContainerInterface{
      * @return  bool
      */
     protected function hasInDelegate($id){
-        foreach($this->delegate as $container){
-            if($container->has($id)){
-                return true;
+        if($this->delegate !== null){
+            foreach($this->delegate as $container){
+                if($container->has($id)){
+                    return true;
+                }
             }
         }
 
