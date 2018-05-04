@@ -18,8 +18,6 @@ namespace Fratily\Container\Injection;
  */
 class LazyRequire implements LazyInterface{
 
-    use LazyTrait;
-
     /**
      * @var string|object
      */
