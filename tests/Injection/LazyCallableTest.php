@@ -52,7 +52,6 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
     /**
      * 遅延ロードだから通過したコールバックが実はコールバックではなかった場合は\LogicExceptionがスローされる
      *
-     *
      * @param   callable    $callback
      * @param   mixed[] $params
      *
