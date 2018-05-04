@@ -49,6 +49,23 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
         new LazyCallable($callback, $params);
     }
 
+    /**
+     * 遅延ロードだから通過したコールバックが実はコールバックではなかった場合は\LogicExceptionがスローされる
+     *
+     *
+     * @param   callable    $callback
+     * @param   mixed[] $params
+     *
+     * @dataProvider    notCallableAfterLazyLoadDataProvider
+     */
+    public function testNotCallableAfterLazyLoad($callback, $params){
+        $this->expectException(\LogicException::class);
+
+        $lazy   = new LazyCallable($callback, $params);
+
+        $lazy->load();
+    }
+
     public function loadDataProvider(){
         return [
             [
@@ -92,6 +109,23 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
             [
                 [new \SplQueue(), "undefineMethodQWERTY"],
                 [],
+            ],
+        ];
+    }
+
+    public function notCallableAfterLazyLoadDataProvider(){
+        return [
+            [
+                new LazyExpectedValue("undefineFunctionQWERTY"),
+                []
+            ],
+            [
+                [new LazyExpectedValue("unDefineClassQWERTY"), "undefineMethodQWERTY"],
+                []
+            ],
+            [
+                [new \SplQueue(), new LazyExpectedValue("undefineMethodQWERTY")],
+                []
             ],
         ];
     }
