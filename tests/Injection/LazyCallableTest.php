@@ -21,6 +21,7 @@ use Fratily\Container\Injection\LazyCallable;
 class LazyCallableTest extends \PHPUnit\Framework\TestCase{
 
     /**
+     * 正しいコールバックが与えられた場合は正しい値が返される
      *
      * @param   mixed   $expected
      * @param   callable    $callback
@@ -33,7 +34,6 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
 
         $this->assertSame($expected, $lazy->load());
     }
-
     public function loadDataProvider(){
         return [
             [
