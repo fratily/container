@@ -70,7 +70,7 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
             [
                 123,
                 function(int $a, int $b){return $a + $b;},
-                [100, 23],
+                [new LazyExpectedValue(100), 23],
             ],
             [
                 true,
