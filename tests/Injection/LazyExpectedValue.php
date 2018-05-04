@@ -25,7 +25,7 @@ class LazyExpectedValue implements LazyInterface{
     /**
      * Constructor
      *
-     * @param   mixed
+     * @param   mixed   $expected
      */
     public function __construct($expected){
         $this->expected = $expected;
