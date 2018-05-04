@@ -37,14 +37,15 @@ class LazyCallable implements LazyInterface{
     public function __construct($callable, array $params = []){
         if(!is_callable($callable)){
             if(is_array($callable)){
-                if(!isset($callable[0]) || !isset($callable[1])
-                    || (!is_string($callable[0]) && !is_object($callable[0]))
-                    || (!is_string($callable[1]) && !is_object($callable[1]))
-                ){
+                if(!isset($callable[0]) || !isset($callable[1]) || count($callable) !== 2){
                     throw new \InvalidArgumentException();
                 }
 
-                $callable   = [$callable[0], $callable[1]];
+                if(!($callable[0] instanceof LazyInterface)
+                    && !($callable[1] instanceof LazyInterface)
+                ){
+                    throw new \InvalidArgumentException();
+                }
             }else if(!($callable instanceof LazyInterface)){
                 throw new \InvalidArgumentException();
             }
