@@ -17,7 +17,7 @@ use Fratily\Container\{
     Injection\LazyValue,
     Resolver\Resolver
 };
-use Fratiry\Reflection\Reflector\ClassReflector;
+use Fratily\Reflection\Reflector\ClassReflector;
 
 /**
  *

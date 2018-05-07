@@ -15,6 +15,7 @@ namespace Fratily\Tests\Container\Injection;
 
 use Fratily\Container\{
     Container,
+    ContainerFactory,
     Injection\LazyGet
 };
 
@@ -24,20 +25,16 @@ use Fratily\Container\{
 class LazyGetTest extends \PHPUnit\Framework\TestCase{
 
     public function testLoad(){
-        $di     = Container::createInstance();
+        $container  = (new ContainerFactory())->create();
+        $queue      = new \SplQueue();
+        $stack      = new \SplStack();
+        $lazy_queue = new LazyGet($container, "queue");
+        $lazy_stack = new LazyGet($container, "stack");
 
-        $q_k    = "queue";
-        $q_v    = new \SplQueue();
-        $s_k    = "stack";
-        $s_v    = new \SplStack();
+        $container->set("queue", $queue);
+        $container->set("stack", $stack);
 
-        $di->set($q_k, $q_v);
-        $di->set($s_k, $s_v);
-
-        $lazy_q = new LazyGet($di, $q_k);
-        $lazy_s = new LazyGet($di, $s_k);
-
-        $this->assertSame($q_v, $lazy_q->load());
-        $this->assertSame($s_v, $lazy_s->load());
+        $this->assertSame($queue, $lazy_queue->load());
+        $this->assertSame($stack, $lazy_stack->load());
     }
 }

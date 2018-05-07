@@ -67,7 +67,7 @@ class ContainerTest extends \PHPUnit\Framework\TestCase{
 
         $di = (new ContainerFactory())->create();
 
-        $di->addDelegateContainer(Container::createInstance());
+        $di->addDelegateContainer((new ContainerFactory())->create());
 
         $di->get("not_found");
     }
