@@ -59,14 +59,40 @@ class ContainerFactory{
      *
      * @return  Container
      */
-    public function createWithConfig(array $classes, bool $auto = false){
+    public function createWithConfig(array $classes, bool $auto = false, callable $modify = null){
         $container  = $this->create($auto);
 
-        foreach($classes as $class){
+        $configs    = [];
 
+        foreach($classes as $class){
+            if(is_string($class)){
+                if(!class_exists($class)){
+                    throw new \InvalidArgumentException();
+                }
+
+                $config = new $class();
+            }else{
+                $config = $class;
+            }
+
+            if(!(is_object($config) && $config instanceof ContainerConfigInterface)){
+                throw new \InvalidArgumentException();
+            }
+
+            $config->define($container);
+
+            $configs[]  = $config;
         }
 
         $container->lock();
+
+        foreach($configs as $config){
+            $config->modify($container);
+        }
+
+        if($modify !== null){
+            $modify($container);
+        }
 
         return $container;
     }
