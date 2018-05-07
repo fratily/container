@@ -24,7 +24,7 @@ class Reflector{
     protected $classes = [];
 
     /**
-     * @var \ReflectionParameters[][]
+     * @var \ReflectionParameters[][][]
      */
     protected $params = [];
 
@@ -53,21 +53,32 @@ class Reflector{
     }
 
     /**
-     * コンストラクタのパラメータリストを取得する
+     * クラスメソッドのパラメータリストを取得する
      *
      * @param   string  $class
+     * @param   string  $method
      *
      * @return  \ReflectionParameter[]
      */
-    public function getParams(string $class){
+    public function getParams(string $class, string $method = null){
         if(!class_exists($class)){
             throw new \InvalidArgumentException();
         }
 
+        if($method !== null && !method_exists($class, $method)){
+            throw new \InvalidArgumentException();
+        }
+
         if(!array_key_exists($class, $this->params)){
-            $constructor            = $this->getClass($class)->getConstructor();
-            $this->params[$class]   = $constructor === null
-                ? [] : $constructor->getParameters()
+            if($method === null){
+                $reflection = $this->getClass($class)->getConstructor();
+            }else{
+                $reflection = $this->getClass($class)->getMethod($method);
+            }
+
+            $this->params[$class][$method]  = $reflection === null
+                ? []
+                : $reflection->getParameters()
             ;
         }
 
