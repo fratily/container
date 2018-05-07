@@ -338,7 +338,7 @@ class Container implements ContainerInterface{
      *
      * @return  $this
      */
-    public function setParam(string $class, string $param, $value){
+    public function param(string $class, string $param, $value){
         $this->resolver->setParam($class, $param, $value);
 
         return $this;
@@ -353,7 +353,7 @@ class Container implements ContainerInterface{
      *
      * @return  $this
      */
-    public function setSetter(string $class, string $method, $value){
+    public function setter(string $class, string $method, $value){
         $this->resolver->setSetter($class, $method, $value);
 
         return $this;
@@ -367,7 +367,7 @@ class Container implements ContainerInterface{
      *
      * @return  $this
      */
-    public function setType(string $class, $value){
+    public function type(string $class, $value){
         $this->resolver->setType($class, $value);
 
         return $this;
@@ -381,7 +381,7 @@ class Container implements ContainerInterface{
      *
      * @return  $this
      */
-    public function setValue(string $name, $value){
+    public function value(string $name, $value){
         $this->resolver->setValue($name, $value);
 
         return $this;
