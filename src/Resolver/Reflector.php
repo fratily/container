@@ -24,7 +24,7 @@ class Reflector{
     protected $classes = [];
 
     /**
-     * @var \ReflectionParameters[][][]
+     * @var \ReflectionParameter[][][]
      */
     protected $params = [];
 
