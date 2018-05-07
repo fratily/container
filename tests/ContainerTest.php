@@ -13,7 +13,10 @@
  */
 namespace Fratily\Tests\Container;
 
-use Fratily\Container\Container;
+use Fratily\Container\{
+    Container,
+    ContainerFactory
+};
 use Psr\Container\{
     ContainerExceptionInterface,
     NotFoundExceptionInterface
@@ -28,42 +31,41 @@ class ContainerTest extends \PHPUnit\Framework\TestCase{
      * 初歩的な使い方のテスト
      */
     public function testBasic(){
-        $di     = Container::createInstance();
-        $q_k    = "queue";
-        $q_v    = new \SplQueue();
+        $container  = (new ContainerFactory())->create();
+        $value      = new \SplQueue();
 
-        $di->set($q_k, $q_v);
+        $container->set("queue", $value);
 
-        $this->assertTrue($di->has($q_k));
-        $this->assertFalse($di->has("not_found"));
+        $this->assertTrue($container->has("queue"));
+        $this->assertFalse($container->has("not_found"));
 
-        $this->assertSame($q_v, $di->get($q_k));
+        $this->assertSame($value, $container->get("queue"));
     }
 
     public function testNotFound(){
         $this->expectException(NotFoundExceptionInterface::class);
 
-        $di = Container::createInstance();
+        $container  = (new ContainerFactory())->create();
 
-        $di->get("not_found");
+        $container->get("not_found");
     }
 
     public function testGetWithDelegate(){
-        $di     = Container::createInstance();
-        $di2    = Container::createInstance();
-        $queue  = new \SplQueue();
+        $container1 = (new ContainerFactory())->create();
+        $container2 = (new ContainerFactory())->create();
+        $queue      = new \SplQueue();
 
-        $di2->set("queue", $queue);
+        $container2->set("queue", $queue);
 
-        $di->addDelegateContainer($di2);
+        $container1->addDelegateContainer($container2);
 
-        $this->assertSame($queue, $di->get("queue"));
+        $this->assertSame($queue, $container1->get("queue"));
     }
 
     public function testNotFoundWithDelegate(){
         $this->expectException(NotFoundExceptionInterface::class);
 
-        $di     = Container::createInstance();
+        $di = (new ContainerFactory())->create();
 
         $di->addDelegateContainer(Container::createInstance());
 

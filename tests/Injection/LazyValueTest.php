@@ -15,9 +15,9 @@ namespace Fratily\Tests\Container\Injection;
 
 use Fratily\Container\{
     Injection\LazyValue,
-    Resolver\Resolver,
-    Resolver\Reflector
+    Resolver\Resolver
 };
+use Fratiry\Reflection\Reflector\ClassReflector;
 
 /**
  *
@@ -25,7 +25,7 @@ use Fratily\Container\{
 class LazyValueTest extends \PHPUnit\Framework\TestCase{
 
     public function testLoad(){
-        $resolver   = new Resolver(new Reflector());
+        $resolver   = new Resolver(new ClassReflector());
 
         $v1_k   = "v1";
         $v1_v   = "value1";
