@@ -14,6 +14,7 @@
 namespace Fratily\Container\Resolver;
 
 use Fratily\Container\Injection\LazyResolver;
+use Fratily\Reflection\Reflector\ClassReflector;
 
 /**
  *
@@ -46,7 +47,7 @@ class Resolver{
     private $unified    = [];
 
     /**
-     * @var Reflector
+     * @var ClassReflector
      */
     private $reflector;
 
@@ -58,9 +59,10 @@ class Resolver{
     /**
      * Constructor
      *
-     * @param   Reflector   $reflector
+     * @param   ClassReflector  $reflector
+     * @param   bool    $auto
      */
-    public function __construct(Reflector $reflector, bool $auto = false){
+    public function __construct(ClassReflector $reflector, bool $auto = false){
         $this->reflector        = $reflector;
         $this->effectiveAuto    = $auto;
     }

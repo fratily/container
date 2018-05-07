@@ -49,32 +49,11 @@ class Container implements ContainerInterface{
     protected $instances    = [];
 
     /**
-     *
-     *
-     * @param   bool    $auto
-     */
-    public static function createInstance(bool $auto = false){
-        return new static(new Resolver\Resolver(new Resolver\Reflector(), $auto));
-    }
-
-    /**
-     *
-     *
-     * @param   string[]    $classes
-     * @param   bool    $auto
-     */
-    public static function createConfiguredInstance(array $classes, bool $auto = false){
-        $container  = static::createInstance($auto);
-
-        return $container;
-    }
-
-    /**
      * Constructor
      *
      * @param   Resolver\Resolver   $resolver
      */
-    protected function __construct(Resolver\Resolver $resolver){
+    public function __construct(Resolver\Resolver $resolver){
         $this->resolver = $resolver;
         $this->locked   = false;
     }
