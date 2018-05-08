@@ -199,6 +199,20 @@ class Container implements ContainerInterface{
     /**
      *
      *
+     * @param   callable    $callable
+     * @param   mixed   ...$params
+     *
+     * @return  Injection\Lazy
+     *
+     * @throws  \InvalidArgumentException
+     */
+    public function lazy($callable, ...$params){
+        return new Injection\Lazy($callable, $params);
+    }
+
+    /**
+     *
+     *
      * @param   mixed[] $valules
      *
      * @return  Injection\LazyArray
