@@ -197,6 +197,88 @@ class Container implements ContainerInterface{
     }
 
     /**
+     * コンストラクタインジェクションの値を追加
+     *
+     * @param   string  $class
+   　* @param   string  $param
+     * @param   mixed   $value
+     *
+     * @return  $this
+     */
+    public function param(string $class, string $param, $value){
+        $this->resolver->setParam($class, $param, $value);
+
+        return $this;
+    }
+
+    /**
+     * セッターインジェクションの値を追加
+     *
+     * @param   string  $class
+   　* @param   string  $method
+     * @param   mixed   $value
+     *
+     * @return  $this
+     */
+    public function setter(string $class, string $method, $value){
+        $this->resolver->setSetter($class, $method, $value);
+
+        return $this;
+    }
+
+    /**
+     * コンストラクタインジェクションにおける自動解決用の値を追加
+     *
+     * @param   string  $class
+     * @param   mixed   $value
+     *
+     * @return  $this
+     */
+    public function type(string $class, $value){
+        $this->resolver->setType($class, $value);
+
+        return $this;
+    }
+
+    /**
+     * 値を追加
+     *
+     * @param   string  $name
+     * @param   mixed   $value
+     *
+     * @return  $this
+     */
+    public function value(string $name, $value){
+        $this->resolver->setValue($name, $value);
+
+        return $this;
+    }
+    
+    /**
+     * Creates and returns a new instance of a class using reflection and
+     * the configuration parameters, optionally with overrides, invoking Lazy
+     * values along the way.
+     *
+     * Note the that container must be locked before creating a new instance.
+     * This prevents premature resolution of params and setters.
+     *
+     * @param   string  $class
+     * @param   mixed[] $params
+     * @param   mixed[] $setters
+     *
+     * @return  object
+     */
+    public function newInstance(
+        string $class,
+        array $params = [],
+        array $setters = []
+    ){
+        $this->lock();
+
+        return $this->resolver->resolve($class, $params, $setters)->create();
+    }
+
+    /**
      *
      *
      * @param   callable    $callable
@@ -296,87 +378,5 @@ class Container implements ContainerInterface{
      */
     public function lazyValue(string $key){
         return new Injection\LazyValue($this->resolver, $key);
-    }
-
-    /**
-     * Creates and returns a new instance of a class using reflection and
-     * the configuration parameters, optionally with overrides, invoking Lazy
-     * values along the way.
-     *
-     * Note the that container must be locked before creating a new instance.
-     * This prevents premature resolution of params and setters.
-     *
-     * @param   string  $class
-     * @param   mixed[] $params
-     * @param   mixed[] $setters
-     *
-     * @return  object
-     */
-    public function newInstance(
-        string $class,
-        array $params = [],
-        array $setters = []
-    ){
-        $this->lock();
-
-        return $this->resolver->resolve($class, $params, $setters)->create();
-    }
-
-    /**
-     * コンストラクタインジェクションの値を追加
-     *
-     * @param   string  $class
-   　* @param   string  $param
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function param(string $class, string $param, $value){
-        $this->resolver->setParam($class, $param, $value);
-
-        return $this;
-    }
-
-    /**
-     * セッターインジェクションの値を追加
-     *
-     * @param   string  $class
-   　* @param   string  $method
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function setter(string $class, string $method, $value){
-        $this->resolver->setSetter($class, $method, $value);
-
-        return $this;
-    }
-
-    /**
-     * コンストラクタインジェクションにおける自動解決用の値を追加
-     *
-     * @param   string  $class
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function type(string $class, $value){
-        $this->resolver->setType($class, $value);
-
-        return $this;
-    }
-
-    /**
-     * 値を追加
-     *
-     * @param   string  $name
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function value(string $name, $value){
-        $this->resolver->setValue($name, $value);
-
-        return $this;
     }
 }
