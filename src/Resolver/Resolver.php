@@ -380,7 +380,7 @@ class Resolver{
     protected function getUnifiedParams(string $class, array $parent){
         $unified    = [];
 
-        foreach($this->reflector->getParams($class) as $param){
+        foreach($this->reflector->getParameters($class) as $param){
             $unified[$param->getName()] = $this->getUnifiedParam(
                 $param,
                 $class,
