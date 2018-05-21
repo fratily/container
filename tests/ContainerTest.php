@@ -13,14 +13,10 @@
  */
 namespace Fratily\Tests\Container;
 
-use Fratily\Container\{
-    Container,
-    ContainerFactory
-};
-use Psr\Container\{
-    ContainerExceptionInterface,
-    NotFoundExceptionInterface
-};
+use Fratily\Container\Container;
+use Fratily\Container\ContainerFactory;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 
 /**
  *
@@ -65,10 +61,33 @@ class ContainerTest extends \PHPUnit\Framework\TestCase{
     public function testNotFoundWithDelegate(){
         $this->expectException(NotFoundExceptionInterface::class);
 
-        $di = (new ContainerFactory())->create();
+        $container = (new ContainerFactory())->create();
 
-        $di->addDelegateContainer((new ContainerFactory())->create());
+        $container->addDelegateContainer((new ContainerFactory())->create());
 
-        $di->get("not_found");
+        $container->get("not_found");
+    }
+
+    public function testSetClosure(){
+        $container = (new ContainerFactory())->create();
+
+        $container->set("queue", function(){return new \SplQueue();});
+
+        $this->assertInstanceOf(\SplQueue::class, $container->get("queue"));
+    }
+
+    public function testAutoInjection(){
+        $container  = (new ContainerFactory())->create(true);
+        $hoge       = new Dummy\Hoge();
+        $fuga       = new Dummy\Fuga();
+        $piyo       = new Dummy\Piyo();
+
+        $container->type(Dummy\HogeInterface::class, $hoge);
+        $container->type(Dummy\FugaInterface::class, $fuga);
+        $container->type(Dummy\PiyoInterface::class, $piyo);
+
+        $foo    = $container->newInstance(Dummy\Foo::class);
+
+        $this->assertSame($hoge, $foo->getHoge());
     }
 }
