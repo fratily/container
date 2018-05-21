@@ -48,7 +48,7 @@ class ContainerFactory{
             $this->reflector    = new ClassReflector();
         }
 
-        return new Container(new Resolver\Resolver($this->reflector), $auto);
+        return new Container(new Resolver\Resolver($this->reflector, $auto));
     }
 
     /**
