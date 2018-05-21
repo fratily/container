@@ -136,6 +136,14 @@ class Container implements ContainerInterface{
             $this->instances[$id]   = Injection\LazyResolver::resolveLazy(
                 $this->services[$id]
             );
+
+            if($this->instances[$id] instanceof \Closure){
+                $this->instances[$id]   = $this->instances[$id]();
+            }
+        }
+
+        if(!is_object($this->instances[$id])){
+            throw new LogicException;
         }
 
         return $this->instances[$id];
@@ -253,7 +261,7 @@ class Container implements ContainerInterface{
 
         return $this;
     }
-    
+
     /**
      * Creates and returns a new instance of a class using reflection and
      * the configuration parameters, optionally with overrides, invoking Lazy
