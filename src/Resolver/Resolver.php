@@ -536,10 +536,7 @@ class Resolver{
                 }
 
                 if(!$add){
-                    $result[]   = $param->allowsNull()
-                        ? null
-                        : new UnresolvedParam($param->getName())
-                    ;
+                    $result[]   = null;
                 }
             }
         }
