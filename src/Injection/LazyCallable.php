@@ -13,10 +13,18 @@
  */
 namespace Fratily\Container\Injection;
 
+use Fratily\Container\Resolver\Resolver;
+use Fratily\Reflection\ReflectionCallable;
+
 /**
  *
  */
 class LazyCallable implements LazyInterface{
+
+    /**
+     * @var Resolver
+     */
+    private $resolver;
 
     /**
      * @var mixed
@@ -34,7 +42,7 @@ class LazyCallable implements LazyInterface{
      * @param   mixed   $callable
      * @param   mixed[] $params
      */
-    public function __construct($callable, array $params = []){
+    public function __construct(Resolver $resolver, $callable, array $params = []){
         if(!is_callable($callable)){
             if(is_array($callable)){
                 if(!isset($callable[0]) || !isset($callable[1]) || count($callable) !== 2){
@@ -51,6 +59,7 @@ class LazyCallable implements LazyInterface{
             }
         }
 
+        $this->resolver = $resolver;
         $this->callable = $callable;
         $this->params   = $params;
     }
@@ -71,6 +80,14 @@ class LazyCallable implements LazyInterface{
             throw new \LogicException;
         }
 
-        return call_user_func_array($this->callable, $this->params);
+        $params = (new ReflectionCallable($this->callable))
+            ->getReflection()
+            ->getParameters()
+        ;
+
+        return call_user_func_array(
+            $this->callable,
+            $this->resolver->resolveParameters($params, $this->params)
+        );
     }
 }
