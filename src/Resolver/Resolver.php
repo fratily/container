@@ -508,7 +508,7 @@ class Resolver{
      *
      * @return  mixed[]
      */
-    public function getCallableParams(array $params, array $data){
+    public function resolveParameters(array $params, array $data){
         $result     = [];
 
         foreach($params as $param){
