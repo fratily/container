@@ -501,20 +501,21 @@ class Resolver{
     }
 
     /**
-     * コール可能な値の引数リストを作成する
+     * パラメータリストから引数リストを作成する
      *
-     * @param   callable    $callable
-     * @param   mixed[] $params
+     * @param   \ReflectionParameter[]  $params
+     * @param   mixed[] $data
+     *
+     * @return  mixed[]
      */
-    public function getCallableParams(callable $callable, array $params){
-        $reflection = new \Fratily\Reflection\ReflectionCallable($callable);
+    public function getCallableParams(array $params, array $data){
         $result     = [];
 
-        foreach($reflection->getReflection()->getParameters() as $param){
-            if(array_key_exists($param->getPosition(), $params)){
-                $result[]   = $params[$param->getPosition()];
-            }else if(array_key_exists($param->getName(), $params)){
-                $result[]   = $params[$param->getName()];
+        foreach($params as $param){
+            if(array_key_exists($param->getPosition(), $data)){
+                $result[]   = $data[$param->getPosition()];
+            }else if(array_key_exists($param->getName(), $data)){
+                $result[]   = $data[$param->getName()];
             }else{
                 $add    = false;
                 $class  = $param->getClass();
