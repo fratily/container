@@ -14,6 +14,8 @@
 namespace Fratily\Tests\Container\Injection;
 
 use Fratily\Container\Injection\LazyCallable;
+use Fratily\Container\Resolver\Resolver;
+use Fratily\Reflection\Reflector\ClassReflector;
 
 /**
  *
@@ -22,114 +24,32 @@ class LazyCallableTest extends \PHPUnit\Framework\TestCase{
 
     /**
      * 正しいコールバックが与えられた場合は正しい値が返される
-     *
-     * @param   mixed   $expected
-     * @param   callable    $callback
-     * @param   mixed[] $params
-     *
-     * @dataProvider    loadDataProvider
      */
-    public function testLoad($expected, $callback, $params){
-        $lazy   = new LazyCallable($callback, $params);
+    public function testLoad(){
+        $resolver   = new Resolver(new ClassReflector(), true);
+        $queue      = new \SplQueue();
+        $params     = [
+            "a" => "a",
+            2   => "b",
+            "c" => "c",
+        ];
 
-        $this->assertSame($expected, $lazy->load());
-    }
+        $resolver->setType(\SplQueue::class, $queue);
 
-    /**
-     * newするときに不正な値が渡された場合はInvalidArgumentExceptionがスローされる
-     *
-     * @param   callable    $callback
-     * @param   mixed[] $params
-     *
-     * @dataProvider    invalidArgumentDataProvider
-     */
-    public function testInvalidArgument($callback, $params){
-        $this->expectException(\InvalidArgumentException::class);
-
-        new LazyCallable($callback, $params);
-    }
-
-    /**
-     * 遅延ロードだから通過したコールバックが実はコールバックではなかった場合は\LogicExceptionがスローされる
-     *
-     * @param   callable    $callback
-     * @param   mixed[] $params
-     *
-     * @dataProvider    notCallableAfterLazyLoadDataProvider
-     */
-    public function testNotCallableAfterLazyLoad($callback, $params){
-        $this->expectException(\LogicException::class);
-
-        $lazy   = new LazyCallable($callback, $params);
+        $lazy   = new LazyCallable($resolver, [$this, "sampleMethod"], $params);
 
         $lazy->load();
+
+        $this->assertSame("a", $queue->dequeue());
+        $this->assertSame("b", $queue->dequeue());
+        $this->assertSame("c", $queue->dequeue());
+        $this->assertSame(null, $queue->dequeue());
     }
 
-    public function loadDataProvider(){
-        return [
-            [
-                123,
-                function(int $a, int $b){return $a + $b;},
-                [new LazyExpectedValue(100), 23],
-            ],
-            [
-                true,
-                "is_string",
-                ["string"],
-            ],
-            [
-                false,
-                new LazyExpectedValue("is_string"),
-                [123],
-            ],
-            [
-                "a,b,c",
-                [$this, "implode"],
-                [",", ["a", "b", "c"]],
-            ],
-            [
-                "a,b,c",
-                [new LazyExpectedValue($this), new LazyExpectedValue("implode")],
-                [",", ["a", "b", "c"]],
-            ],
-        ];
-    }
-
-    public function invalidArgumentDataProvider(){
-        return [
-            [
-                "undefineFunctionQWERTY",
-                [],
-            ],
-            [
-                ["undefineClassQWERTY", "undefineMethodQWERTY"],
-                [],
-            ],
-            [
-                [new \SplQueue(), "undefineMethodQWERTY"],
-                [],
-            ],
-        ];
-    }
-
-    public function notCallableAfterLazyLoadDataProvider(){
-        return [
-            [
-                new LazyExpectedValue("undefineFunctionQWERTY"),
-                []
-            ],
-            [
-                [new LazyExpectedValue("unDefineClassQWERTY"), "undefineMethodQWERTY"],
-                []
-            ],
-            [
-                [new \SplQueue(), new LazyExpectedValue("undefineMethodQWERTY")],
-                []
-            ],
-        ];
-    }
-
-    public function implode(string $glue, array $pieces){
-        return implode($glue, $pieces);
+    public function sampleMethod(\SplQueue $queue, $a, $b, $c, $d){
+        $queue->enqueue($a);
+        $queue->enqueue($b);
+        $queue->enqueue($c);
+        $queue->enqueue($d);
     }
 }
