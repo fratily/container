@@ -13,6 +13,7 @@
  */
 namespace Fratily\Container\Resolver;
 
+use Fratily\Container\Injection\LazyNew;
 use Fratily\Container\Injection\LazyResolver;
 use Fratily\Reflection\Reflector\ClassReflector;
 
@@ -497,5 +498,48 @@ class Resolver{
         }
 
         return $unified;
+    }
+
+    /**
+     * コール可能な値の引数リストを作成する
+     *
+     * @param   callable    $callable
+     * @param   mixed[] $params
+     */
+    public function getCallableParams(callable $callable, array $params){
+        $reflection = new \Fratily\Reflection\ReflectionCallable($callable);
+        $result     = [];
+
+        foreach($reflection->getReflection()->getParameters() as $param){
+            if(array_key_exists($param->getPosition(), $params)){
+                $result[]   = $params[$param->getPosition()];
+            }else if(array_key_exists($param->getName(), $params)){
+                $result[]   = $params[$param->getName()];
+            }else{
+                $add    = false;
+                $class  = $param->getClass();
+
+                if($class !== null && $this->effectiveAuto){
+                    if($this->hasType($class->getName())){
+                        $add        = true;
+                        $result[]   = $this->getType($class->getName());
+                    }else if($class->isInstantiable()){
+                        $add        = true;
+                        $result[]   = new LazyNew($this, $class->getName());
+                    }
+                }
+
+                if($param->isDefaultValueAvailable()){
+                    $add        = true;
+                    $result[]   = $param->getDefaultValue();
+                }
+
+                if(!$add){
+                    $result[]   = new UnresolvedParam($param->getName());
+                }
+            }
+        }
+
+        return $result;
     }
 }
