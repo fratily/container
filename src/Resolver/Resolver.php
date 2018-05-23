@@ -379,17 +379,22 @@ class Resolver{
      *
      */
     protected function getUnifiedParams(string $class, array $parent){
-        $unified    = [];
+        return $this->resolveParameters(
+            $this->reflector->getParameters($class),
+            array_merge($parent, $this->params[$class] ?? [])
+        );
 
-        foreach($this->reflector->getParameters($class) as $param){
-            $unified[$param->getName()] = $this->getUnifiedParam(
-                $param,
-                $class,
-                $parent
-            );
-        }
+//        $unified    = [];
 
-        return $unified;
+//        foreach($this->reflector->getParameters($class) as $param){
+//            $unified[$param->getName()] = $this->getUnifiedParam(
+//                $param,
+//                $class,
+//                $parent
+//            );
+//        }
+
+//        return $unified;
     }
 
     /**
