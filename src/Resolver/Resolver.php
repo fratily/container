@@ -310,8 +310,7 @@ class Resolver{
         array $setters,
         array $mergeSetters
     ){
-        return array_map(
-            [LazyResolver::class, "resolveLazy"],
+        return LazyResolver::resolveLazyArray(
             array_merge($setters, $mergeSetters)
         );
     }
