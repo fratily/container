@@ -330,15 +330,24 @@ class Resolver{
         array $params,
         array $mergeParams
     ){
-        $result = [];
-
-        foreach($params as $key => $val){
-            $result[]   = LazyResolver::resolveLazy(
-                array_key_exists($key, $mergeParams) ? $mergeParams[$key] : $val
-            );
+        foreach($this->reflector->getParameters($class) as $param){
+            if(array_key_exists($param->getPosition(), $mergeParams)){
+                $params[$param->getPosition()]  = $mergeParams[$param->getPosition()];
+            }else if(array_key_exists($param->getName(), $mergeParams)){
+                $params[$param->getPosition()]  = $mergeParams[$param->getName()];
+            }
         }
 
-        return $result;
+        return LazyResolver::resolveLazyArray($params);
+//        $result = [];
+
+//        foreach($params as $key => $val){
+//            $result[]   = LazyResolver::resolveLazy(
+//                array_key_exists($key, $mergeParams) ? $mergeParams[$key] : $val
+//            );
+//        }
+
+//        return $result;
     }
 
     /**
