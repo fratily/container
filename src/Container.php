@@ -322,7 +322,7 @@ class Container implements ContainerInterface{
      * @throws  \InvalidArgumentException
      */
     public function lazyCallable($callable, array $params = []){
-        return new Injection\LazyCallable($callable, $params);
+        return new Injection\LazyCallable($this->resolver, $callable, $params);
     }
 
     /**
