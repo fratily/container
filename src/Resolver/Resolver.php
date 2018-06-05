@@ -159,7 +159,7 @@ class Resolver{
      * @return  $this
      */
     public function setSetter(string $class, string $method, $value){
-        if(!class_exists($class)){
+        if(!class_exists($class) && !trait_exists($class) && !interface_exists($class)){
             throw new \InvalidArgumentException();
         }
 
