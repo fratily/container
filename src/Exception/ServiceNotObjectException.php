@@ -60,9 +60,7 @@ class ServiceNotObjectException extends \LogicException implements ContainerExce
      * @return  bool
      */
     public function setId(string $id){
-        $result = $this->id !== null;
-
-        if($result){
+        if($this->id === null){
             $this->id       = $id;
             $this->message  = str_replace("{id}", $this->id, self::MSG);
         }
