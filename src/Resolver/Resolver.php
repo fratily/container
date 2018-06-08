@@ -13,8 +13,7 @@
  */
 namespace Fratily\Container\Resolver;
 
-use Fratily\Container\Injection\LazyNew;
-use Fratily\Container\Injection\LazyResolver;
+use Fratily\Container\Injection;
 use Fratily\Reflection\Reflector\ClassReflector;
 
 /**
@@ -72,44 +71,44 @@ class Resolver{
      * コンストラクタインジェクションの値を取得
      *
      * @param   string  $class
-     * @param   string  $param
+     * @param   string|int  $name
      *
      * @return  mixed|null
-     *      もし存在しなければnullが返る。明示的にnullを指定しているのか
-     *      確認するには、hasParam()メソッドを利用する。
+     *  もし存在しなければnullが返る。値にnullを指定しているのか確認するには
+     *  hasParameter()メソッドを利用する。
      */
-    public function getParam(string $class, string $param){
-        return $this->params[$class][$param] ?? null;
+    public function getParameter(string $class, $name){
+        return $this->params[$class][$name] ?? null;
     }
 
     /**
      * コンストラクタインジェクションの値設定が存在するか
      *
      * @param   string  $class
-     * @param   string  $param
+     * @param   string|int  $name
      *
      * @return  bool
      */
-    public function hasParam(string $class, string $param){
+    public function hasParameter(string $class, string $name){
         return array_key_exists($class, $this->params)
-            && array_key_exists($param, $this->params[$class]);
+            && array_key_exists($name, $this->params[$class]);
     }
 
     /**
      * コンストラクタインジェクションの値を追加
      *
      * @param   string  $class
-   　* @param   string  $param
+   　* @param   string|int  $name
      * @param   mixed   $value
      *
      * @return  $this
      */
-    public function setParam(string $class, string $param, $value){
-        if(!class_exists($class)){
+    public function addParameter(string $class, $name, $value){
+        if(!class_exists($class) && !trait_exists($class) && !interface_exists($class)){
             throw new \InvalidArgumentException();
         }
 
-        if($param === ""){
+        if(!is_string($name) && !is_int($name)){
             throw new \InvalidArgumentException();
         }
 
@@ -117,7 +116,7 @@ class Resolver{
             $this->params[$class]   = [];
         }
 
-        $this->params[$class][$param]    = $value;
+        $this->params[$class][$name]    = $value;
 
         return $this;
     }
@@ -134,6 +133,17 @@ class Resolver{
      */
     public function getSetter(string $class, string $method){
         return $this->setters[$class][$method] ?? null;
+    }
+
+    /**
+     * セッターとその値の連想配列を取得
+     *
+     * @param   string  $class
+     *
+     * @return  mixed[]
+     */
+    public function getSetters(string $class){
+        return $this->setters[$class] ?? [];
     }
 
     /**
@@ -158,11 +168,16 @@ class Resolver{
      *
      * @return  $this
      */
-    public function setSetter(string $class, string $method, $value){
+    public function addSetter(string $class, string $method, $value){
         if(!class_exists($class) && !trait_exists($class) && !interface_exists($class)){
             throw new \InvalidArgumentException();
         }
 
+        if($method === ""){
+            throw new \InvalidArgumentException();
+        }
+
+// __callでセッターを定義している可能性もある
 //        if(!method_exists($class, $method)){
 //            $method = "set" . ucfirst($method);
 //
@@ -170,10 +185,6 @@ class Resolver{
 //                throw new \InvalidArgumentException();
 //            }
 //        }
-
-        if($method === ""){
-            throw new \InvalidArgumentException();
-        }
 
         if(!array_key_exists($class, $this->setters)){
             $this->setters[$class]  = [];
@@ -212,16 +223,20 @@ class Resolver{
      * コンストラクタインジェクションにおける自動解決用の値を追加
      *
      * @param   string  $class
-     * @param   mixed   $value
+     * @param   object|Injection\LazyInterface  $instance
      *
      * @return  $this
      */
-    public function setType(string $class, $value){
+    public function addType(string $class, $instance){
         if(!class_exists($class) && !interface_exists($class)){
             throw new \InvalidArgumentException();
         }
 
-        $this->types[$class]    = $value;
+        if(!is_object($instance)){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->types[$class]    = $instance;
 
         return $this;
     }
@@ -258,11 +273,7 @@ class Resolver{
      *
      * @return  $this
      */
-    public function setValue(string $name, $value){
-        if($name === ""){
-            throw new \InvalidArgumentException();
-        }
-
+    public function addValue(string $name, $value){
         $this->values[$name]    = $value;
 
         return $this;
@@ -310,9 +321,7 @@ class Resolver{
         array $setters,
         array $mergeSetters
     ){
-        return LazyResolver::resolveLazyArray(
-            array_merge($setters, $mergeSetters)
-        );
+        return array_merge($setters, $mergeSetters);
     }
 
     /**
@@ -337,16 +346,7 @@ class Resolver{
             }
         }
 
-        return LazyResolver::resolveLazyArray($params);
-//        $result = [];
-
-//        foreach($params as $key => $val){
-//            $result[]   = LazyResolver::resolveLazy(
-//                array_key_exists($key, $mergeParams) ? $mergeParams[$key] : $val
-//            );
-//        }
-
-//        return $result;
+        return $params;
     }
 
     /**
@@ -387,89 +387,72 @@ class Resolver{
      *
      */
     protected function getUnifiedParams(string $class, array $parent){
-        return $this->resolveParameters(
-            $this->reflector->getParameters($class),
-            array_merge($parent, $this->params[$class] ?? [])
-        );
+        $result     = [];
+        $interfaces = class_implements($class);
+        $traits     = $this->reflector->getTraits($class);
 
-//        $unified    = [];
+        foreach($this->reflector->getParameters($class) as $param){
+            $offset = null;
+            $value  = null;
 
-//        foreach($this->reflector->getParameters($class) as $param){
-//            $unified[$param->getName()] = $this->getUnifiedParam(
-//                $param,
-//                $class,
-//                $parent
-//            );
-//        }
+            // パラメータ位置指定
+            if($this->hasParameter($class, $param->getPosition())){
+                $offset = $param->getPosition();
+                $value  = $this->getParameter($class, $param->getPosition());
+            }
 
-//        return $unified;
-    }
+            // パラメータ名指定
+            if($offset === null && $this->hasParameter($class, $param->getName())){
+                $offset = $param->getName();
+                $value  = $this->getParameter($class, $param->getName());
+            }
 
-    /**
-     * 親を考慮したパラメータを取得
-     *
-     * @param   \ReflectionParameter    $param
-     * @param   string  $class
-     * @param   mixed[] $parent
-     *
-     * @return  mixed
-     */
-    protected function getUnifiedParam(
-        \ReflectionParameter $param,
-        string $class,
-        array $parent
-    ){
-        $name   = $param->getName();
-        $pos    = $param->getPosition();
+            foreach($interfaces as $interface){
+                if($offset === null && $this->hasParameter($interface, $param->getName())){
+                    $offset = $param->getName();
+                    $value  = $this->getParameter($interface, $param->getName());
 
-        $explicitPos    = isset($this->params[$class])
-            && array_key_exists($pos, $this->params[$class])
-            && !$this->params[$class][$pos] instanceof UnresolvedParam
-        ;
-
-        if($explicitPos){
-            return $this->params[$class][$pos];
-        }
-
-
-        $explicitNamed  = isset($this->params[$class])
-            && array_key_exists($name, $this->params[$class])
-            && !$this->params[$class][$name] instanceof UnresolvedParam
-        ;
-
-        if($explicitNamed){
-            return $this->params[$class][$name];
-        }
-
-        $implicitNamed  = array_key_exists($name, $parent)
-            && ! $parent[$name] instanceof UnresolvedParam
-        ;
-
-        if($implicitNamed){
-            return $parent[$name];
-        }
-
-        if($param->isDefaultValueAvailable()){
-            return $param->getDefaultValue();
-        }
-
-        if($this->effectiveAuto){
-            $type   = $param->getClass();
-
-            if($type !== null){
-                $name   = $type->getName();
-
-                if($this->hasType($name)){
-                    return $this->getType($name);
-                }
-
-                if($type->isInstantiable()){
-                    return new LazyNew($this, $name);
+                    break;
                 }
             }
+
+            foreach($traits as $trait){
+                if($offset === null && $this->hasParameter($trait, $param->getName())){
+                    $offset = $param->getName();
+                    $value  = $this->getParameter($trait, $param->getName());
+
+                    break;
+                }
+            }
+
+            if($offset === null && array_key_exists($param->getName(), $parent)){
+                $offset = $param->getName();
+                $value  = $parent[$param->getName()];
+            }
+
+            if($offset === null && $this->effectiveAuto){
+                $type   = $param->getClass();
+
+                if($type !== null && $this->hasType($type->getName())){
+                    $offset = $param->getPosition();
+                    $value  = $this->getType($type->getName());
+                }
+            }
+
+            if($offset === null && $param->isDefaultValueAvailable()){
+                $offset = $param->getPosition();
+                $value  = $param->getDefaultValue();
+            }
+
+            if($offset === null){
+                $offset = $param->getPosition();
+                $value  = null;
+            }
+
+            $result[$offset]    = $value;
         }
 
-        return new UnresolvedParam($name);
+        return $result;
     }
 
     /**
@@ -486,29 +469,23 @@ class Resolver{
         $traits     = $this->reflector->getTraits($class);
 
         foreach($interfaces as $interface){
-            if(isset($this->setters[$interface])){
-                $unified = array_merge(
-                    $this->setters[$interface],
-                    $unified
-                );
-            }
-        }
-
-        foreach ($traits as $trait) {
-            if(isset($this->setters[$trait])){
-                $unified = array_merge(
-                    $this->setters[$trait],
-                    $unified
-                );
-            }
-        }
-
-        if(isset($this->setters[$class])){
             $unified = array_merge(
                 $unified,
-                $this->setters[$class]
+                $this->getSetters($interface)
             );
         }
+
+        foreach($traits as $trait){
+            $unified = array_merge(
+                $unified,
+                $this->getSetters($trait)
+            );
+        }
+
+        $unified = array_merge(
+            $unified,
+            $this->getSetters($class)
+        );
 
         return $unified;
     }

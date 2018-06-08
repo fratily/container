@@ -15,7 +15,7 @@
     "require": {
         "php": "^7.0",
         "psr/container": "^1.0",
-        "fratily/reflection" : "^0.3.0"
+        "fratily/reflection" : "^0.4.0"
     },
     "autoload": {
         "psr-4": {

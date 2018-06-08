@@ -13,6 +13,8 @@
  */
 namespace Fratily\Container\Resolver;
 
+use Fratily\Container\Injection\LazyResolver;
+
 /**
  *
  */
@@ -32,6 +34,11 @@ class ResolveClass{
      * @var mixed[]
      */
     private $setters;
+
+    /**
+     * @var object|null
+     */
+    private $instance;
 
     /**
      * Constructor
@@ -56,12 +63,16 @@ class ResolveClass{
      * @return  object
      */
     public function create(){
-        $instance   = $this->reflection->newInstanceArgs($this->params);
+        if($this->instance === null){
+            $this->instance = $this->reflection->newInstanceArgs(
+                LazyResolver::resolveLazyArray($this->params)
+            );
 
-        foreach($this->setters as $method => $value){
-            $instance->$method($value);
+            foreach($this->setters as $method => $value){
+                $this->instance->$method(LazyResolver::resolveLazy($value));
+            }
         }
 
-        return $instance;
+        return $this->instance;
     }
 }
