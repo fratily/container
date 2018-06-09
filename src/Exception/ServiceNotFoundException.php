@@ -57,14 +57,12 @@ class ServiceNotFoundException extends \LogicException implements NotFoundExcept
      *
      * @param   string  $id
      *
-     * @return  bool
+     * @return  void
      */
     public function setId(string $id){
         if($this->id === null){
             $this->id       = $id;
             $this->message  = str_replace("{id}", $this->id, self::MSG);
         }
-
-        return $result;
     }
 }
