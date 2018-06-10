@@ -361,6 +361,21 @@ class Container implements ContainerInterface{
     }
 
     /**
+     * コンストラクタインジェクションにおける自動解決用の値を追加
+     *
+     * @param   mixed[] $types
+     *
+     * @return  $this
+     */
+    public function types(array $types){
+        foreach($types as $class => $value){
+            $this->type($class, $value);
+        }
+
+        return $this;
+    }
+
+    /**
      * 値を追加
      *
      * @param   string  $name
@@ -370,6 +385,21 @@ class Container implements ContainerInterface{
      */
     public function value(string $name, $value){
         $this->factory->getResolver()->addValue($name, $value);
+
+        return $this;
+    }
+
+    /**
+     * 値を追加
+     *
+     * @param   mixed[] $values
+     *
+     * @return  $this
+     */
+    public function values(array $values){
+        foreach($values as $name => $value){
+            $this->value($name, $value);
+        }
 
         return $this;
     }
