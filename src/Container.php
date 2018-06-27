@@ -290,6 +290,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function param(string $class, $name, $value){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+        
         if(!is_string($name) && !is_int($name)){
             throw new \InvalidArgumentException();
         }
@@ -308,6 +312,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function params(string $class, array $params){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
         foreach($params as $name => $value){
             $this->param($class, $name, $value);
         }
@@ -325,6 +333,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function setter(string $class, string $method, $value){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
         $this->factory->getResolver()->addSetter($class, $method, $value);
 
         return $this;
@@ -339,6 +351,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function setters(string $class, array $setters){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
         foreach($setters as $method => $value){
             $this->setter($class, $method, $value);
         }
@@ -355,6 +371,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function type(string $class, $value){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
         $this->factory->getResolver()->addType($class, $value);
 
         return $this;
@@ -368,6 +388,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function types(array $types){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
         foreach($types as $class => $value){
             $this->type($class, $value);
         }
@@ -398,6 +422,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function value(string $name, $value){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
         $this->factory->getResolver()->addValue($name, $value);
 
         return $this;
@@ -411,6 +439,10 @@ class Container implements ContainerInterface{
      * @return  $this
      */
     public function values(array $values){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
         foreach($values as $name => $value){
             $this->value($name, $value);
         }
