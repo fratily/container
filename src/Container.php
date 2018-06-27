@@ -376,6 +376,20 @@ class Container implements ContainerInterface{
     }
 
     /**
+     * 値を取得する
+     *
+     * @param   string  $name
+     * @param   mixed   $default
+     *
+     * @return  mixed
+     */
+    public function getValue(string $name, $default){
+        $this->lock();
+
+        return $this->factory->getResolver()->getValue($name) ?? $default;
+    }
+
+    /**
      * 値を追加
      *
      * @param   string  $name
