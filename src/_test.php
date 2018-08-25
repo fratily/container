@@ -57,7 +57,7 @@ class Bar extends Foo implements BarInterface{
 }
 
 
-$container  = (new Fratily\Container\ContainerFactory())->create(true);
+$container  = (new Fratily\Container\ContainerFactory())->create();
 $container->value("name", "name");
 
 $container->type(FugaInterface::class, $container->lazyNew(Fuga::class));
