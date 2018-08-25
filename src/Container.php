@@ -77,12 +77,7 @@ class Container implements ContainerInterface{
     }
 
     /**
-     * Creates and returns a new instance of a class using reflection and
-     * the configuration parameters, optionally with overrides, invoking Lazy
-     * values along the way.
-     *
-     * Note the that container must be locked before creating a new instance.
-     * This prevents premature resolution of params and setters.
+     * インスタンスを生成する
      *
      * @param   string  $class
      * @param   mixed[] $params
@@ -293,7 +288,7 @@ class Container implements ContainerInterface{
         if($this->isLocked()){
             throw new Exception\LockedException();
         }
-        
+
         if(!is_string($name) && !is_int($name)){
             throw new \InvalidArgumentException();
         }
