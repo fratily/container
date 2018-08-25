@@ -26,78 +26,69 @@ class ContainerFactory{
     private $reflector;
 
     /**
+     * @var ContainerConfigInterface[]
+     */
+    private $configList = [];
+
+    /**
      * Constructor
      *
      * @param   ClassReflector  $reflector
      */
     public function __construct(ClassReflector $reflector = null){
-        if($reflector !== null){
-            $this->reflector    = $reflector;
-        }
+        $this->reflector    = $reflector ?? new ClassReflector();
     }
 
     /**
-     *
-     *
-     * @param   bool    $auto
+     * コンテナを生成する
      *
      * @return  Container
      */
-    public function create(bool $auto = false){
-        if($this->reflector === null){
-            $this->reflector    = new ClassReflector();
-        }
-
-        return new Container(
+    public function create(){
+        $container  = new Container(
             new Injection\Factory(
                 new Resolver\Resolver($this->reflector, $auto)
             )
         );
-    }
 
-    /**
-     *
-     *
-     * @param   string[]    $classes
-     * @param   bool    $auto
-     *
-     * @return  Container
-     */
-    public function createWithConfig(array $classes, bool $auto = false, callable $modify = null){
-        $container  = $this->create($auto);
-
-        $configs    = [];
-
-        foreach($classes as $class){
-            if(is_string($class)){
-                if(!class_exists($class)){
-                    throw new \InvalidArgumentException();
-                }
-
-                $config = new $class();
-            }else{
-                $config = $class;
-            }
-
-            if(!(is_object($config) && $config instanceof ContainerConfigInterface)){
-                throw new \InvalidArgumentException();
-            }
-
+        foreach($this->configList as $config){
             $config->define($container);
-
-            $configs[]  = $config;
         }
 
         $container->lock();
 
-        foreach($configs as $config){
+        foreach($this->configList as $config){
             $config->modify($container);
         }
 
-        if($modify !== null){
-            $modify($container);
-        }
-
         return $container;
+    }
+
+    /**
+     * 設定クラスを追加する
+     *
+     * @param   ContainerConfigInterface    $config
+     *
+     * @return  $this
+     */
+    public function append(ContainerConfigInterface $config){
+        $this->configList[] = $config;
+
+        return $this;
+    }
+
+    /**
+     * 設定クラスを追加する
+     *
+     * 先に実行されるように追加する
+     *
+     * @param   ContainerConfigInterface    $config
+     *
+     * @return  $this
+     */
+    public function prepend(ContainerConfigInterface $config){
+        array_shift($this->configList, $config);
+
+        return $this;
     }
 }
