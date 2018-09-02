@@ -13,10 +13,8 @@
  */
 namespace Fratily\Container;
 
-use Psr\Container\{
-    ContainerInterface,
-    ContainerExceptionInterface
-};
+use Psr\Container\ContainerInterface;
+use Psr\Container\ContainerExceptionInterface;
 
 /**
  *
@@ -24,40 +22,33 @@ use Psr\Container\{
 class Container implements ContainerInterface{
 
     /**
-     * @var bool
+     * @var Resolver\Resolver
      */
-    private $locked;
+    private $resolver;
 
     /**
-     * @var Injection\Factory
+     * @var bool
      */
-    private $factory;
+    private $locked     = false;
 
     /**
      * @var mixed[]
      */
-    protected $services;
-
-    /**
-     * @var object[]
-     */
-    protected $instances;
+    protected $services = [];
 
     /**
      * @var \SplPriorityQueue|null
      */
-    private $delegate;
+    private $delegate   = [];
 
     /**
      * Constructor
      *
-     * @param   Injection\Factory   $factory
+     * @param   Resolver\Resolver   $resolver
+     *  依存関係を統括するリゾルバオブジェクト
      */
-    public function __construct(Injection\Factory $factory){
-        $this->factory      = $factory;
-        $this->locked       = false;
-        $this->services     = [];
-        $this->instances    = [];
+    public function __construct(Resolver\Resolver $resolver){
+        $this->resolver = $resolver;
     }
 
     /**
@@ -80,19 +71,41 @@ class Container implements ContainerInterface{
      * インスタンスを生成する
      *
      * @param   string  $class
-     * @param   mixed[] $params
-     * @param   mixed[] $setters
+     *  対象クラス名
+     * @param   mixed[] $parameters
+     *  追加指定パラメータの連想配列
      *
      * @return  object
      */
-    public function newInstance(
-        $class,
-        $params = [],
-        $setters = []
-    ){
+    public function getInstance(string $class, array $parameters = []){
+        if(!class_exists($class)){
+            throw new \InvalidArgumentException();
+        }
+
         $this->lock();
 
-        return $this->factory->newInstance($class, $params, $setters);
+        return $this->resolver
+            ->getClassResolver($class)
+            ->createInstanceGenerator($this->resolver)
+            ->generate($parameters)
+        ;
+    }
+
+    public function invokeMethod($instance, string $method, array $parameters = []){
+        if(!is_object($instance)){
+            throw new \InvalidArgumentException();
+        }
+
+        if(!method_exists($instance, $method)){
+            throw new \InvalidArgumentException();
+        }
+
+        $invoker    = new Resolver\MethodInvoker(
+            $this->resolver,
+            new \ReflectionMethod($instance, $method)
+        );
+
+        return $invoker->invoke($instance, $parameters);
     }
 
     /**
@@ -289,11 +302,13 @@ class Container implements ContainerInterface{
             throw new Exception\LockedException();
         }
 
-        if(!is_string($name) && !is_int($name)){
+        if(is_string($name)){
+            $this->resolver->getClassResolver($class)->addNameParameter($name, $value);
+        }elseif(is_int($name)){
+            $this->resolver->getClassResolver($class)->addPositionParameter($name, $value);
+        }else{
             throw new \InvalidArgumentException();
         }
-
-        $this->factory->getResolver()->addParameter($class, $name, $value);
 
         return $this;
     }
@@ -332,7 +347,7 @@ class Container implements ContainerInterface{
             throw new Exception\LockedException();
         }
 
-        $this->factory->getResolver()->addSetter($class, $method, $value);
+        $this->resolver->getClassResolver($class)->addSetter($method, $value);
 
         return $this;
     }
@@ -370,7 +385,7 @@ class Container implements ContainerInterface{
             throw new Exception\LockedException();
         }
 
-        $this->factory->getResolver()->addType($class, $value);
+        $this->resolver->addType($class, $value);
 
         return $this;
     }
@@ -395,20 +410,6 @@ class Container implements ContainerInterface{
     }
 
     /**
-     * 値を取得する
-     *
-     * @param   string  $name
-     * @param   mixed   $default
-     *
-     * @return  mixed
-     */
-    public function getValue(string $name, $default){
-        $this->lock();
-
-        return $this->factory->getResolver()->getValue($name) ?? $default;
-    }
-
-    /**
      * 値を追加
      *
      * @param   string  $name
@@ -421,7 +422,7 @@ class Container implements ContainerInterface{
             throw new Exception\LockedException();
         }
 
-        $this->factory->getResolver()->addValue($name, $value);
+        $this->resolver->addValue($name, $value);
 
         return $this;
     }
@@ -454,7 +455,7 @@ class Container implements ContainerInterface{
      * @return  Injection\Lazy
      */
     public function lazy($callable, $params = []){
-        return $this->factory->createLazy($callable, $params);
+        return new Injection\Lazy($this->resolver, $callable, $params);
     }
 
     /**
@@ -466,7 +467,7 @@ class Container implements ContainerInterface{
      * @return  Injection\LazyCallable
      */
     public function lazyCallable($callable, ...$params){
-        return $this->factory->createLazyCallable($callable, $params);
+        return new Injection\LazyCallable($callable, $params);
     }
 
     /**
@@ -477,7 +478,7 @@ class Container implements ContainerInterface{
      * @return  Injection\LazyArray
      */
     public function lazyArray(array $array){
-        return $this->factory->createLazyArray($array);
+        return new Injection\LazyArray($array);
     }
 
     /**
@@ -489,7 +490,7 @@ class Container implements ContainerInterface{
      * @return  Injection\LazyGet
      */
     public function lazyGet($id){
-        return $this->factory->createLazyGet($this, $id);
+        return new Injection\LazyGet($this, $id);
     }
 
     /**
@@ -500,7 +501,7 @@ class Container implements ContainerInterface{
      * @return  Injection\LazyInclude
      */
     public function lazyInclude($file){
-        return $this->factory->createLazyInclude($file);
+        return new Injection\LazyInclude($file);
     }
 
     /**
@@ -511,20 +512,31 @@ class Container implements ContainerInterface{
      * @return  Injection\LazyInclude
      */
     public function lazyRequire($file){
-        return $this->factory->createLazyRequire($file);
+        return new Injection\LazyRequire($file);
     }
 
     /**
      * インスタンス遅延生成インスタンスを生成する
      *
      * @param   string  $class
-     * @param   mixed[] $params
-     * @param   mixed[] $setters
+     *  クラス名
+     * @param   mixed[]|Injection\LazyInterface $parameters
+     *  パラメータ
      *
      * @return  Injection\LazyNew
      */
-    public function lazyNew($class, $params = [], $setters = []){
-        return $this->factory->createLazyNew($class, $params, $setters);
+    public function lazyNew(string $class, $parameters = []){
+        if(!class_exists($class)){
+            throw new \InvalidArgumentException();
+        }
+
+        return new Injection\LazyNew(
+            $this->resolver
+                ->getClassResolver($class)
+                ->createInstanceGenerator()
+            ,
+            $parameters
+        );
     }
 
     /**
@@ -535,6 +547,6 @@ class Container implements ContainerInterface{
      * @return  Injection\LazyValue
      */
     public function lazyValue($key){
-        return $this->factory->createLazyValue($key);
+        return new Injection\LazyValue($this->resolver, $key);
     }
 }

@@ -13,7 +13,9 @@
  */
 namespace Fratily\Container\Injection;
 
-use Fratily\Container\Resolver\Resolver;
+use Fratily\Container\Injection\LazyInterface;
+use Fratily\Container\Injection\LazyResolver;
+use Fratily\Container\Resolver\InstanceGenerator;
 
 /**
  *
@@ -27,53 +29,41 @@ use Fratily\Container\Resolver\Resolver;
 class LazyNew implements LazyInterface{
 
     /**
-     * @var Resolver
+     * @var InstanceGenerator
      */
-    protected $resolver;
-
-    /**
-     * @var string
-     */
-    protected $class;
+    private $instanceGenerator;
 
     /**
      * @var mixed[]
      */
-    protected $params;
-
-    /**
-     * @var mixed[]
-     */
-    protected $setters;
+    private $parameters;
 
     /**
      * Constructor
      *
-     * @param   Resolver    $resolver
-     * @param   string  $class
-     * @param   mixed[] $params
-     * @param   mixed[] $setters
+     * @param   InstanceGenerator   $instanceGenerator
+     *  インスタンスジェネレーターオブジェクト
+     * @param   mixed[] $parameters
+     *  追加指定パラメータの連想配列
      */
     public function __construct(
-        Resolver $resolver,
-        string $class,
-        array $params = [],
-        array $setters = []
-    ) {
-        $this->resolver = $resolver;
-        $this->class    = $class;
-        $this->params   = $params;
-        $this->setters  = $setters;
+        InstanceGenerator $instanceGenerator,
+        $parameters = []
+    ){
+        if(!is_array($parameters) && !($parameters instanceof LazyInterface)){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->instanceGenerator    = $instanceGenerator;
+        $this->parameters           = $parameters;
     }
 
     /**
      * {@inheritdoc}
      */
     public function load(){
-        return $this->resolver->resolve(
-            $this->class,
-            $this->params,
-            $this->setters
-        )->create();
+        return $this->instanceGenerator->generate(
+            LazyResolver::resolveLazy($this->parameters)
+        );
     }
 }
