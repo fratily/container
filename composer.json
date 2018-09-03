@@ -2,7 +2,7 @@
     "name": "fratily/container",
     "keywords": [
         "Fratily",
-        "PSR-11",
+        "psr-11",
         "container"
     ],
     "authors": [
