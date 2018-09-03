@@ -161,6 +161,13 @@ class Resolver{
         $result = [];
 
         foreach($function->getParameters() as $param){
+            $pos    = $param->getPosition();
+            $name   = $param->getName();
+            $target = $function instanceof \ReflectionMethod
+                ? $function->getDeclaringClass() . "::" . $function->getName()
+                : $function->getName()
+            ;
+
             if(array_key_exists($param->getPosition(), $parameters)){
                 $result[]   = $parameters[$param->getPosition()];
                 continue;
@@ -201,13 +208,6 @@ class Resolver{
                 $result[]   = null;
                 continue;
             }
-
-            $pos    = $param->getPosition();
-            $name   = $param->getName();
-            $target = $function instanceof \ReflectionMethod
-                ? $function->getDeclaringClass() . "::" . $function->getName()
-                : $function->getName()
-            ;
 
             throw new Exception\RequireParameterNotDefinedException(
                 "The parameter \${$name}({$pos}) of {$target}() cannot be resolved."
