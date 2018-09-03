@@ -56,7 +56,7 @@ class Resolver{
         }
 
         if(null !== $reflection && !array_key_exists($class, $this->classes)){
-            $this->classes[$class]  = new ClassResolver($reflection);
+            $this->classes[$class]  = new ClassResolver($this, $reflection);
         }
 
         return $this->classes[$class];
@@ -152,5 +152,62 @@ class Resolver{
         $this->values[$name]    = $value;
 
         return $this;
+    }
+
+    public function parameterResolve(
+        \ReflectionFunctionAbstract $function,
+        array $parameters = []
+    ){
+        $result = [];
+
+        foreach($function->getParameters() as $param){
+            if(array_key_exists($param->getPosition(), $parameters)){
+                $result[]   = $parameters[$param->getPosition()];
+                continue;
+            }
+
+            if(array_key_exists($param->getName(), $parameters)){
+                $result[]   = $parameters[$param->getName()];
+                continue;
+            }
+
+            if(null !== ($class = $param->getClass())){ // もし型宣言のクラスが不正なら例外発生
+                if($this->hasType($class->getName())){
+                    $result[]   = $this->getType($class->getName());
+                    continue;
+                }
+
+                if(!$param->isDefaultValueAvailable()){
+                    $result[]   = $param->allowsNull()
+                        ? null
+                        : new LazyNew($this, $class->getName())
+                    ;
+                    continue;
+                }
+            }
+
+            if($param->isDefaultValueAvailable()){
+                $result[]   = $param->getDefaultValue();
+                continue;
+            }
+
+            if($param->allowsNull()){
+                $result[]   = null;
+                continue;
+            }
+
+            $pos    = $param->getPosition();
+            $name   = $param->getName();
+            $target = $function instanceof \ReflectionMethod
+                ? $function->getDeclaringClass() . "::" . $function->getName()
+                : $function->getName()
+            ;
+
+            throw new Exception\RequireParameterNotDefinedException(
+                "The parameter \${$name}({$pos}) of {$target}() cannot be resolved."
+            );
+        }
+
+        return $result;
     }
 }

@@ -13,17 +13,10 @@
  */
 namespace Fratily\Container;
 
-use Fratily\Reflection\Reflector\ClassReflector;
-
 /**
  *
  */
 class ContainerFactory{
-
-    /**
-     * @var ClassReflector
-     */
-    private $reflector;
 
     /**
      * @var ContainerConfigInterface[]
@@ -31,25 +24,12 @@ class ContainerFactory{
     private $configList = [];
 
     /**
-     * Constructor
-     *
-     * @param   ClassReflector  $reflector
-     */
-    public function __construct(ClassReflector $reflector = null){
-        $this->reflector    = $reflector ?? new ClassReflector();
-    }
-
-    /**
      * コンテナを生成する
      *
      * @return  Container
      */
     public function create(){
-        $container  = new Container(
-            new Injection\Factory(
-                new Resolver\Resolver($this->reflector, $auto)
-            )
-        );
+        $container  = $this->createWithoutConfigure();
 
         foreach($this->configList as $config){
             $config->define($container);
@@ -62,6 +42,15 @@ class ContainerFactory{
         }
 
         return $container;
+    }
+
+    /**
+     * 設定を行わずにコンテナインスタンスを生成する
+     *
+     * @return  Container
+     */
+    public function createWithoutConfigure(){
+        return new Container(new Resolver\Resolver());
     }
 
     /**

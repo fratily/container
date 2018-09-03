@@ -14,10 +14,11 @@
 namespace Fratily\Container\Injection;
 
 use Fratily\Container\Resolver\Resolver;
+use Fratily\Container\Resolver\CallbackInvoker;
 use Fratily\Reflection\ReflectionCallable;
 
 /**
- * 
+ *
  */
 class Lazy implements LazyInterface{
 
@@ -29,7 +30,7 @@ class Lazy implements LazyInterface{
     /**
      * @var mixed
      */
-    private $callable;
+    private $callback;
 
     /**
      * @var mixed[]
@@ -37,30 +38,35 @@ class Lazy implements LazyInterface{
     private $params;
 
     /**
+     * @var CallbackInvoker|null
+     */
+    private $callbackInvoker;
+
+    /**
      * Constructor.
      *
-     * @param   mixed   $callable
+     * @param   mixed   $callback
      * @param   mixed[] $params
      */
-    public function __construct(Resolver $resolver, $callable, array $params = []){
-        if(!is_callable($callable)){
-            if(is_array($callable)){
-                if(!isset($callable[0]) || !isset($callable[1]) || count($callable) !== 2){
+    public function __construct(Resolver $resolver, $callback, array $params = []){
+        if(!is_callable($callback)){
+            if(is_array($callback)){
+                if(!isset($callback[0]) || !isset($callback[1]) || count($callback) !== 2){
                     throw new \InvalidArgumentException();
                 }
 
-                if(!($callable[0] instanceof LazyInterface)
-                    && !($callable[1] instanceof LazyInterface)
+                if(!($callback[0] instanceof LazyInterface)
+                    && !($callback[1] instanceof LazyInterface)
                 ){
                     throw new \InvalidArgumentException();
                 }
-            }else if(!($callable instanceof LazyInterface)){
+            }else if(!($callback instanceof LazyInterface)){
                 throw new \InvalidArgumentException();
             }
         }
 
         $this->resolver = $resolver;
-        $this->callable = $callable;
+        $this->callback = $callback;
         $this->params   = $params;
     }
 
@@ -70,24 +76,19 @@ class Lazy implements LazyInterface{
      * @throw LogicException
      */
     public function load(){
-        $this->params   = LazyResolver::resolveLazyArray($this->params);
-        $this->callable = is_array($this->callable)
-            ? LazyResolver::resolveLazyArray($this->callable)
-            : LazyResolver::resolveLazy($this->callable)
-        ;
+        if(null === $this->callbackInvoker){
+            $this->callback = is_array($this->callback)
+                ? LazyResolver::resolveLazyArray($this->callback)
+                : LazyResolver::resolveLazy($this->callback)
+            ;
 
-        if(!is_callable($this->callable)){
-            throw new \LogicException;
+            if(!is_callable($this->callback)){
+                throw new \LogicException;
+            }
+
+            $this->callbackInvoker  = new CallbackInvoker($this->resolver, $this->callback);
         }
 
-        $params = (new ReflectionCallable($this->callable))
-            ->getReflection()
-            ->getParameters()
-        ;
-
-        return call_user_func_array(
-            $this->callable,
-            $this->resolver->resolveParameters($params, $this->params)
-        );
+        return $this->callbackInvoker->invoke($this->params);
     }
 }

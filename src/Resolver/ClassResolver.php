@@ -375,7 +375,7 @@ class ClassResolver{
                     $this->unifiedParameters,
                     $this->resolver
                         ->getClassResolver($parent->getName())
-                        ->getUnifiedParameters($this->resolver, false)
+                        ->getUnifiedParameters(false)
                 );
             }
 
@@ -385,7 +385,7 @@ class ClassResolver{
                     $this->unifiedParameters,
                         $this->resolver
                             ->getClassResolver($interface)
-                            ->getUnifiedParameters($this->resolver, false)
+                            ->getUnifiedParameters(false)
                     );
                 }
             }
@@ -395,7 +395,7 @@ class ClassResolver{
                     $this->unifiedParameters,
                     $this->resolver
                         ->getClassResolver($trait)
-                        ->getUnifiedParameters($this->resolver, false)
+                        ->getUnifiedParameters(false)
                 );
             }
 
@@ -405,7 +405,7 @@ class ClassResolver{
             );
         }
 
-        return $this->unifiedNameParameters;
+        return $this->unifiedParameters;
     }
 
     /**
@@ -425,7 +425,7 @@ class ClassResolver{
                     $this->unifiedSetters,
                     $this->resolver
                         ->getClassResolver($parent->getName())
-                        ->getUnifiedSetters($this->resolver, false)
+                        ->getUnifiedSetters(false)
                 );
             }
 
@@ -435,7 +435,7 @@ class ClassResolver{
                     $this->unifiedSetters,
                         $this->resolver
                             ->getClassResolver($interface)
-                            ->getUnifiedSetters($this->resolver, false)
+                            ->getUnifiedSetters(false)
                     );
                 }
             }
@@ -445,7 +445,7 @@ class ClassResolver{
                     $this->unifiedSetters,
                     $this->resolver
                         ->getClassResolver($trait)
-                        ->getUnifiedSetters($this->resolver, false)
+                        ->getUnifiedSetters(false)
                 );
             }
 
@@ -472,7 +472,7 @@ class ClassResolver{
                     $this->unifiedProperties,
                     $this->resolver
                         ->getClassResolver($parent->getName())
-                        ->getUnifiedProperties($this->resolver)
+                        ->getUnifiedProperties()
                 );
             }
 
@@ -481,7 +481,7 @@ class ClassResolver{
                     $this->unifiedProperties,
                     $this->resolver
                         ->getClassResolver($trait)
-                        ->getUnifiedProperties($this->resolver)
+                        ->getUnifiedProperties()
                 );
             }
 

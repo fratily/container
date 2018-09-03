@@ -57,7 +57,7 @@ class Bar extends Foo implements BarInterface{
 }
 
 
-$container  = (new Fratily\Container\ContainerFactory())->create();
+$container  = (new Fratily\Container\ContainerFactory())->createWithoutConfigure();
 $container->value("name", "name");
 
 $container->type(FugaInterface::class, $container->lazyNew(Fuga::class));
@@ -67,12 +67,12 @@ $container->param(FooTrait::class, "name", $container->lazyValue("name"));
 $container->param(Foo::class, 1, "foo_pos_1");
 $container->param(Bar::class, 2, "bar_pos_2");
 
-$container->setter(FooInterface::class, "setHoge", $container->lazy(function(){return new Hoge;}));
+$container->setter(FooInterface::class, "setHoge", $container->lazy(function($hoge){return $hoge;}, ["hoge" => $container->lazyNew(Hoge::class)]));
 $container->setter(BarInterface::class, "setPiyo", $container->lazyCallable(function(){return new Piyo;}));
 
 
-$container->set("foo", $container->lazyNew(Foo::class));
-$container->set("bar", $container->lazyNew(Bar::class));
+$container->set("foo", Foo::class);
+$container->set("bar", Bar::class);
 
 var_dump(
     $container->get("foo"),

@@ -143,66 +143,12 @@ class InstanceGenerator{
             return [];
         }
 
-        $result     = [];
-        $resolver   = $this->resolver->getClassResolver($this->class);
-        $unified    = $resolver->getUnifiedParameters($this->resolver);
-
-        foreach($this->getReflection()->getConstructor()->getParameters() as $param){
-            if(array_key_exists($param->getPosition(), $parameters)){
-                $result[]   = $parameters[$param->getPosition()];
-                continue;
-            }
-
-            if(array_key_exists($param->getName(), $parameters)){
-                $result[]   = $parameters[$param->getName()];
-                continue;
-            }
-
-            if($resolver->hasPositionParameter($param->getPosition())){
-                $result[]   = $resolver->getPositionParameter($param->getPosition());
-                continue;
-            }
-
-            if(array_key_exists($param->getName(), $unified)){
-                $result[]   = $unified[$param->getName()];
-                continue;
-            }
-
-            if(null !== ($class = $param->getClass())){ // もし型宣言のクラスが不正なら例外発生
-                if($this->resolver->hasType($class->getName())){
-                    $result[]   = $this->resolver->getType($class->getName());
-                    continue;
-                }
-
-                if(!$param->isDefaultValueAvailable()){
-                    $result[]   = $param->allowsNull()
-                        ? null
-                        : new LazyNew($this->resolver, $class->getName())
-                    ;
-                    continue;
-                }
-            }
-
-            if($param->isDefaultValueAvailable()){
-                $result[]   = $param->getDefaultValue();
-                continue;
-            }
-
-            if($param->allowsNull()){
-                $result[]   = null;
-                continue;
-            }
-
-            $pos    = $param->getPosition();
-            $name   = $param->getName();
-            $class  = $resolver->getReflection()->getName();
-
-            throw new Exception\RequireParameterNotDefinedException(
-                "The parameter \${$name}({$pos}) of {$class} cannot be resolved."
-            );
-        }
-
-        return $result;
+        return $this->resolver->parameterResolve(
+            $this->getReflection()->getConstructor(),
+            $parameters
+                + $this->getClassResolver()->getUnifiedParameters()
+                + $this->getClassResolver()->getPostionParameters()
+        );
     }
 
     /**
@@ -215,7 +161,7 @@ class InstanceGenerator{
      */
     protected function ExecuteInjectionPropety($instance){
         $class      = $this->getReflection();
-        $unified    = $this->getClassResolver()->getUnifiedProperties($this->resolver);
+        $unified    = $this->getClassResolver()->getUnifiedProperties();
 
         do{
             $resolver   = $this->resolver->getClassResolver($class->getName());
@@ -226,7 +172,6 @@ class InstanceGenerator{
                     $prop->setValue(
                         $instance,
                         LazyResolver::resolveLazy(
-                            $this->resolver,
                             $resolver->getProperty($prop->getName())
                         )
                     );
@@ -240,7 +185,7 @@ class InstanceGenerator{
             $prop->setAccessible(true);
             $prop->setValue(
                 $instance,
-                LazyResolver::resolveLazy($this->resolver, $value)
+                LazyResolver::resolveLazy($value)
             );
         }
     }
@@ -254,12 +199,15 @@ class InstanceGenerator{
      * @return  void
      */
     protected function ExecuteInjectionSetter($instance){
-        $unified    = $this->getClassResolver()->getUnifiedSetters($this->resolver);
+        $unified    = $this->getClassResolver()->getUnifiedSetters();
 
         foreach($unified as $name => $value){
             $reflection = $this->getReflection()->getMethod($name);
 
-            $reflection->invoke($instance, $value);
+            $reflection->invoke(
+                $instance,
+                LazyResolver::resolveLazy($value)
+            );
         }
     }
 }
