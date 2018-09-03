@@ -178,6 +178,12 @@ class Resolver{
                 }
 
                 if(!$param->isDefaultValueAvailable()){
+                    if(!$param->allowsNull() && !$class->isInstantiable()){
+                        throw new Exception\RequireParameterNotDefinedException(
+                            "The parameter \${$name}({$pos}) of {$target}() cannot be resolved."
+                        );
+                    }
+
                     $result[]   = $param->allowsNull()
                         ? null
                         : new LazyNew($this, $class->getName())
