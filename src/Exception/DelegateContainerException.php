@@ -19,21 +19,4 @@ use Psr\Container\ContainerExceptionInterface;
  *
  */
 class DelegateContainerException extends \LogicException implements ContainerExceptionInterface{
-
-    const MSG  = "Delegate container threw an exception.";
-
-    /**
-     * Constructor
-     *
-     * @param   string  $message    [optional]
-     * @param   int $code   [optional]
-     * @param   \Throwable  $previous   [optional]
-     */
-    public function __construct(
-        string $message = null,
-        int $code = 0,
-        \Throwable $previous = null
-    ){
-        parent::__construct($message ?? self::_MSG, $code, $previous);
-    }
 }

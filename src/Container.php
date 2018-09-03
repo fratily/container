@@ -32,7 +32,7 @@ class Container implements ContainerInterface{
     private $locked     = false;
 
     /**
-     * @var mixed[]
+     * @var Resolver\InstanceGenerator[]
      */
     protected $services = [];
 
@@ -120,31 +120,17 @@ class Container implements ContainerInterface{
 
         $this->lock();
 
-        if(!array_key_exists($id, $this->instances)){
-            if($this->hasInThisContainer($id)){
-                $instance   = Injection\LazyResolver::resolveLazy(
-                    $this->services[$id]
-                );
-
-                if(!is_object($instance)){
-                    $e  = new Exception\ServiceNotObjectException();
-                    $e->setId($id);
-
-                    throw $e;
-                }
-
-                $this->instances[$id]   = $instance;
-            }else if($this->hasInDelegateContainer($id)){
-                return $this->getFromDelegateContainer($id);
-            }else{
-                $e  = new Exception\ServiceNotFoundException();
-                $e->setId($id);
-
-                throw $e;
-            }
+        if($this->hasInThisContainer($id)){
+            return $this->services[$id]->generate();
+        }elseif($this->hasInDelegateContainer($id)){
+            return $this->getFromDelegateContainer($id);
+        }elseif(class_exists($id)){
+            return $this->getInstance($id);
         }
 
-        return $this->instances[$id];
+        throw new Exception\ServiceNotFoundException(
+            "Service {$id} is not found in container."
+        );
     }
 
     /**
@@ -170,13 +156,16 @@ class Container implements ContainerInterface{
                 }
             }
         }catch(ContainerExceptionInterface $e){
-            throw new Exception\DelegateContainerException(null, 0, $e);
+            throw new Exception\DelegateContainerException(
+                "Delegate container threw an exception.",
+                0,
+                $e
+            );
         }
 
-        $e  = new Exception\ServiceNotFoundException();
-        $e->setId($id);
-
-        throw $e;
+        throw new Exception\ServiceNotFoundException(
+            "Service {$id} is not found in container."
+        );
     }
 
     /**
@@ -246,7 +235,9 @@ class Container implements ContainerInterface{
      */
     public function addDelegateContainer(ContainerInterface $container, int $priority = 1){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         if($this->delegate === null){
@@ -272,17 +263,20 @@ class Container implements ContainerInterface{
      * @throws  Exception\LockedException
      * @throws  \InvalidArgumentException
      */
-    public function set(string $id, $val){
+    public function set(string $id, string $class){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
-        if(!is_object($val)){
+        if(!class_exists($class)){
             throw new \InvalidArgumentException();
         }
 
-        $this->services[$id] = ($val instanceof \Closure)
-            ? $this->lazyCallable($val) : $val
+        $this->services[$id]    = $this->resolver
+            ->getClassResolver($class)
+            ->createInstanceGenerator()
         ;
 
         return $this;
@@ -299,7 +293,9 @@ class Container implements ContainerInterface{
      */
     public function param(string $class, $name, $value){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         if(is_string($name)){
@@ -323,7 +319,9 @@ class Container implements ContainerInterface{
      */
     public function params(string $class, array $params){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         foreach($params as $name => $value){
@@ -344,7 +342,9 @@ class Container implements ContainerInterface{
      */
     public function setter(string $class, string $method, $value){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         $this->resolver->getClassResolver($class)->addSetter($method, $value);
@@ -362,7 +362,9 @@ class Container implements ContainerInterface{
      */
     public function setters(string $class, array $setters){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         foreach($setters as $method => $value){
@@ -382,7 +384,9 @@ class Container implements ContainerInterface{
      */
     public function type(string $class, $value){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         $this->resolver->addType($class, $value);
@@ -399,7 +403,9 @@ class Container implements ContainerInterface{
      */
     public function types(array $types){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         foreach($types as $class => $value){
@@ -419,7 +425,9 @@ class Container implements ContainerInterface{
      */
     public function value(string $name, $value){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         $this->resolver->addValue($name, $value);
@@ -436,7 +444,9 @@ class Container implements ContainerInterface{
      */
     public function values(array $values){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
         }
 
         foreach($values as $name => $value){
