@@ -15,7 +15,6 @@ namespace Fratily\Container\Injection;
 
 use Fratily\Container\Resolver\Resolver;
 use Fratily\Container\Resolver\CallbackInvoker;
-use Fratily\Reflection\ReflectionCallable;
 
 /**
  *
