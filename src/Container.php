@@ -91,21 +91,22 @@ class Container implements ContainerInterface{
         ;
     }
 
-    public function invokeMethod($instance, string $method, array $parameters = []){
-        if(!is_object($instance)){
-            throw new \InvalidArgumentException();
-        }
-
-        if(!method_exists($instance, $method)){
-            throw new \InvalidArgumentException();
-        }
-
-        $invoker    = new Resolver\MethodInvoker(
-            $this->resolver,
-            new \ReflectionMethod($instance, $method)
-        );
-
-        return $invoker->invoke($instance, $parameters);
+    /**
+     * コールバックを実行しその結果を取得する
+     *
+     * DI定義を用いたパラメータの自動解決が行われる。
+     *
+     * @param   callable    $callback
+     *  実行対象コールバック
+     * @param   mixed[] $parameters
+     *  実行時追加パラメータ
+     *
+     * @return  mixed
+     */
+    public function invokeCallback(callable $callback, array $parameters = []){
+        return (new Resolver\CallbackInvoker($this->resolver, $callback))
+            ->invoke($parameters)
+        ;
     }
 
     /**
