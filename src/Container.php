@@ -376,6 +376,29 @@ class Container implements ContainerInterface{
     }
 
     /**
+     * プロパティインジェクションの値を追加
+     *
+     * @param   string  $class
+     * @param   string  $name
+     * @param   mixed   $value
+     *
+     * @return $this
+     *
+     * @throws Exception\LockedException
+     */
+    public function prop(string $class, string $name, $value){
+        if($this->isLocked()){
+            throw new Exception\LockedException(
+                "Container is locked."
+            );
+        }
+
+        $this->resolver->getClassResolver($class)->addProperty($name, $value);
+
+        return $this;
+    }
+
+    /**
      * コンストラクタインジェクションにおける自動解決用の値を追加
      *
      * @param   string  $class
