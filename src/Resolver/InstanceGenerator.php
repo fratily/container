@@ -138,7 +138,10 @@ class InstanceGenerator{
      *  型宣言に使用したクラスが存在しない場合などにスローされる
      */
     protected function resolveParameter(array $parameters){
-        if(null === $this->getReflection()->getConstructor()){
+        if(
+            null === $this->getReflection()->getConstructor()
+            || !$this->getReflection()->getConstructor()->isPublic()
+        ){
             return [];
         }
 
