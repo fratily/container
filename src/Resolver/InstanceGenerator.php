@@ -14,7 +14,6 @@
 namespace Fratily\Container\Resolver;
 
 use Fratily\Container\Injection\LazyResolver;
-use Fratily\Container\Injection\LazyNew;
 use Fratily\Container\Exception;
 
 /**
