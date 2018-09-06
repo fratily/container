@@ -76,7 +76,7 @@ class ContainerFactory{
      * @return  $this
      */
     public function prepend(ContainerConfigInterface $config){
-        array_shift($this->configList, $config);
+        array_unshift($this->configList, $config);
 
         return $this;
     }
