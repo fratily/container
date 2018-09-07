@@ -48,11 +48,13 @@ class CallbackInvoker{
      * メソッドを実行しその結果を取得する
      *
      * @param   mixed[] $parameters
-     *  メソッド実行時パラメーター
+     *  パラメータの連想配列
+     * @param   mixed[] $types
+     *  型の連想配列
      *
      * @return  mixed
      */
-    public function invoke(array $parameters = []){
+    public function invoke(array $parameters = [], array $types = []){
         $reflection = new ReflectionCallable($this->callback);
 
         return call_user_func_array(
@@ -60,7 +62,8 @@ class CallbackInvoker{
             LazyResolver::resolveLazyArray(
                 $this->resolver->parameterResolve(
                     $reflection->getReflection(),
-                    $parameters
+                    $parameters,
+                    $types
                 )
             )
         );

@@ -74,10 +74,16 @@ class Container implements ContainerInterface{
      *  対象クラス名
      * @param   mixed[] $parameters
      *  追加指定パラメータの連想配列
+     * @param   mixed[] $types
+     *  追加指定型の連想配列
      *
      * @return  object
      */
-    public function getInstance(string $class, array $parameters = []){
+    public function getInstance(
+        string $class,
+        array $parameters = [],
+        array $types = []
+    ){
         if(!class_exists($class)){
             throw new \InvalidArgumentException();
         }
@@ -87,7 +93,7 @@ class Container implements ContainerInterface{
         return $this->resolver
             ->getClassResolver($class)
             ->createInstanceGenerator($this->resolver)
-            ->generate($parameters)
+            ->generate($parameters, $types)
         ;
     }
 
@@ -99,13 +105,19 @@ class Container implements ContainerInterface{
      * @param   callable    $callback
      *  実行対象コールバック
      * @param   mixed[] $parameters
-     *  実行時追加パラメータ
+     *  パラメータの連想配列
+     * @param   mixed[] $types
+     *  型の連想配列
      *
      * @return  mixed
      */
-    public function invokeCallback(callable $callback, array $parameters = []){
+    public function invokeCallback(
+        callable $callback,
+        array $parameters = [],
+        array $types = []
+    ){
         return (new Resolver\CallbackInvoker($this->resolver, $callback))
-            ->invoke($parameters)
+            ->invoke($parameters, $types)
         ;
     }
 

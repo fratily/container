@@ -76,10 +76,12 @@ class InstanceGenerator{
      *
      * @param   mixed[] $parameters
      *  追加指定パラメータの連想配列
+     * @param   mixed[] $types
+     *  追加指定型の連想配列
      *
      * @return  object
      */
-    public function generate(array $parameters = []){
+    public function generate(array $parameters = [], array $types = []){
         if(null !== $this->instance){
             return $this->instance;
         }
@@ -93,7 +95,7 @@ class InstanceGenerator{
             $constructor->invokeArgs(
                 $instance,
                 LazyResolver::resolveLazyArray(
-                    $this->resolveParameter($parameters)
+                    $this->resolveParameter($parameters, $types)
                 )
             );
         }
@@ -129,7 +131,9 @@ class InstanceGenerator{
      * インスタンス生成時に使用するパラメータの解決を行う
      *
      * @param   mixed[] $parameters
-     *  追加パラメータ
+     *  追加指定パラメータの連想配列
+     * @param   mixed[] $types
+     *  追加指定型の連想配列
      *
      * @return  mixed[]
      *
@@ -137,7 +141,7 @@ class InstanceGenerator{
      * @throws  \ReflectionException
      *  型宣言に使用したクラスが存在しない場合などにスローされる
      */
-    protected function resolveParameter(array $parameters){
+    protected function resolveParameter(array $parameters = [], array $types = []){
         if(
             null === $this->getReflection()->getConstructor()
             || !$this->getReflection()->getConstructor()->isPublic()
@@ -150,6 +154,8 @@ class InstanceGenerator{
             $parameters
                 + $this->getClassResolver()->getUnifiedParameters()
                 + $this->getClassResolver()->getPostionParameters()
+            ,
+            $types
         );
     }
 

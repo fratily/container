@@ -154,9 +154,24 @@ class Resolver{
         return $this;
     }
 
+    /**
+     *　関数の引数を解決する
+     *
+     * @param \ReflectionFunctionAbstract $function
+     *  解決対象関数のリフレクションインスタンス
+     * @param   mixed[] $parameters
+     *  パラメータの連想配列
+     * @param   mixed[] $types
+     *  型の連想配列
+     *
+     * @return  mixed[]
+     *
+     * @throws  Exception\RequireParameterNotDefinedException
+     */
     public function parameterResolve(
         \ReflectionFunctionAbstract $function,
-        array $parameters = []
+        array $parameters = [],
+        array $types = []
     ){
         $result = [];
 
@@ -179,6 +194,29 @@ class Resolver{
             }
 
             if(null !== ($class = $param->getClass())){ // もし型宣言のクラスが不正なら例外発生
+                if(array_key_exists($class->getName(), $types)){
+                    if(null === $types[$class->getName()] && $param->allowsNull()){
+                        $result[]   = null;
+                        continue;
+                    }
+
+                    if(
+                        is_object($types[$class->getName()])
+                        && is_a($types[$class->getName()], $class->getName())
+                    ){
+                        $result[]   = $types[$class->getName()];
+                        continue;
+                    }
+
+                    if(
+                        $param->isDefaultValueAvailable()
+                        && $types[$class->getName()] === $param->getDefaultValue()
+                    ){
+                        $result[]   = $types[$class->getName()];
+                        continue;
+                    }
+                }
+
                 if($this->hasType($class->getName())){
                     $result[]   = $this->getType($class->getName());
                     continue;
