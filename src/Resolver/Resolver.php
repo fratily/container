@@ -233,7 +233,11 @@ class Resolver{
 
                     $result[]   = $param->allowsNull()
                         ? null
-                        : new LazyNew($this, $class->getName())
+                        : new LazyNew(
+                            $this
+                                ->getClassResolver($class->getName())
+                                ->createInstanceGenerator()
+                        )
                     ;
                     continue;
                 }
