@@ -13,6 +13,8 @@
  */
 namespace Fratily\Container\Resolver;
 
+use Fratily\Container\Injection\LazyNew;
+
 /**
  *
  */
