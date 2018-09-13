@@ -32,7 +32,7 @@ class Container implements ContainerInterface{
     private $locked     = false;
 
     /**
-     * @var Resolver\InstanceGenerator[]
+     * @var Resolver\InstanceGenerator[]|Injection\LazyInterface[]|object[]
      */
     protected $services = [];
 
@@ -133,17 +133,39 @@ class Container implements ContainerInterface{
 
         $this->lock();
 
+        $find       = false;
+        $service    = null;
+
         if($this->hasInThisContainer($id)){
-            return $this->services[$id]->generate();
+            $find   = true;
+
+            if($this->services[$id] instanceof Resolver\InstanceGenerator){
+                $service    = $this->services[$id]->generate();
+            }elseif($this->services[$id] instanceof Injection\LazyInterface){
+                $service    = $this->services[$id]->load;
+            }else{
+                $service    = $this->services[$id];
+            }
         }elseif($this->hasInDelegateContainer($id)){
-            return $this->getFromDelegateContainer($id);
-        }elseif(class_exists($id)){
-            return $this->getInstance($id);
+            $find       = true;
+            $service    = $this->getFromDelegateContainer($id);
         }
 
-        throw new Exception\ServiceNotFoundException(
-            "Service {$id} is not found in container."
-        );
+        if($find && !is_object($service)){
+            throw new \LogicException;
+        }
+
+        if($find){
+            return $service;
+        }
+
+        if(!$find && !class_exists($id)){
+            throw new Exception\ServiceNotFoundException(
+                "Service {$id} is not found in container."
+            );
+        }
+
+        return $this->getInstance($id);
     }
 
     /**
@@ -269,28 +291,45 @@ class Container implements ContainerInterface{
      * 遅延ロード用の匿名関数であると解釈されます。
      *
      * @param   string  $id
-     * @param   object|\Closure|Injection\LazyInterface $val
+     *  サービスID
+     * @param   string|object|\Closure|Injection\LazyInterface  $value
+     *  クラス名かクラスインスタンス、もしくはオブジェクトを生成する匿名関数や
+     *  遅延ロードクラスインスタンス
      *
      * @return  $this
      *
      * @throws  Exception\LockedException
      * @throws  \InvalidArgumentException
      */
-    public function set(string $id, string $class){
+    public function set(string $id, $value){
         if($this->isLocked()){
             throw new Exception\LockedException(
                 "Container is locked."
             );
         }
 
+        if(is_string($value)){
+            if(!class_exists($value)){
+                throw new \InvalidArgumentException();
+            }
+
+            $value  = $this->resolver
+                ->getClassResolver($class)
+                ->createInstanceGenerator()
+            ;
+        }elseif($value instanceof Injection\LazyInterface){
+
+        }elseif($value instanceof \Closure){
+            $value  = new Injection\LazyCallable($value);
+        }elseif(!is_object($value)){
+            throw new \InvalidArgumentException();
+        }
+
         if(!class_exists($class)){
             throw new \InvalidArgumentException();
         }
 
-        $this->services[$id]    = $this->resolver
-            ->getClassResolver($class)
-            ->createInstanceGenerator()
-        ;
+        $this->services[$id]    = $value;
 
         return $this;
     }
