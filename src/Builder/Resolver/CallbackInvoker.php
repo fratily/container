@@ -11,7 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Resolver;
+namespace Fratily\Container\Builder\Resolver;
 
 use Fratily\Container\Injection\LazyResolver;
 use Fratily\Reflection\ReflectionCallable;

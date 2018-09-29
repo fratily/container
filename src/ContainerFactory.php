@@ -13,55 +13,72 @@
  */
 namespace Fratily\Container;
 
+use Psr\Container\ContainerInterface;
+
 /**
  *
  */
 class ContainerFactory{
 
     /**
-     * @var ContainerConfigInterface[]
+     * @var string[]
      */
-    private $configList = [];
+    private $containers = [];
 
     /**
      * コンテナを生成する
      *
-     * @return  Container
-     */
-    public function create(){
-        $container  = $this->createWithoutConfigure();
-
-        foreach($this->configList as $config){
-            $config->define($container);
-        }
-
-        $container->lock();
-
-        foreach($this->configList as $config){
-            $config->modify($container);
-        }
-
-        return $container;
-    }
-
-    /**
-     * 設定を行わずにコンテナインスタンスを生成する
+     * @param   mixed[] $options
+     *  ビルダー作成時に参照するオプションの連想配列
+     * @param   ContainerInterface[]    $delegate
+     *  サービスコンテナに追加するデリゲートコンテナの配列
      *
      * @return  Container
      */
-    public function createWithoutConfigure(){
-        return new Container(new Resolver\Resolver());
+    public function create(array $options = [], array $delegate = []){
+        foreach($delegate as $index => $delegateContainer){
+            if(!$delegateContainer instanceof ContainerInterface){
+                throw new \InvalidArgumentException();
+            }
+        }
+
+        $resolver       = new Builder\Resolver\Resolver();
+        $services       = [];
+        $taggedServices = [];
+
+        foreach($this->containers as $container){
+            $builder    = new Builder\ContainerBuilder($resolver);
+
+            $container::build($builder, $options);
+
+            $services       = array_merge($services, $builder->getServices());
+            $taggedServices = array_merge_recursive(
+                $taggedServices,
+                $builder->getTaggedServicesId()
+            );
+        }
+
+        $resolver->lock();
+
+        return new Container(
+
+        );
     }
 
     /**
      * 設定クラスを追加する
      *
-     * @param   ContainerConfigInterface    $config
+     * @param   string  $container
+     *  コンテナクラス
      *
      * @return  $this
      */
-    public function append(ContainerConfigInterface $config){
-        $this->configList[] = $config;
+    public function append(string $container){
+        if(!is_subclass_of($container, Builder\AbstractContainer::class)){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->containers[] = $container;
 
         return $this;
     }
@@ -71,12 +88,17 @@ class ContainerFactory{
      *
      * 先に実行されるように追加する
      *
-     * @param   ContainerConfigInterface    $config
+     * @param   string  $container
+     *  コンテナクラス
      *
      * @return  $this
      */
-    public function prepend(ContainerConfigInterface $config){
-        array_unshift($this->configList, $config);
+    public function prepend(string $container){
+        if(!is_subclass_of($container, Builder\AbstractContainer::class)){
+            throw new \InvalidArgumentException();
+        }
+
+        array_unshift($this->containers, $container);
 
         return $this;
     }

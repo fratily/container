@@ -11,7 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Injection;
+namespace Fratily\Container\Builder\Lazy;
 
 /**
  *
@@ -33,11 +33,11 @@ class LazyArray implements LazyInterface{
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
+     *
+     * @return  mixed[]
      */
-    public function load(){
-        $this->values   = LazyResolver::resolveLazyArray($this->values);
-
-        return $this->values;
+    public function load(\Fratily\Container\Container $container){
+        return LazyResolver::resolveLazyArray($this->values);
     }
 }

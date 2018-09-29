@@ -11,17 +11,12 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Injection;
+namespace Fratily\Container\Builder\Resolver\Exception;
+
+use Psr\Container\ContainerExceptionInterface;
 
 /**
  *
  */
-interface LazyInterface{
-
-    /**
-     * 遅延読み込み用のメソッド
-     *
-     * @return  mixed[]
-     */
-    public function load();
+class RequireParameterNotDefinedException extends \LogicException implements ContainerExceptionInterface{
 }

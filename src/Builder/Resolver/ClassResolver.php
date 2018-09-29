@@ -11,12 +11,14 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Resolver;
+namespace Fratily\Container\Builder\Resolver;
 
 /**
  *
  */
 class ClassResolver{
+
+    use LockTrait;
 
     /**
      * @var Resolver
@@ -68,6 +70,9 @@ class ClassResolver{
      */
     private $unifiedSetters         = null;
 
+    /**
+     * @var InstanceGenerator
+     */
     private $instanceGenerator      = null;
 
     /**
@@ -84,17 +89,33 @@ class ClassResolver{
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function lock(){
+        $this->lock = true;
+
+        if(null !== $this->instanceGenerator){
+            $this->instanceGenerator->lock();
+        }
+
+        return $this;
+    }
+
+    /**
      * インスタンスジェネレータを生成する
      *
      * @return  InstanceGenerator
      */
-    public function createInstanceGenerator(){
+    public function getInstanceGenerator(){
         if(null === $this->instanceGenerator){
             $this->instanceGenerator    = new InstanceGenerator(
                 $this->resolver,
-                $this->reflection->getName(),
-                InstanceGenerator::SINGLETON
+                $this->reflection->getName()
             );
+
+            if($this->locked()){
+                $this->instanceGenerator->lock();
+            }
         }
 
         return $this->instanceGenerator;
@@ -192,6 +213,10 @@ class ClassResolver{
      * @throws  \InvalidArgumentException
      */
     public function addPositionParameter(int $pos, $value){
+        if($this->locked()){
+            throw new Exception\LockedException("Container is locked.");
+        }
+
         if($pos < 0){
             throw new \InvalidArgumentException();
         }
@@ -212,6 +237,10 @@ class ClassResolver{
      * @return  $this
      */
     public function addNameParameter(string $name, $value){
+        if($this->locked()){
+            throw new Exception\LockedException("Container is locked.");
+        }
+
         $this->nameParameters[$name]    = $value;
 
         return $this;
@@ -267,6 +296,10 @@ class ClassResolver{
      * @throws  \InvalidArgumentException
      */
     public function addSetter(string $name, $value){
+        if($this->locked()){
+            throw new Exception\LockedException("Container is locked.");
+        }
+
         if(
             !$this->reflection->hasMethod($name)
 //            && !$this->reflection->hasMethod("__call")
@@ -338,6 +371,10 @@ class ClassResolver{
      * @throws  \InvalidArgumentException
      */
     public function addProperty(string $name, $value){
+        if($this->locked()){
+            throw new Exception\LockedException("Container is locked.");
+        }
+
         if(
             !$this->reflection->hasProperty($name)
 //            && !$this->reflection->hasMethod("__set")

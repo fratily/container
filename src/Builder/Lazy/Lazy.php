@@ -11,20 +11,14 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Injection;
+namespace Fratily\Container\Builder\Lazy;
 
-use Fratily\Container\Resolver\Resolver;
 use Fratily\Container\Resolver\CallbackInvoker;
 
 /**
  *
  */
 class Lazy implements LazyInterface{
-
-    /**
-     * @var Resolver
-     */
-    private $resolver;
 
     /**
      * @var mixed
@@ -37,17 +31,26 @@ class Lazy implements LazyInterface{
     private $params;
 
     /**
+     * @var mixed[]
+     */
+    private $types;
+
+    /**
      * @var CallbackInvoker|null
      */
     private $callbackInvoker;
 
     /**
-     * Constructor.
+     * Constructor
      *
      * @param   mixed   $callback
-     * @param   mixed[] $params
+     *  実行するコールバック
+     * @param   mixed[] $parameters
+     *  追加指定パラメータの配列
+     * @param   mixed[] $types
+     *  追加指定型指定解決値の配列
      */
-    public function __construct(Resolver $resolver, $callback, array $params = []){
+    public function __construct($callback, array $parameters = [], array $types = []){
         if(!is_callable($callback)){
             if(is_array($callback)){
                 if(!isset($callback[0]) || !isset($callback[1]) || count($callback) !== 2){
@@ -64,9 +67,9 @@ class Lazy implements LazyInterface{
             }
         }
 
-        $this->resolver = $resolver;
         $this->callback = $callback;
-        $this->params   = $params;
+        $this->params   = $parameters;
+        $this->types    = $types;
     }
 
     /**
@@ -74,7 +77,7 @@ class Lazy implements LazyInterface{
      *
      * @throw LogicException
      */
-    public function load(){
+    public function load(\Fratily\Container\Container $container){
         if(null === $this->callbackInvoker){
             $this->callback = is_array($this->callback)
                 ? LazyResolver::resolveLazyArray($this->callback)
@@ -85,9 +88,15 @@ class Lazy implements LazyInterface{
                 throw new \LogicException;
             }
 
-            $this->callbackInvoker  = new CallbackInvoker($this->resolver, $this->callback);
+            $this->callbackInvoker  = new CallbackInvoker(
+                $container->getResolver(),
+                $this->callback
+            );
         }
 
-        return $this->callbackInvoker->invoke($this->params);
+        return $this->callbackInvoker->invoke(
+            $this->params,
+            $this->types
+        );
     }
 }

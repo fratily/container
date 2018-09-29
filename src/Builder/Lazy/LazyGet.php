@@ -11,9 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Injection;
-
-use Psr\Container\ContainerInterface;
+namespace Fratily\Container\Builder\Lazy;
 
 /**
  *
@@ -21,30 +19,26 @@ use Psr\Container\ContainerInterface;
 class LazyGet implements LazyInterface{
 
     /**
-     * @var ContainerInterface
-     */
-    protected $container;
-
-    /**
      * @var string
      */
-    protected $id;
+    private $id;
 
     /**
      * Constructor
      *
-     * @param   ContainerInterface  $container
      * @param   string  $id
+     *  サービスID
      */
-    public function __construct(ContainerInterface $container, $id){
-        $this->container    = $container;
-        $this->id           = $id;
+    public function __construct(string $id){
+        $this->id   = $id;
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
+     *
+     * @return  object
      */
-    public function load(){
-        return $this->container->get($this->id);
+    public function load(\Fratily\Container\Container $container){
+        return $container->get($this->id);
     }
 }

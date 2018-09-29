@@ -11,12 +11,12 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Exception;
+namespace Fratily\Container\Builder\Resolver\Exception;
 
 use Psr\Container\ContainerExceptionInterface;
 
 /**
  *
  */
-class RequireParameterNotDefinedException extends \LogicException implements ContainerExceptionInterface{
+class LockedException extends \LogicException implements ContainerExceptionInterface{
 }

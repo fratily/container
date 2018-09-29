@@ -11,24 +11,35 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container;
+namespace Fratily\Container\Builder\Resolver;
 
 /**
  *
  */
-class ContainerConfig implements ContainerConfigInterface{
+trait LockTrait{
 
     /**
-     * {@inheritdoc}
+     * @var bool
      */
-    public function define(Container $container){
+    private $lock   = false;
 
+    /**
+     * ロックする
+     *
+     * @return  $this
+     */
+    public function lock(){
+        $this->lock = true;
+
+        return $this;
     }
 
     /**
-     * {@inheritdoc}
+     * ロックされているか確認する
+     *
+     * @return  bool
      */
-    public function modify(Container $container){
-
+    public function locked(){
+        return $this->lock;
     }
 }

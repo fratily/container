@@ -11,14 +11,16 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Resolver;
+namespace Fratily\Container\Builder\Resolver;
 
-use Fratily\Container\Injection\LazyNew;
+use Fratily\Container\Builder\Lazy;
 
 /**
  *
  */
 class Resolver{
+
+    use LockTrait;
 
     /**
      * @var ClassResolver[]
@@ -26,14 +28,22 @@ class Resolver{
     private $classes    = [];
 
     /**
-     * @var mixed[]
-     */
-    private $values     = [];
-
-    /**
-     * @var mixed[]
+     * @var ClassResolver
      */
     private $types      = [];
+
+    /**
+     * {@inheritdoc}
+     */
+    public function lock(){
+        $this->lock = true;
+
+        foreach($this->classes as $class){
+            $class->lock();
+        }
+
+        return $this;
+    }
 
     /**
      * クラスの依存解決インスタンスを取得する
@@ -42,116 +52,78 @@ class Resolver{
      *  クラス名
      *
      * @return  ClassResolver
-     *
-     * @throws  \InvalidArgumentException
      */
     public function getClassResolver(string $class){
         if(!class_exists($class) && !interface_exists($class) && !trait_exists($class)){
             throw new \InvalidArgumentException();
         }
 
-        $reflection = null;
-
         if(!array_key_exists($class, $this->classes)){
             $reflection = new \ReflectionClass($class);
             $class      = $reflection->getName();
-        }
 
-        if(null !== $reflection && !array_key_exists($class, $this->classes)){
             $this->classes[$class]  = new ClassResolver($this, $reflection);
+
+            if($this->locked()){
+                $this->classes[$class]->lock();
+            }
         }
 
         return $this->classes[$class];
     }
 
     /**
+     * コールバック実行インスタンスを取得する
+     *
+     * @apram   Resolver    $resolver
+     *  リゾルバ
+     * @param   callable    $callback
+     *  実行するコールバック
+     *
+     * return CallbackInvoker
+     */
+    public function createCallbackInvoker(callable $callback){
+        return new CallbackInvoker($this, $callback);
+    }
+
+    /**
      * 指定した型の値を取得する
      *
-     * @param   string  $class
-     *  クラス名
+     * @param   string  $type
+     *  型名
      *
-     * @return  mixed|null
-     *  もし存在しなければnullが返る。明示的にnullを指定しているのか
-     *  確認するには、hasType()メソッドを利用する。
+     * @return  object|null
      */
-    public function getType(string $class){
-        return $this->types[$class] ?? null;
+    public function getType(string $type){
+        return $this->types[$type] ?? null;
     }
 
     /**
-     * 指定した型の値が登録済みか確認する
+     * 指定した型のパラメータにインジェクションする値を登録する
      *
-     * @param   string  $class
-     *  クラス名
-     *
-     * @return  bool
-     */
-    public function hasType(string $class){
-        return array_key_exists($class, $this->types);
-    }
-
-    /**指定した型のパラメータにインジェクションする値を登録する
-     *
-     * @param   string  $class
-     * @param   object|Injection\LazyInterface  $instance
-     *
-     * @return  $this
-     *
-     * @throws  \InvalidArgumentException
-     */
-    public function addType(string $class, $instance){
-        if(!class_exists($class) && !interface_exists($class)){
-            throw new \InvalidArgumentException();
-        }
-
-        if(!is_object($instance)){
-            throw new \InvalidArgumentException();
-        }
-
-        $class  = $this->getClassResolver($class)->getReflection()->getName();
-
-        $this->types[$class]    = $instance;
-
-        return $this;
-    }
-
-    /**
-     * 指定した名前の依存解決に使用する値を取得する
-     *
-     * @param   $name
-     *
-     * @return  mixed|null
-     *  もし存在しなければnullが返る。明示的にnullを指定しているのか
-     *  確認するには、hasValue()メソッドを利用する。
-     */
-    public function getValue(string $name){
-        return $this->values[$name] ?? null;
-    }
-
-    /**
-     * 指定した名前の依存解決用の値が登録済みか確認する
-     *
-     * @param   string  $name
-     *  名前
-     *
-     * @return  bool
-     */
-    public function hasValue(string $name){
-        return array_key_exists($name, $this->values);
-    }
-
-    /**
-     * 指定した名前の依存解決用の値を登録する
-     *
-     * @param   string  $name
-     *  名前
-     * @param   mixed   $value
-     *  値
+     * @param   string  $type
+     *  型名
+     * @param   object|Lazy\LazyInterface   $value
+     *  インジェクションする値
      *
      * @return  $this
      */
-    public function addValue(string $name, $value){
-        $this->values[$name]    = $value;
+    public function addType(string $type, $value){
+        if($this->locked()){
+            throw new Exception\LockedException("Container is locked.");
+        }
+
+        if(!class_exists($type) && !interface_exists($type)){
+            throw new \InvalidArgumentException();
+        }
+
+        if(!is_object($value)){
+            throw new \InvalidArgumentException();
+        }
+
+        $type  = $this->getClassResolver($type)->getReflection()->getName();
+
+        $this->types[$type]    = $value;
 
         return $this;
     }
@@ -233,12 +205,9 @@ class Resolver{
 
                     $result[]   = $param->allowsNull()
                         ? null
-                        : new LazyNew(
-                            $this
-                                ->getClassResolver($class->getName())
-                                ->createInstanceGenerator()
-                        )
+                        : new LazyNew($class->getName())
                     ;
+
                     continue;
                 }
             }

@@ -13,6 +13,7 @@
  */
 namespace Fratily\Container;
 
+use Builder\Lazy\LazyResolver;
 use Psr\Container\ContainerInterface;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -22,49 +23,56 @@ use Psr\Container\ContainerExceptionInterface;
 class Container implements ContainerInterface{
 
     /**
-     * @var Resolver\Resolver
+     * @var Builder\Resolver\Resolver
      */
     private $resolver;
 
     /**
-     * @var bool
+     * @var object[]|Builder\Lazy\LazyInterface[]
      */
-    private $locked     = false;
+    private $services;
 
     /**
-     * @var Resolver\InstanceGenerator[]|Injection\LazyInterface[]|object[]
+     * @var string[][]
      */
-    protected $services = [];
+    private $taggedServices;
 
     /**
-     * @var \SplPriorityQueue|null
+     * @var ContainerInterface[]
      */
-    private $delegate   = [];
+    private $delegateContainers;
 
     /**
      * Constructor
      *
      * @param   Resolver\Resolver   $resolver
      *  依存関係を統括するリゾルバオブジェクト
+     * @param   object[]|Builder\Lazy\LazyInterface[]   $services
+     *  サービスとそのIDの連想配列
+     * @param   string[][]  $taggedServices
+     *  タグ付けされたサービスの二次元連想配列
+     * @param   ContainerInterface[]    $delegateContainers
+     *  サービスコンテナに登録するデリゲートコンテナの配列
      */
-    public function __construct(Resolver\Resolver $resolver){
-        $this->resolver = $resolver;
+    public function __construct(
+        Builder\Resolver\Resolver $resolver,
+        array $services,
+        array $taggedServices,
+        array $delegateContainers
+    ){
+        $this->resolver             = $resolver;
+        $this->services             = $services;
+        $this->taggedServices       = $taggedServices;
+        $this->delegateContainers   = $delegateContainers;
     }
 
     /**
-     * コンテナをロックする
-     */
-    public function lock(){
-        $this->locked   = true;
-    }
-
-    /**
-     * コンテナがロックされているか確認する
+     * リゾルバを取得する
      *
-     * @return  bool
+     * @return  Builder\Resolver\Resolver
      */
-    public function isLocked(){
-        return $this->locked;
+    public function getResolver(){
+        return $this->resolver;
     }
 
     /**
@@ -88,11 +96,9 @@ class Container implements ContainerInterface{
             throw new \InvalidArgumentException();
         }
 
-        $this->lock();
-
         return $this->resolver
             ->getClassResolver($class)
-            ->createInstanceGenerator($this->resolver)
+            ->getInstanceGenerator()
             ->generate($parameters, $types)
         ;
     }
@@ -116,56 +122,61 @@ class Container implements ContainerInterface{
         array $parameters = [],
         array $types = []
     ){
-        return (new Resolver\CallbackInvoker($this->resolver, $callback))
+        return $this->resolver
+            ->createCallbackInvoker($callback)
             ->invoke($parameters, $types)
         ;
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @throws  \InvalidArgumentException
      */
     public function get($id){
         if(!is_string($id)){
             throw new \InvalidArgumentException();
         }
 
-        $this->lock();
-
-        $find       = false;
         $service    = null;
 
-        if($this->hasInThisContainer($id)){
-            $find   = true;
-
-            if($this->services[$id] instanceof Resolver\InstanceGenerator){
-                $service    = $this->services[$id]->generate();
-            }elseif($this->services[$id] instanceof Injection\LazyInterface){
-                $service    = $this->services[$id]->load;
-            }else{
-                $service    = $this->services[$id];
-            }
-        }elseif($this->hasInDelegateContainer($id)){
-            $find       = true;
-            $service    = $this->getFromDelegateContainer($id);
-        }
-
-        if($find && !is_object($service)){
-            throw new \LogicException;
-        }
-
-        if($find){
-            return $service;
-        }
-
-        if(!$find && !class_exists($id)){
+        if(!$this->has($id)){
             throw new Exception\ServiceNotFoundException(
                 "Service {$id} is not found in container."
             );
         }
 
-        return $this->getInstance($id);
+        if($this->hasInThisContainer($id)){
+            $service    = LazyResolver::resolveLazy($this, $this->services[$id]);
+
+            if(!is_object($service)){
+                throw new \LogicException;
+            }
+        }else{
+            $service    = $this->getFromDelegateContainer($id);
+        }
+
+        return $service;
+    }
+
+    /**
+     * タグ付けられたサービスの配列を取得する
+     *
+     * @param   string  $tag
+     *  タグ
+     *
+     * @return  object[]
+     */
+    public function getTagged(string $tag){
+        if(!array_key_exists($tag, $this->taggedServices)){
+            return [];
+        }
+
+        $result = [];
+
+        foreach($this->taggedServices[$tag] as $id){
+            $result[]   = $this->get($id);
+        }
+
+        return $result;
     }
 
     /**
@@ -185,7 +196,7 @@ class Container implements ContainerInterface{
         }
 
         try{
-            foreach($this->delegate as $container){
+            foreach($this->delegateContainers as $container){
                 if($container->has($id)){
                     return $container->get($id);
                 }
@@ -197,10 +208,6 @@ class Container implements ContainerInterface{
                 $e
             );
         }
-
-        throw new Exception\ServiceNotFoundException(
-            "Service {$id} is not found in container."
-        );
     }
 
     /**
@@ -256,382 +263,5 @@ class Container implements ContainerInterface{
         }
 
         return false;
-    }
-
-    /**
-     * デリゲートコンテナを追加する
-     *
-     * @param   ContainerInterface  $container
-     * @param   int $priority
-     *
-     * @return  $this
-     *
-     * @throws  Exception\LockedException;
-     */
-    public function addDelegateContainer(ContainerInterface $container, int $priority = 1){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        if($this->delegate === null){
-            $this->delegate = new \SplPriorityQueue();
-        }
-
-        $this->delegate->insert($container, $priority);
-
-        return $this;
-    }
-
-    /**
-     * コンテナにサービスを登録する
-     *
-     * 登録しようとしているサービスがクロージャだった場合、
-     * 遅延ロード用の匿名関数であると解釈されます。
-     *
-     * @param   string  $id
-     *  サービスID
-     * @param   string|object|\Closure|Injection\LazyInterface  $value
-     *  クラス名かクラスインスタンス、もしくはオブジェクトを生成する匿名関数や
-     *  遅延ロードクラスインスタンス
-     *
-     * @return  $this
-     *
-     * @throws  Exception\LockedException
-     * @throws  \InvalidArgumentException
-     */
-    public function set(string $id, $value){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        if(is_string($value)){
-            if(!class_exists($value)){
-                throw new \InvalidArgumentException();
-            }
-
-            $value  = $this->resolver
-                ->getClassResolver($class)
-                ->createInstanceGenerator()
-            ;
-        }elseif($value instanceof Injection\LazyInterface){
-
-        }elseif($value instanceof \Closure){
-            $value  = new Injection\LazyCallable($value);
-        }elseif(!is_object($value)){
-            throw new \InvalidArgumentException();
-        }
-
-        if(!class_exists($class)){
-            throw new \InvalidArgumentException();
-        }
-
-        $this->services[$id]    = $value;
-
-        return $this;
-    }
-
-    /**
-     * コンストラクタインジェクションの値を追加
-     *
-     * @param   string  $class
-   　* @param   string|int  $name
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function param(string $class, $name, $value){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        if(is_string($name)){
-            $this->resolver->getClassResolver($class)->addNameParameter($name, $value);
-        }elseif(is_int($name)){
-            $this->resolver->getClassResolver($class)->addPositionParameter($name, $value);
-        }else{
-            throw new \InvalidArgumentException();
-        }
-
-        return $this;
-    }
-
-    /**
-     * コンストラクタインジェクションの値を追加
-     *
-     * @param   string  $class
-   　* @param   mixed[] $params
-     *
-     * @return  $this
-     */
-    public function params(string $class, array $params){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        foreach($params as $name => $value){
-            $this->param($class, $name, $value);
-        }
-
-        return $this;
-    }
-
-    /**
-     * セッターインジェクションの値を追加
-     *
-     * @param   string  $class
-   　* @param   string  $method
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function setter(string $class, string $method, $value){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        $this->resolver->getClassResolver($class)->addSetter($method, $value);
-
-        return $this;
-    }
-
-    /**
-     * セッターインジェクションの値を追加
-     *
-     * @param   string  $class
-   　* @param   mixed[] $setters
-     *
-     * @return  $this
-     */
-    public function setters(string $class, array $setters){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        foreach($setters as $method => $value){
-            $this->setter($class, $method, $value);
-        }
-
-        return $this;
-    }
-
-    /**
-     * プロパティインジェクションの値を追加
-     *
-     * @param   string  $class
-     * @param   string  $name
-     * @param   mixed   $value
-     *
-     * @return $this
-     *
-     * @throws Exception\LockedException
-     */
-    public function prop(string $class, string $name, $value){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        $this->resolver->getClassResolver($class)->addProperty($name, $value);
-
-        return $this;
-    }
-
-    /**
-     * コンストラクタインジェクションにおける自動解決用の値を追加
-     *
-     * @param   string  $class
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function type(string $class, $value){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        $this->resolver->addType($class, $value);
-
-        return $this;
-    }
-
-    /**
-     * コンストラクタインジェクションにおける自動解決用の値を追加
-     *
-     * @param   mixed[] $types
-     *
-     * @return  $this
-     */
-    public function types(array $types){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        foreach($types as $class => $value){
-            $this->type($class, $value);
-        }
-
-        return $this;
-    }
-
-    /**
-     * 値を追加
-     *
-     * @param   string  $name
-     * @param   mixed   $value
-     *
-     * @return  $this
-     */
-    public function value(string $name, $value){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        $this->resolver->addValue($name, $value);
-
-        return $this;
-    }
-
-    /**
-     * 値を追加
-     *
-     * @param   mixed[] $values
-     *
-     * @return  $this
-     */
-    public function values(array $values){
-        if($this->isLocked()){
-            throw new Exception\LockedException(
-                "Container is locked."
-            );
-        }
-
-        foreach($values as $name => $value){
-            $this->value($name, $value);
-        }
-
-        return $this;
-    }
-
-    /**
-     * パラメータ自動解決を行う関数/メソッド遅延実行インスタンスを生成する
-     *
-     * @param   mixed   $callable
-     * @param   mixed[] $params
-     *
-     * @return  Injection\Lazy
-     */
-    public function lazy($callable, $params = []){
-        return new Injection\Lazy($this->resolver, $callable, $params);
-    }
-
-    /**
-     * 関数/メソッド遅延実行インスタンスを生成する
-     *
-     * @param   mixed   $callable
-     * @param   mixed[] $params
-     *
-     * @return  Injection\LazyCallable
-     */
-    public function lazyCallable($callable, ...$params){
-        return new Injection\LazyCallable($callable, $params);
-    }
-
-    /**
-     * 配列遅延生成を行うインスタンスを生成する
-     *
-     * @param   mixed[] $array
-     *
-     * @return  Injection\LazyArray
-     */
-    public function lazyArray(array $array){
-        return new Injection\LazyArray($array);
-    }
-
-    /**
-     * サービス遅延取得インスタンスを生成する
-     *
-     * @param   ContainerInterface  $container
-     * @param   string  $id
-     *
-     * @return  Injection\LazyGet
-     */
-    public function lazyGet($id){
-        return new Injection\LazyGet($this, $id);
-    }
-
-    /**
-     * ファイル遅延取得インスタンスを生成する
-     *
-     * @param   string|LazyInterface|\SplFileInfo   $file
-     *
-     * @return  Injection\LazyInclude
-     */
-    public function lazyInclude($file){
-        return new Injection\LazyInclude($file);
-    }
-
-    /**
-     * ファイル遅延取得インスタンスを生成する
-     *
-     * @param   string|LazyInterface|\SplFileInfo   $file
-     *
-     * @return  Injection\LazyInclude
-     */
-    public function lazyRequire($file){
-        return new Injection\LazyRequire($file);
-    }
-
-    /**
-     * インスタンス遅延生成インスタンスを生成する
-     *
-     * @param   string  $class
-     *  クラス名
-     * @param   mixed[]|Injection\LazyInterface $parameters
-     *  パラメータ
-     *
-     * @return  Injection\LazyNew
-     */
-    public function lazyNew(string $class, $parameters = []){
-        if(!class_exists($class)){
-            throw new \InvalidArgumentException();
-        }
-
-        return new Injection\LazyNew(
-            $this->resolver
-                ->getClassResolver($class)
-                ->createInstanceGenerator()
-            ,
-            $parameters
-        );
-    }
-
-    /**
-     * 値遅延取得インスタンスを生成する
-     *
-     * @param   string|LazyInterface  $key
-     *
-     * @return  Injection\LazyValue
-     */
-    public function lazyValue($key){
-        return new Injection\LazyValue($this->resolver, $key);
     }
 }

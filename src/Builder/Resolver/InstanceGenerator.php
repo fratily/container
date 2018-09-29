@@ -11,15 +11,14 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Resolver;
-
-use Fratily\Container\Injection\LazyResolver;
-use Fratily\Container\Exception;
+namespace Fratily\Container\Builder\Resolver;
 
 /**
  *
  */
 class InstanceGenerator{
+
+    use LockTrait;
 
     const SINGLETON = "singleton";
     const PROTOTYPE = "prototype";
@@ -51,14 +50,8 @@ class InstanceGenerator{
      *  リゾルバ
      * @param   string  $class
      *  クラス名
-     * @param   string  $scope
-     *  生成ルール
      */
-    public function __construct(
-        Resolver $resolver,
-        string $class,
-        string $scope = self::SINGLETON
-    ){
+    public function __construct(Resolver $resolver, string $class){
         if(
             !class_exists($class)
             || !$resolver->getClassResolver($class)->getReflection()->isInstantiable()
@@ -68,7 +61,31 @@ class InstanceGenerator{
 
         $this->resolver = $resolver;
         $this->class    = $class;
+        $this->scope    = self::SINGLETON;
+    }
+
+    /**
+     * インスタンスの生成に関する制約を指定する
+     *
+     * @param   string  $scope
+     *  生成制約
+     *
+     * @return  $this
+     *
+     * @throws  \InvalidArgumentException
+     */
+    public function setScope(string $scope){
+        if($this->locked()){
+            throw new Exception\LockedException("Container is locked.");
+        }
+
+        if(self::SINGLETON !== $scope && self::PROTOTYPE !== $scope){
+            throw new \InvalidArgumentException();
+        }
+
         $this->scope    = $scope;
+
+        return $this;
     }
 
     /**
@@ -82,14 +99,12 @@ class InstanceGenerator{
      * @return  object
      */
     public function generate(array $parameters = [], array $types = []){
-        if(null !== $this->instance){
+        if(self::SINGLETON === $this->scope && null !== $this->instance){
             return $this->instance;
         }
 
         $instance       = $this->getReflection()->newInstanceWithoutConstructor();
         $constructor    = $this->getReflection()->getConstructor();
-
-        $this->ExecuteInjectionPropety($instance);
 
         if(null !== $constructor){
             $constructor->invokeArgs(
@@ -100,6 +115,7 @@ class InstanceGenerator{
             );
         }
 
+        $this->ExecuteInjectionPropety($instance);
         $this->ExecuteInjectionSetter($instance);
 
         if(self::SINGLETON === $this->scope){

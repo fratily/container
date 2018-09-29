@@ -11,18 +11,20 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Injection;
+namespace Fratily\Container\Builder\Lazy;
 
 /**
  *
  */
-class LazyResolver{
+interface LazyInterface{
 
-    public static function resolveLazy($val){
-        return ($val instanceof LazyInterface) ? $val->load() : $val;
-    }
-
-    public static function resolveLazyArray(array $vals){
-        return array_map([static::class, "resolveLazy"], $vals);
-    }
+    /**
+     * 遅延実行用メソッド
+     *
+     * @param   \Fratily\Container\Container    $container
+     *  サービスコンテナ
+     *
+     * @return  mixed
+     */
+    public function load(\Fratily\Container\Container $container);
 }
