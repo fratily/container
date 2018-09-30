@@ -98,7 +98,7 @@ class Container implements ContainerInterface{
         return $this->resolver
             ->getClassResolver($class)
             ->getInstanceGenerator()
-            ->generate($parameters, $types)
+            ->generate($this, $parameters, $types)
         ;
     }
 

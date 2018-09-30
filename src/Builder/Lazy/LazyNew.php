@@ -46,7 +46,7 @@ class LazyNew implements LazyInterface{
             ->getResolver()
             ->getClassResolver($this->class)
             ->getInstanceGenerator()
-            ->generate()
+            ->generate($container)
         ;
     }
 }
