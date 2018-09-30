@@ -13,6 +13,7 @@
  */
 namespace Fratily\Container\Builder\Resolver;
 
+use Fratily\Container\Container;
 use Fratily\Container\Builder\Lazy\LazyResolver;
 
 /**
@@ -93,6 +94,8 @@ class InstanceGenerator{
     /**
      * インスタンスを生成する
      *
+     * @param   Container   $container
+     *  サービスコンテナ
      * @param   mixed[] $parameters
      *  追加指定パラメータの連想配列
      * @param   mixed[] $types
@@ -100,7 +103,7 @@ class InstanceGenerator{
      *
      * @return  object
      */
-    public function generate(array $parameters = [], array $types = []){
+    public function generate(Container $container, array $parameters = [], array $types = []){
         if(self::SINGLETON === $this->scope && null !== $this->instance){
             return $this->instance;
         }
@@ -112,13 +115,14 @@ class InstanceGenerator{
             $constructor->invokeArgs(
                 $instance,
                 LazyResolver::resolveLazyArray(
+                    $container,
                     $this->resolveParameter($parameters, $types)
                 )
             );
         }
 
-        $this->ExecuteInjectionPropety($instance);
-        $this->ExecuteInjectionSetter($instance);
+        $this->ExecuteInjectionPropety($container, $instance);
+        $this->ExecuteInjectionSetter($container, $instance);
 
         if(self::SINGLETON === $this->scope){
             $this->instance = $instance;
@@ -180,12 +184,14 @@ class InstanceGenerator{
     /**
      * プロパティに値をインジェクションする
      *
+     * @param   Container   $container
+     *  サービスコンテナ
      * @param   object  $instance
      *  実行対象イスタンス
      *
      * @return  void
      */
-    protected function ExecuteInjectionPropety($instance){
+    protected function ExecuteInjectionPropety(Container $container, $instance){
         $class      = $this->getReflection();
         $unified    = $this->getClassResolver()->getUnifiedProperties();
 
@@ -198,6 +204,7 @@ class InstanceGenerator{
                     $prop->setValue(
                         $instance,
                         LazyResolver::resolveLazy(
+                            $container,
                             $resolver->getProperty($prop->getName())
                         )
                     );
@@ -211,7 +218,7 @@ class InstanceGenerator{
             $prop->setAccessible(true);
             $prop->setValue(
                 $instance,
-                LazyResolver::resolveLazy($value)
+                LazyResolver::resolveLazy($container, $value)
             );
         }
     }
@@ -219,12 +226,14 @@ class InstanceGenerator{
     /**
      * セッターを実行する
      *
+     * @param   Container   $container
+     *  サービスコンテナ
      * @param   object  $instance
      *  実行対象インスタンス
      *
      * @return  void
      */
-    protected function ExecuteInjectionSetter($instance){
+    protected function ExecuteInjectionSetter(Container $container, $instance){
         $unified    = $this->getClassResolver()->getUnifiedSetters();
 
         foreach($unified as $name => $value){
@@ -232,7 +241,7 @@ class InstanceGenerator{
 
             $reflection->invoke(
                 $instance,
-                LazyResolver::resolveLazy($value)
+                LazyResolver::resolveLazy($container, $value)
             );
         }
     }
