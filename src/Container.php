@@ -136,25 +136,16 @@ class Container implements ContainerInterface{
             throw new \InvalidArgumentException();
         }
 
-        $service    = null;
-
         if(!$this->has($id)){
             throw new Exception\ServiceNotFoundException(
                 "Service {$id} is not found in container."
             );
         }
 
-        if($this->hasInThisContainer($id)){
-            $service    = LazyResolver::resolveLazy($this, $this->services[$id]);
-
-            if(!is_object($service)){
-                throw new \LogicException;
-            }
-        }else{
-            $service    = $this->getFromDelegateContainer($id);
-        }
-
-        return $service;
+        return $this->hasInThisContainer($id)
+            ? LazyResolver::resolveLazy($this, $this->services[$id])
+            : $this->getFromDelegateContainer($id)
+        ;
     }
 
     /**
@@ -190,7 +181,7 @@ class Container implements ContainerInterface{
      * @throws  Exception\DelegateContainerException
      * @throws  Exception\ServiceNotFoundException
      */
-    public function getFromDelegateContainer($id){
+    protected function getFromDelegateContainer($id){
         if(!is_string($id)){
             throw new \InvalidArgumentException();
         }
@@ -232,7 +223,7 @@ class Container implements ContainerInterface{
      *
      * @throws  \InvalidArgumentException
      */
-    public function hasInThisContainer($id){
+    protected function hasInThisContainer($id){
         if(!is_string($id)){
             throw new \InvalidArgumentException();
         }
@@ -249,7 +240,7 @@ class Container implements ContainerInterface{
      *
      * @throws  \InvalidArgumentException
      */
-    public function hasInDelegateContainer($id){
+    protected function hasInDelegateContainer($id){
         if(!is_string($id)){
             throw new \InvalidArgumentException();
         }
