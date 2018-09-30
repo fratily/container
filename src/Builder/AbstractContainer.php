@@ -28,7 +28,7 @@ abstract class AbstractContainer{
      *
      * @return  void
      */
-    public static function build(
+    abstract public static function build(
         ContainerBuilderInterface $builder,
         array $options
     );
