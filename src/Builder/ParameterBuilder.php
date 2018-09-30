@@ -51,7 +51,7 @@ class ParameterBuilder{
      *
      * @return $this
      */
-    public function add(string $parameter, $value){
+    public function add($parameter, $value){
         $this->builder->addParameter($this->class, $parameter, $value);
 
         return $this;
