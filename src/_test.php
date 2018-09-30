@@ -56,23 +56,41 @@ class Bar extends Foo implements BarInterface{
     }
 }
 
+class TestContainer extends Fratily\Container\Builder\AbstractContainer{
+    public static function build(Fratily\Container\Builder\ContainerBuilderInterface $builder, array $options){
+        $builder
+            ->add("fuga", Fuga::class, [], [FugaInterface::class])
+            ->add("hogera", Hogera::class, [], [HogeraInterface::class])
+            ->add("foo", Foo::class)
+            ->add("bar", Bar::class)
+        ;
 
-$container  = (new Fratily\Container\ContainerFactory())->createWithoutConfigure();
-$container->value("name", "name");
+        $builder->parameter(FooTrait::class)
+            ->add("name", "value_name")
+        ;
 
-$container->type(FugaInterface::class, $container->lazyNew(Fuga::class));
-$container->type(HogeraInterface::class, $container->lazyNew(Hogera::class));
+        $builder->parameter(Foo::class)
+            ->add(1, "foo_pos_1")
+        ;
 
-$container->param(FooTrait::class, "name", $container->lazyValue("name"));
-$container->param(Foo::class, 1, "foo_pos_1");
-$container->param(Bar::class, 2, "bar_pos_2");
+        $builder->parameter(Bar::class)
+            ->add(2, "bar_pos_2")
+        ;
 
-$container->setter(FooInterface::class, "setHoge", $container->lazy(function($hoge){return $hoge;}, ["hoge" => $container->lazyNew(Hoge::class)]));
-$container->setter(BarInterface::class, "setPiyo", $container->lazyCallable(function(){return new Piyo;}));
+        $builder->setter(FooInterface::class)
+            ->add("setHoge", $builder->lazy(function($hoge){return $hoge;}, ["hoge" => $builder->lazyNew(Hoge::class)]))
+        ;
 
+        $builder->setter(BarInterface::class)
+            ->add("setPiyo", $builder->lazyCallable(function(){return new Piyo;}))
+        ;
+    }
+}
 
-$container->set("foo", Foo::class);
-$container->set("bar", Bar::class);
+$factory    = new Fratily\Container\ContainerFactory();
+$factory->append(TestContainer::class);
+
+$container  = $factory->create();
 
 var_dump(
     $container->get("foo"),
