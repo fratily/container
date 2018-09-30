@@ -99,6 +99,18 @@ class Resolver{
     }
 
     /**
+     * 指定した型の値が登録済みか確認する
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  bool
+     */
+    public function hasType(string $class){
+        return array_key_exists($class, $this->types);
+    }
+
+    /**
      * 指定した型のパラメータにインジェクションする値を登録する
      *
      * @param   string  $type
