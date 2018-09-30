@@ -92,7 +92,7 @@ class Container implements ContainerInterface{
         array $types = []
     ){
         if(!class_exists($class)){
-            throw new \InvalidArgumentException();
+            throw new \InvalidArgumentException("Class '{$class}' not found.");
         }
 
         return $this->resolver
@@ -132,12 +132,14 @@ class Container implements ContainerInterface{
      */
     public function get($id){
         if(!is_string($id)){
-            throw new \InvalidArgumentException();
+            throw new \InvalidArgumentException(
+                "The service ID must be a string."
+            );
         }
 
         if(!$this->has($id)){
             throw new Exception\ServiceNotFoundException(
-                "Service {$id} is not found in container."
+                "Service '{$id}' is not found in container."
             );
         }
 
@@ -180,11 +182,7 @@ class Container implements ContainerInterface{
      * @throws  Exception\DelegateContainerException
      * @throws  Exception\ServiceNotFoundException
      */
-    protected function getFromDelegateContainer($id){
-        if(!is_string($id)){
-            throw new \InvalidArgumentException();
-        }
-
+    protected function getFromDelegateContainer(string $id){
         try{
             foreach($this->delegateContainers as $container){
                 if($container->has($id)){
@@ -207,7 +205,9 @@ class Container implements ContainerInterface{
      */
     public function has($id){
         if(!is_string($id)){
-            throw new \InvalidArgumentException();
+            throw new \InvalidArgumentException(
+                "The service ID must be a string."
+            );
         }
 
         return $this->hasInThisContainer($id) || $this->hasInDelegateContainer($id);
@@ -222,11 +222,7 @@ class Container implements ContainerInterface{
      *
      * @throws  \InvalidArgumentException
      */
-    protected function hasInThisContainer($id){
-        if(!is_string($id)){
-            throw new \InvalidArgumentException();
-        }
-
+    protected function hasInThisContainer(string $id){
         return array_key_exists($id, $this->services);
     }
 
@@ -239,11 +235,7 @@ class Container implements ContainerInterface{
      *
      * @throws  \InvalidArgumentException
      */
-    protected function hasInDelegateContainer($id){
-        if(!is_string($id)){
-            throw new \InvalidArgumentException();
-        }
-
+    protected function hasInDelegateContainer(string $id){
         if($this->delegate !== null){
             foreach($this->delegate as $container){
                 if($container->has($id)){

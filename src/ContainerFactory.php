@@ -36,9 +36,13 @@ class ContainerFactory{
      * @return  Container
      */
     public function create(array $options = [], array $delegate = []){
-        foreach($delegate as $index => $delegateContainer){
+        foreach($delegate as $delegateContainer){
             if(!$delegateContainer instanceof ContainerInterface){
-                throw new \InvalidArgumentException();
+                $interface  = ContainerInterface::class;
+
+                throw new \InvalidArgumentException(
+                    "The delegate container must implement '{$interface}'."
+                );
             }
         }
 
@@ -78,7 +82,11 @@ class ContainerFactory{
      */
     public function append(string $container){
         if(!is_subclass_of($container, Builder\AbstractContainer::class)){
-            throw new \InvalidArgumentException();
+            $class  = Builder\AbstractContainer::class;
+
+            throw new \InvalidArgumentException(
+                "The container definition class must inherit '{$class}'."
+            );
         }
 
         $this->containers[] = $container;
@@ -98,7 +106,11 @@ class ContainerFactory{
      */
     public function prepend(string $container){
         if(!is_subclass_of($container, Builder\AbstractContainer::class)){
-            throw new \InvalidArgumentException();
+            $class  = Builder\AbstractContainer::class;
+
+            throw new \InvalidArgumentException(
+                "The container definition class must inherit '{$class}'."
+            );
         }
 
         array_unshift($this->containers, $container);
