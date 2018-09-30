@@ -95,6 +95,7 @@ class Lazy implements LazyInterface{
         }
 
         return $this->callbackInvoker->invoke(
+            $container,
             $this->params,
             $this->types
         );
