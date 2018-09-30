@@ -13,7 +13,6 @@
  */
 namespace Fratily\Container;
 
-use Fratily\Container\Builder\Lazy\LazyResolver;
 use Psr\Container\ContainerInterface;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -143,7 +142,7 @@ class Container implements ContainerInterface{
         }
 
         return $this->hasInThisContainer($id)
-            ? LazyResolver::resolveLazy($this, $this->services[$id])
+            ? Builder\Lazy\LazyResolver::resolveLazy($this, $this->services[$id])
             : $this->getFromDelegateContainer($id)
         ;
     }
