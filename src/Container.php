@@ -13,7 +13,7 @@
  */
 namespace Fratily\Container;
 
-use Builder\Lazy\LazyResolver;
+use Fratily\Container\Builder\Lazy\LazyResolver;
 use Psr\Container\ContainerInterface;
 use Psr\Container\ContainerExceptionInterface;
 
