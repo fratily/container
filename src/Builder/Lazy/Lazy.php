@@ -13,7 +13,7 @@
  */
 namespace Fratily\Container\Builder\Lazy;
 
-use Fratily\Container\Resolver\CallbackInvoker;
+use Fratily\Container\Builder\Resolver\CallbackInvoker;
 
 /**
  *
