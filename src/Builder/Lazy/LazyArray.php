@@ -38,6 +38,6 @@ class LazyArray implements LazyInterface{
      * @return  mixed[]
      */
     public function load(\Fratily\Container\Container $container){
-        return LazyResolver::resolveLazyArray($this->values);
+        return LazyResolver::resolveLazyArray($container, $this->values);
     }
 }

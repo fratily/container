@@ -60,7 +60,7 @@ class LazyLoadFile implements LazyInterface{
      * {@inheritdoc}
      */
     public function load(\Fratily\Container\Container $container){
-        $path   = LazyResolver::resolveLazy($this->file);
+        $path   = LazyResolver::resolveLazy($container, $this->file);
 
         if($path instanceof \SplFileInfo){
             $path   = $path->getPathname();

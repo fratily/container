@@ -64,8 +64,8 @@ class LazyCallable implements LazyInterface{
      */
     public function load(\Fratily\Container\Container $container){
         $callback   = is_array($this->callback)
-            ? LazyResolver::resolveLazyArray($this->callback)
-            : LazyResolver::resolveLazy($this->callback)
+            ? LazyResolver::resolveLazyArray($container, $this->callback)
+            : LazyResolver::resolveLazy($container, $this->callback)
         ;
 
         if(!is_callable($callback)){
@@ -74,7 +74,7 @@ class LazyCallable implements LazyInterface{
 
         return call_user_func_array(
             $callback,
-            LazyResolver::resolveLazyArray($this->params)
+            LazyResolver::resolveLazyArray($container, $this->params)
         );
     }
 }
