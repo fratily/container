@@ -13,7 +13,7 @@
  */
 namespace Fratily\Container\Builder\Resolver;
 
-use Fratily\Container\Injection\LazyResolver;
+use Fratily\Container\Builder\Lazy\LazyResolver;
 use Fratily\Reflection\ReflectionCallable;
 
 /**
