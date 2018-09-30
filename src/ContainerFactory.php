@@ -61,7 +61,10 @@ class ContainerFactory{
         $resolver->lock();
 
         return new Container(
-
+            $resolver,
+            $services,
+            $taggedServices,
+            $delegate
         );
     }
 
