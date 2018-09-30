@@ -13,6 +13,8 @@
  */
 namespace Fratily\Container\Builder\Resolver;
 
+use Fratily\Container\Builder\Lazy\LazyResolver;
+
 /**
  *
  */
