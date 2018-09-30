@@ -124,20 +124,24 @@ class ContainerBuilder implements ContainerBuilderInterface{
      * {@inheritdoc}
      */
     public function addParameter(string $class, $parameter, $value){
-        if(!is_string($parameter) || "" === $parameter){
-            throw new \InvalidArgumentException();
-        }
-
-        if(!is_int($parameter) || 0 > $parameter){
+        if(!is_string($parameter) && !is_int($parameter)){
             throw new \InvalidArgumentException();
         }
 
         if(is_string($parameter)){
+            if("" === $parameter){
+                throw new \InvalidArgumentException();
+            }
+
             $this->resolver
                 ->getClassResolver($class)
                 ->addNameParameter($parameter, $value)
             ;
-        }elseif(is_int($parameter)){
+        }else{
+            if(0 > $parameter){
+                throw new \InvalidArgumentException();
+            }
+
             $this->resolver
                 ->getClassResolver($class)
                 ->addPositionParameter($parameter, $value)
