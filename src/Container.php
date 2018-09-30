@@ -123,7 +123,7 @@ class Container implements ContainerInterface{
     ){
         return $this->resolver
             ->createCallbackInvoker($callback)
-            ->invoke($parameters, $types)
+            ->invoke($this, $parameters, $types)
         ;
     }
 
