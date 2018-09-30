@@ -30,7 +30,7 @@ class LazyNew implements LazyInterface{
      *  クラス名
      */
     public function __construct(string $class){
-        if(!is_class($class)){
+        if(!class_exists($class)){
             throw new \InvalidArgumentException();
         }
         $this->class    = $class;
