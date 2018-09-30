@@ -44,7 +44,7 @@ class LazyNew implements LazyInterface{
     public function load(\Fratily\Container\Container $container){
         return $container
             ->getResolver()
-            ->getClassResolver($class)
+            ->getClassResolver($this->class)
             ->getInstanceGenerator()
             ->generate()
         ;
