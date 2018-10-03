@@ -75,7 +75,7 @@ class ContainerFactory{
             $container::modify($serviceContainer);
         }
 
-        return $container;
+        return $serviceContainer;
     }
 
     /**
