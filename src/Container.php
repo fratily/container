@@ -236,11 +236,9 @@ class Container implements ContainerInterface{
      * @throws  \InvalidArgumentException
      */
     protected function hasInDelegateContainer(string $id){
-        if($this->delegate !== null){
-            foreach($this->delegate as $container){
-                if($container->has($id)){
-                    return true;
-                }
+        foreach($this->delegateContainers as $container){
+            if($container->has($id)){
+                return true;
             }
         }
 
