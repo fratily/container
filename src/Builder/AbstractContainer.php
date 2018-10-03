@@ -43,5 +43,7 @@ abstract class AbstractContainer{
      * @param   Container   $container
      *  サービスコンテナ
      */
-    abstract public static function modify(Container $container);
+    public static function modify(Container $container){
+        
+    }
 }
