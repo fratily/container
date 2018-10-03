@@ -217,7 +217,7 @@ class Resolver{
 
                     $result[]   = $param->allowsNull()
                         ? null
-                        : new LazyNew($class->getName())
+                        : new Lazy\LazyNew($class->getName())
                     ;
 
                     continue;
