@@ -64,12 +64,18 @@ class ContainerFactory{
 
         $resolver->lock();
 
-        return new Container(
+        $serviceContainer   = new Container(
             $resolver,
             $services,
             $taggedServices,
             $delegate
         );
+
+        foreach($this->containers as $container){
+            $container::modify($serviceContainer);
+        }
+
+        return $container;
     }
 
     /**

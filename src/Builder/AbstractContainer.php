@@ -13,6 +13,8 @@
  */
 namespace Fratily\Container\Builder;
 
+use Fratily\Container\Container;
+
 /**
  *
  */
@@ -32,4 +34,14 @@ abstract class AbstractContainer{
         ContainerBuilderInterface $builder,
         array $options
     );
+
+    /**
+     * サービスを手動で変更する
+     *
+     * ビルダーで解決できない依存関係を手動で解決したりするのに使用する
+     *
+     * @param   Container   $container
+     *  サービスコンテナ
+     */
+    abstract public static function modify(Container $container);
 }
