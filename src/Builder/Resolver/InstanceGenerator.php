@@ -23,9 +23,6 @@ class InstanceGenerator{
 
     use LockTrait;
 
-    const SINGLETON = "singleton";
-    const PROTOTYPE = "prototype";
-
     /**
      * @var Resolver
      */
@@ -37,14 +34,14 @@ class InstanceGenerator{
     private $class;
 
     /**
-     * @var string
-     */
-    private $scope;
-
-    /**
      * @var object|null
      */
     private $instance;
+
+    /**
+     * @var bool
+     */
+    private $singleton  = false;
 
     /**
      * Constructor
@@ -64,29 +61,24 @@ class InstanceGenerator{
 
         $this->resolver = $resolver;
         $this->class    = $class;
-        $this->scope    = self::SINGLETON;
     }
 
     /**
-     * インスタンスの生成に関する制約を指定する
+     * インスタンス生成をシングルトンモードにするか設定する
      *
-     * @param   string  $scope
-     *  生成制約
+     * @param   bool    $singleton
+     *  trueでシングルトンモード。falseでプロトタイプモード
      *
      * @return  $this
      *
-     * @throws  \InvalidArgumentException
+     * @throws  Exception\LockedException
      */
-    public function setScope(string $scope){
+    public function setIsSingleton(bool $singleton){
         if($this->locked()){
             throw new Exception\LockedException("Container is locked.");
         }
 
-        if(self::SINGLETON !== $scope && self::PROTOTYPE !== $scope){
-            throw new \InvalidArgumentException();
-        }
-
-        $this->scope    = $scope;
+        $this->singleton    = $singleton;
 
         return $this;
     }
@@ -104,7 +96,7 @@ class InstanceGenerator{
      * @return  object
      */
     public function generate(Container $container, array $parameters = [], array $types = []){
-        if(self::SINGLETON === $this->scope && null !== $this->instance){
+        if($this->singleton && null !== $this->instance){
             return $this->instance;
         }
 
@@ -124,7 +116,7 @@ class InstanceGenerator{
         $this->ExecuteInjectionPropety($container, $instance);
         $this->ExecuteInjectionSetter($container, $instance);
 
-        if(self::SINGLETON === $this->scope){
+        if($this->singleton){
             $this->instance = $instance;
         }
 

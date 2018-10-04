@@ -62,16 +62,24 @@ interface ContainerBuilderInterface{
     );
 
     /**
-     * インスタンス化のスコープを設定する
+     * クラスのインスタンス化モードをシングルトンにする
      *
      * @param   string  $class
      *  クラス名
-     * @param   string  $scope
-     *  スコープ
      *
      * @return  $this
      */
-    public function setScope(string $class, string $scope);
+    public function isSingleton(string $class);
+
+    /**
+     * クラスのインスタンス化モードをプロトタイプにする
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  $this
+     */
+    public function isPrototype(string $class);
 
     /**
      *  パラメーターを登録する

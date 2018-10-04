@@ -111,10 +111,22 @@ class ContainerBuilder implements ContainerBuilderInterface{
     /**
      * {@inheritdoc}
      */
-    public function setScope(string $class, string $scope){
+    public function isSingleton(string $class){
         $this->resolver->getClassResolver($class)
             ->getInstanceGenerator()
-            ->setScope($scope)
+            ->setIsSingleton(true)
+        ;
+
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isPrototype(string $class){
+        $this->resolver->getClassResolver($class)
+            ->getInstanceGenerator()
+            ->setIsSingleton(false)
         ;
 
         return $this;
