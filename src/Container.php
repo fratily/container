@@ -32,6 +32,11 @@ class Container implements ContainerInterface{
     private $services;
 
     /**
+     * @var object[]
+     */
+    private $serviceInstances   = [];
+
+    /**
      * @var string[][]
      */
     private $taggedServices;
@@ -143,10 +148,14 @@ class Container implements ContainerInterface{
             );
         }
 
-        return $this->hasInThisContainer($id)
-            ? Builder\Lazy\LazyResolver::resolveLazy($this, $this->services[$id])
-            : $this->getFromDelegateContainer($id)
-        ;
+        if(!array_key_exists($id, $this->serviceInstances)){
+            $this->serviceInstances[$id]    = $this->hasInThisContainer($id)
+                ? Builder\Lazy\LazyResolver::resolveLazy($this, $this->services[$id])
+                : $this->getFromDelegateContainer($id)
+            ;
+        }
+
+        return $this->serviceInstances[$id];
     }
 
     /**
