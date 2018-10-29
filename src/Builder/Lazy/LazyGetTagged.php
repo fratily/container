@@ -26,12 +26,8 @@ class LazyGetTagged implements LazyInterface{
     /**
      * Constructor
      *
-     * @param   mixed   $callback
-     *  実行するコールバック
-     * @param   mixed[] $parameters
-     *  追加指定パラメータの配列
-     * @param   mixed[] $types
-     *  追加指定型指定解決値の配列
+     * @param   string  $tag
+     *  タグ名
      */
     public function __construct(string $tag){
         $this->tag  = $tag;
