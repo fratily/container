@@ -28,7 +28,7 @@ trait LazyBuilderTrait{
      * @param   mixed[] $types
      *  追加指定型指定解決値の配列
      *
-     * @return  Lazy
+     * @return  Lazy\Lazy
      */
     public function lazy($callback, array $parameters = [], array $types = []){
         return new Lazy\Lazy($callback, $parameters, $types);
@@ -41,7 +41,7 @@ trait LazyBuilderTrait{
      * @param   mixed[] $parameters
      *  コールバック実行時に指定するパラメータの配列
      *
-     * @return  LazyCallable
+     * @return  Lazy\LazyCallable
      */
     public function lazyCallable($callback, array $parameters = []){
         return new Lazy\LazyCallable($callback, $parameters);
@@ -53,7 +53,7 @@ trait LazyBuilderTrait{
      * @param   mixed[] $array
      *  遅延解決インスタンスを含む配列
      *
-     * @return  LazyArray
+     * @return  Lazy\LazyArray
      */
     public function lazyArray(array $array){
         return new Lazy\LazyArray($array);
@@ -65,7 +65,7 @@ trait LazyBuilderTrait{
      * @param   string  $id
      *  サービスID
      *
-     * @return  LazyGet
+     * @return  Lazy\LazyGet
      */
     public function lazyGet(string $id){
         return new Lazy\LazyGet($id);
@@ -77,7 +77,7 @@ trait LazyBuilderTrait{
      * @param   string  $tag
      *  タグ名
      *
-     * @return  LazyGetTagged
+     * @return  Lazy\LazyGetTagged
      */
     public function lazyGetTagged(string $tag){
         return new Lazy\LazyGetTagged($tag);
@@ -86,12 +86,12 @@ trait LazyBuilderTrait{
     /**
      * ファイル遅延取得インスタンスを生成する
      *
-     * @param   string|LazyInterface|\SplFileInfo   $file
+     * @param   string|Lazy\LazyInterface|\SplFileInfo   $file
      *  includeするファイル
      * @param   bool    $once
      *  include_onceフラグ
      *
-     * @return  LazyInclude
+     * @return  Lazy\LazyInclude
      */
     public function lazyInclude($file, bool $once = false){
         return new Lazy\LazyLoadFile($file, $once, false);
@@ -100,12 +100,12 @@ trait LazyBuilderTrait{
     /**
      * ファイル遅延取得インスタンスを生成する
      *
-     * @param   string|LazyInterface|\SplFileInfo   $file
+     * @param   string|Lazy\LazyInterface|\SplFileInfo   $file
      *  requireするファイル
      * @param   bool    $once
      *  require_onceフラグ
      *
-     * @return  LazyRequire
+     * @return  Lazy\LazyRequire
      */
     public function lazyRequire($file, bool $once = false){
         return new Lazy\LazyLoadFile($file, $once, true);
@@ -117,7 +117,7 @@ trait LazyBuilderTrait{
      * @param   string  $class
      *  クラス名
      *
-     * @return  LazyNew
+     * @return  Lazy\LazyNew
      */
     public function lazyNew(string $class){
         return new Lazy\LazyNew($class);
