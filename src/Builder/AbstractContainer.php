@@ -23,7 +23,7 @@ abstract class AbstractContainer{
     /**
      * ビルダーにサービスの定義などを追加する
      *
-     * @param   ContainerBuilderInterface   $builder
+     * @param   ContainerBuilder    $builder
      *  サービスコンテナビルダー
      * @param   mixed[] $options
      *  オプションの連想配列
@@ -31,7 +31,7 @@ abstract class AbstractContainer{
      * @return  void
      */
     abstract public static function build(
-        ContainerBuilderInterface $builder,
+        ContainerBuilder $builder,
         array $options
     );
 
@@ -44,6 +44,6 @@ abstract class AbstractContainer{
      *  サービスコンテナ
      */
     public static function modify(Container $container){
-        
+
     }
 }

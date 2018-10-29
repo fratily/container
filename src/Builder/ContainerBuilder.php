@@ -16,7 +16,7 @@ namespace Fratily\Container\Builder;
 /**
  *
  */
-class ContainerBuilder implements ContainerBuilderInterface{
+class ContainerBuilder{
 
     use LazyBuilderTrait;
 
@@ -46,28 +46,46 @@ class ContainerBuilder implements ContainerBuilderInterface{
     }
 
     /**
-     * {@inheritdoc}
+     * リゾルバを取得する
+     *
+     * @return  Resolver\Resolver
      */
     public function getResolver(){
         return $this->resolver;
     }
 
     /**
-     * {@inheritdoc}
+     * サービスのリストを取得する
+     *
+     * @return  object[]|Lazy\LazyInterface[]
      */
     public function getServices(){
         return $this->services;
     }
 
     /**
-     * {@inheritdoc}
+     * タグ付けがされたサービスIDのリストを取得する
+     *
+     * @return  string[][]
      */
     public function getTaggedServicesId(){
         return $this->taggedServices;
     }
 
     /**
-     * {@inheritdoc}
+     * サービスを登録する
+     *
+     * @param   string  $id
+     *  サービスID
+     * @param   string|LazyInterface|object $service
+     *  サービス
+     * @param   string[]    $tags
+     *  サービスにつけるタグの配列
+     * @param   string[]    $types
+     *  パラメータの型指定による自動解決時に、
+     *  このサービスがどのようなクラス指定に使用されるかを示す配列
+     *
+     * @return  $this
      */
     public function add(
         string $id,
@@ -109,7 +127,12 @@ class ContainerBuilder implements ContainerBuilderInterface{
     }
 
     /**
-     * {@inheritdoc}
+     * クラスのインスタンス化モードをシングルトンにする
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  $this
      */
     public function isSingleton(string $class){
         $this->resolver->getClassResolver($class)
@@ -121,7 +144,12 @@ class ContainerBuilder implements ContainerBuilderInterface{
     }
 
     /**
-     * {@inheritdoc}
+     * クラスのインスタンス化モードをプロトタイプにする
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  $this
      */
     public function isPrototype(string $class){
         $this->resolver->getClassResolver($class)
@@ -133,7 +161,16 @@ class ContainerBuilder implements ContainerBuilderInterface{
     }
 
     /**
-     * {@inheritdoc}
+     *  パラメーターを登録する
+     *
+     * @param   string  $class
+     *  クラス名
+     * @param   int|string  $parameter
+     *  パラメーター名もしくはパラメーターポジション
+     * @param   mixed   $value
+     *  インジェクションする値
+     *
+     * @return  $this
      */
     public function addParameter(string $class, $parameter, $value){
         if(!is_string($parameter) && !is_int($parameter)){
@@ -164,7 +201,16 @@ class ContainerBuilder implements ContainerBuilderInterface{
     }
 
     /**
-     * {@inheritdoc}
+     * セッターを登録する
+     *
+     * @param   string  $class
+     *  クラス名
+     * @param   string  $setter
+     *  メソッド名
+     * @param type $value
+     *  インジェクションする値
+     *
+     * @return  $this
      */
     public function addSetter(string $class, string $setter, $value){
         $this->resolver->getClassResolver($class)->addSetter($setter, $value);
@@ -173,7 +219,16 @@ class ContainerBuilder implements ContainerBuilderInterface{
     }
 
     /**
-     * {@inheritdoc}
+     * プロパティを登録する
+     *
+     * @param   string  $class
+     *  クラス名
+     * @param   string  $property
+     *  プロパティ名
+     * @param   mixed   $value
+     *  インジェクションする値
+     *
+     * @return  $this
      */
     public function addProperty(string $class, string $property, $value){
         $this->resolver->getClassResolver($class)->addProperty($property, $value);
@@ -182,21 +237,36 @@ class ContainerBuilder implements ContainerBuilderInterface{
     }
 
     /**
-     * {@inheritdoc}
+     * パラメータ登録のオブジェクティブ版を取得する
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  ParameterBuilder
      */
     public function parameter(string $class){
         return new ParameterBuilder($this, $class);
     }
 
     /**
-     * {@inheritdoc}
+     * セッター登録のオブジェクティブ版を取得する
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  SetterBuilder
      */
     public function setter(string $class){
         return new SetterBuilder($this, $class);
     }
 
     /**
-     * {@inheritdoc}
+     * プロパティ登録のオブジェクティブ版を取得する
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  PropertyBuilder
      */
     public function property(string $class){
         return new PropertyBuilder($this, $class);

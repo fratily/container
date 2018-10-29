@@ -31,12 +31,12 @@ class PropertyBuilder{
     /**
      * Constructor
      *
-     * @param   ContainerBuilderInterface   $builder
+     * @param   ContainerBuilder    $builder
      *  サービスコンテナビルダー
      * @param   string  $class
      *  クラス名
      */
-    public function __construct(ContainerBuilderInterface $builder, string $class){
+    public function __construct(ContainerBuilder $builder, string $class){
         $this->builder  = $builder;
         $this->class    = $class;
     }

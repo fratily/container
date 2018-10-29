@@ -57,7 +57,7 @@ class Bar extends Foo implements BarInterface{
 }
 
 class TestContainer extends Fratily\Container\Builder\AbstractContainer{
-    public static function build(Fratily\Container\Builder\ContainerBuilderInterface $builder, array $options){
+    public static function build(Fratily\Container\Builder\ContainerBuilder $builder, array $options){
         $builder
             ->add("fuga", Fuga::class, [], [FugaInterface::class])
             ->add("hogera", Hogera::class, [], [HogeraInterface::class])
