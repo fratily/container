@@ -201,4 +201,18 @@ class ContainerBuilder implements ContainerBuilderInterface{
     public function property(string $class){
         return new PropertyBuilder($this, $class);
     }
+
+    /**
+     * サービスコンテナ内共有値を登録する
+     *
+     * @param   string  $name
+     *  共有値名
+     * @param   mixed   $value
+     *  値
+     *
+     * @return  $this
+     */
+    public function addShareValue(string $name, $value){
+        $this->resolver->addShareValue($name, $value);
+    }
 }
