@@ -122,4 +122,16 @@ trait LazyBuilderTrait{
     public function lazyNew(string $class){
         return new Lazy\LazyNew($class);
     }
+
+    /**
+     * 共有値遅延取得インスタンスを生成する
+     *
+     * @param   string  $name
+     *  共有値名
+     *
+     * @return  Lazy\LazyGetShareValue
+     */
+    public function LazyGetShareValue(string $name){
+        return new Lazy\LazyGetShareValue($name);
+    }
 }
