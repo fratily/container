@@ -33,6 +33,11 @@ class Resolver{
     private $types      = [];
 
     /**
+     * @var mixed[]
+     */
+    private $shareVals  = [];
+
+    /**
      * {@inheritdoc}
      */
     public function lock(){
@@ -136,6 +141,50 @@ class Resolver{
         $type  = $this->getClassResolver($type)->getReflection()->getName();
 
         $this->types[$type]    = $value;
+
+        return $this;
+    }
+
+    /**
+     * サービスコンテナ内共有値を取得する
+     *
+     * @param   string  $name
+     *  共有値名
+     *
+     * @return  mixed
+     */
+    public function getShareValue(string $name){
+        return $this->shareVals[$name] ?? null;
+    }
+
+    /**
+     * サービスコンテナ内共有値が登録済みか確認する
+     *
+     * @param   string  $name
+     *  共有値名
+     *
+     * @return  bool
+     */
+    public function hasShareValue(string $name){
+        return array_key_exists($name, $this->shareVals);
+    }
+
+    /**
+     * サービスコンテナ内共有値を登録する
+     *
+     * @param   string  $name
+     *  共有値名
+     * @param   mixed   $value
+     *  値
+     *
+     * @return  $this
+     */
+    public function addShareValue(string $name, $value){
+        if($this->locked()){
+            throw new Exception\LockedException("Container is locked.");
+        }
+
+        $this->shareVals[$name] = $value;
 
         return $this;
     }
