@@ -134,4 +134,13 @@ trait LazyBuilderTrait{
     public function LazyGetShareValue(string $name){
         return new Lazy\LazyGetShareValue($name);
     }
+
+    /**
+     * サービスコンテナ遅延取得インスタンスを生成する
+     *
+     * @return  Lazy\LazyGetContainer
+     */
+    public function lazyGetContainer(){
+        return new Lazy\LazyGetContainer();
+    }
 }
