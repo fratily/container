@@ -84,6 +84,18 @@ trait LazyBuilderTrait{
     }
 
     /**
+     * タグ付きサービスID遅延取得インスタンスを生成する
+     *
+     * @param   string  $tag
+     *  タグ名
+     *
+     * @return  Lazy\LazyGetTaggedIdList
+     */
+    public function lazyGetTaggedIdList(string $tag){
+        return new Lazy\LazyGetTaggedIdList($tag);
+    }
+
+    /**
      * ファイル遅延取得インスタンスを生成する
      *
      * @param   string|Lazy\LazyInterface|\SplFileInfo   $file

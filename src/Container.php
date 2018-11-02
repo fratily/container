@@ -181,6 +181,22 @@ class Container implements ContainerInterface{
     }
 
     /**
+     * タグ付けられたサービスのIDの配列を取得する
+     *
+     * @param   string  $tag
+     *  タグ
+     *
+     * @return  object[]
+     */
+    public function getTaggedIdList(string $tag){
+        if(!array_key_exists($tag, $this->taggedServices)){
+            return [];
+        }
+
+        return $this->taggedServices[$tag];
+    }
+
+    /**
      * デリゲートコンテナからサービスを取得する
      *
      * @param   string  $id
