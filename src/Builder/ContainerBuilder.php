@@ -284,5 +284,7 @@ class ContainerBuilder{
      */
     public function addShareValue(string $name, $value){
         $this->resolver->addShareValue($name, $value);
+
+        return $this;
     }
 }
