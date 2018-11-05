@@ -24,16 +24,37 @@ class LazyNew implements LazyInterface{
     private $class;
 
     /**
+     * @var mixed[]
+     */
+    private $parameters;
+
+    /**
+     * @var mixed[]
+     */
+    private $types;
+
+    /**
      * Constructor
      *
      * @param   string  $class
      *  クラス名
+     * @param   mixed[] $parameters
+     *  追加指定パラメータの配列
+     * @param   mixed[] $types
+     *  追加指定型指定解決値の配列
      */
-    public function __construct(string $class){
+    public function __construct(
+        string $class,
+        array $parameters = [],
+        array $types = []
+    ){
         if(!class_exists($class)){
             throw new \InvalidArgumentException();
         }
-        $this->class    = $class;
+
+        $this->class        = $class;
+        $this->parameters   = $parameters;
+        $this->types        = $types;
     }
 
     /**
@@ -46,7 +67,7 @@ class LazyNew implements LazyInterface{
             ->getResolver()
             ->getClassResolver($this->class)
             ->getInstanceGenerator()
-            ->generate($container)
+            ->generate($container, $this->parameters, $this->types)
         ;
     }
 }

@@ -128,11 +128,19 @@ trait LazyBuilderTrait{
      *
      * @param   string  $class
      *  クラス名
+     * @param   mixed[] $parameters
+     *  追加指定パラメータの配列
+     * @param   mixed[] $types
+     *  追加指定型指定解決値の配列
      *
      * @return  Lazy\LazyNew
      */
-    public function lazyNew(string $class){
-        return new Lazy\LazyNew($class);
+    public function lazyNew(
+        string $class,
+        array $parameters = [],
+        array $types = []
+    ){
+        return new Lazy\LazyNew($class, $parameters, $types);
     }
 
     /**
