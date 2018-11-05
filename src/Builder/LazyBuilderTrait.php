@@ -163,4 +163,20 @@ trait LazyBuilderTrait{
     public function lazyGetContainer(){
         return new Lazy\LazyGetContainer();
     }
+
+    /**
+     * スーパーグローバル遅延取得インスタンスを生成する
+     *
+     * @param   int $type
+     *  取得タイプ
+     * @param   string  $name
+     *  変数名
+     * @param   bool    $checkInput
+     *  filter_input等を通じてリクエスト時に入力された値か確認するか
+     *
+     * @return  Lazy\LazyGetSuperGlobal
+     */
+    public function lazyGetSuperGlobal(int $type, string $name, bool $checkInput = false){
+        return new Lazy\LazyGetSuperGlobal($type, $name, $checkInput);
+    }
 }
