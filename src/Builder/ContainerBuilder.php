@@ -13,6 +13,8 @@
  */
 namespace Fratily\Container\Builder;
 
+use Fratily\Container\Container;
+
 /**
  *
  */
@@ -26,14 +28,9 @@ class ContainerBuilder{
     private $resolver;
 
     /**
-     * @var object[]|Lazy\LazyInterface[]
+     * @var Service[]
      */
-    private $services       = [];
-
-    /**
-     * @var string[]
-     */
-    private $taggedServices = [];
+    private $services   = [];
 
     /**
      * Constructor
@@ -57,19 +54,10 @@ class ContainerBuilder{
     /**
      * サービスのリストを取得する
      *
-     * @return  object[]|Lazy\LazyInterface[]
+     * @return  Service[]
      */
     public function getServices(){
         return $this->services;
-    }
-
-    /**
-     * タグ付けがされたサービスIDのリストを取得する
-     *
-     * @return  string[][]
-     */
-    public function getTaggedServicesId(){
-        return $this->taggedServices;
     }
 
     /**
@@ -87,41 +75,12 @@ class ContainerBuilder{
      *
      * @return  $this
      */
-    public function add(
-        string $id,
-        $service,
-        array $tags = [],
-        array $types = []
-    ){
-        if(!is_string($service) && !is_object($service)){
-            throw new \InvalidArgumentException();
-        }
-
-        if(is_string($service)){
-            if(!class_exists($service)){
-                throw new \InvalidArgumentException();
-            }
-
-            if(!$this->resolver->getClassResolver($service)->getReflection()->isInstantiable()){
-                throw new \InvalidArgumentException();
-            }
-
-            $service    = new Lazy\LazyNew($service);
+    public function add(string $id, Service $service){
+        if(1 !== preg_match(Container::REGEX_KEY, $id)){
+            throw new \InvalidArgumentException;
         }
 
         $this->services[$id]    = $service;
-
-        foreach($tags as $tag){
-            if(!array_key_exists($tag, $this->taggedServices)){
-                $this->taggedServices[$tag] = [];
-            }
-
-            $this->taggedServices[$tag][]   = $id;
-        }
-
-        foreach($types as $type){
-            $this->resolver->addType($type, new Lazy\LazyGet($id));
-        }
 
         return $this;
     }

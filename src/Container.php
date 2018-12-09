@@ -21,6 +21,8 @@ use Psr\Container\ContainerExceptionInterface;
  */
 class Container implements ContainerInterface{
 
+    const REGEX_KEY = "/\A[A-Z_][0-9A-Z_]*(\.[A-Z_][0-9A-Z_]*)*\z/i";
+
     /**
      * @var Builder\Resolver\Resolver
      */
