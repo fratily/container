@@ -11,21 +11,18 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\LockableInterface;
+use Fratily\Container\Builder\LockableTrait;
 
 /**
  *
  */
-class LazyGetContainer extends AbstractLazy{
+abstract class AbstractValue implements LockableInterface{
 
-    /**
-     * {@inheritdoc}
-     */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
+    use LockableTrait;
 
-        return $this->validType($container, $expectedType);
-    }
+    private $expected;
 }

@@ -18,29 +18,39 @@ use Fratily\Container\Container;
 /**
  *
  */
-class LazyArray extends AbstractLazy{
+class LazyGetParameter extends AbstractLazy{
 
     /**
-     * @var mixed[]
+     * @var string|LazyInterface
      */
-    private $values;
+    private $id;
 
     /**
      * Constructor
      *
-     * @param   mixed[] $values
-     *  配列
+     * @param   string|LazyInterface    $id
+     *  パラメーターID
      */
-    public function __construct(array $values){
-        $this->values   = $values;
+    public function __construct($id){
+        if(!is_string($id) && !$id instanceof LazyInterface){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->id   = $id;
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function load(Container $container, string $expectedType = null){
+        $this->lock();
+
         return $this->validType(
-            LazyResolver::resolveLazyArray($container, $this->values),
+            $container->getParameter(
+                $this->id instanceof LazyInterface
+                    ? $this->id->load($container, Container::T_STRING)
+                    : $this->id
+            ),
             $expectedType
         );
     }

@@ -13,12 +13,13 @@
  */
 namespace Fratily\Container\Builder\Lazy;
 
+use Fratily\Container\Container;
 use Fratily\Container\Builder\Resolver\CallbackInvoker;
 
 /**
  *
  */
-class Lazy implements LazyInterface{
+class Lazy extends AbstractLazy{
 
     /**
      * @var mixed
@@ -28,7 +29,7 @@ class Lazy implements LazyInterface{
     /**
      * @var mixed[]
      */
-    private $params;
+    private $parameters;
 
     /**
      * @var mixed[]
@@ -45,59 +46,93 @@ class Lazy implements LazyInterface{
      *
      * @param   mixed   $callback
      *  実行するコールバック
-     * @param   mixed[] $parameters
-     *  追加指定パラメータの配列
-     * @param   mixed[] $types
-     *  追加指定型指定解決値の配列
      */
-    public function __construct($callback, array $parameters = [], array $types = []){
-        if(!is_callable($callback)){
-            if(is_array($callback)){
-                if(!isset($callback[0]) || !isset($callback[1]) || count($callback) !== 2){
-                    throw new \InvalidArgumentException();
-                }
-
-                if(!($callback[0] instanceof LazyInterface)
-                    && !($callback[1] instanceof LazyInterface)
-                ){
-                    throw new \InvalidArgumentException();
-                }
-            }else if(!($callback instanceof LazyInterface)){
-                throw new \InvalidArgumentException();
-            }
+    public function __construct($callback){
+        if(!is_callable($callback) && !$callback instanceof LazyInterface){
+            throw new \InvalidArgumentException();
         }
 
         $this->callback = $callback;
-        $this->params   = $parameters;
-        $this->types    = $types;
     }
 
     /**
      * {@inheritdoc}
-     *
-     * @throw LogicException
      */
-    public function load(\Fratily\Container\Container $container){
+    public function load(Container $container, string $expectedType = null){
+        $this->lock();
+
         if(null === $this->callbackInvoker){
-            $this->callback = is_array($this->callback)
-                ? LazyResolver::resolveLazyArray($container, $this->callback)
-                : LazyResolver::resolveLazy($container, $this->callback)
+            $callback   = $this->callback instanceof LazyInterface
+                ? $this->callback->load($container, Container::T_CALLABLE)
+                : $this->callback
             ;
 
             if(!is_callable($this->callback)){
-                throw new \LogicException;
+                throw new \LogicException("ここに来ることはない");
             }
 
-            $this->callbackInvoker  = new CallbackInvoker(
-                $container->getResolver(),
-                $this->callback
-            );
+            $this->callbackInvoker  = new CallbackInvoker($container->getResolver(), $callback);
         }
 
-        return $this->callbackInvoker->invoke(
-            $container,
-            $this->params,
-            $this->types
+        return $this->validType(
+            $this->callbackInvoker->invoke(
+                $container,
+                $this->parameters,
+                $this->types
+            ),
+            $expectedType
         );
+    }
+
+    /**
+     * パラメータ自動解決用の値を追加する
+     *
+     * @param   string  $key
+     *  ポジションもしくはパラメータ名
+     * @param   mixed   $value
+     *  値
+     *
+     * @return  $this
+     *
+     * @throws  Exception\LockedException
+     */
+    public function addParameter($key, $value){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
+        if(!is_int($key) && !is_string($key)){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->parameters[$key] = $value;
+
+        return $this;
+    }
+
+    /**
+     * 型名自動解決用の値を追加する
+     *
+     * @param   string  $class
+     *  クラス名
+     * @param   object|LazyInterface    $value
+     *  値
+     *
+     * @return  $this
+     *
+     * @throws Exception\LockedException
+     */
+    public function addType(string $class, $value){
+        if($this->isLocked()){
+            throw new Exception\LockedException();
+        }
+
+        if(!class_exists($class)){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->types[$class]    = $value;
+
+        return $this;
     }
 }

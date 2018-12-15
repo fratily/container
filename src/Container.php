@@ -23,6 +23,26 @@ class Container implements ContainerInterface{
 
     const REGEX_KEY = "/\A[A-Z_][0-9A-Z_]*(\.[A-Z_][0-9A-Z_]*)*\z/i";
 
+    const T_INT         = "int";
+    const T_FLOAT       = "float";
+    const T_BOOL        = "bool";
+    const T_STRING      = "string";
+    const T_ARRAY       = "array";
+    const T_OBJECT      = "object";
+    const T_CALLABLE    = "callable";
+    const T_RESOURCE    = "resource";
+
+    const TYPE_VALID    = [
+        self::T_INT         => "is_int",
+        self::T_FLOAT       => "is_float",
+        self::T_BOOL        => "is_bool",
+        self::T_STRING      => "is_string",
+        self::T_ARRAY       => "is_array",
+        self::T_OBJECT      => "is_object",
+        self::T_CALLABLE    => "is_callable",
+        self::T_RESOURCE    => "is_resource",
+    ];
+
     /**
      * @var Builder\Resolver\Resolver
      */

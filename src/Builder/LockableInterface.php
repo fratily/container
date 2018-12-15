@@ -11,21 +11,24 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
-
-use Fratily\Container\Container;
+namespace Fratily\Container\Builder;
 
 /**
  *
  */
-class LazyGetContainer extends AbstractLazy{
+interface LockableInterface{
 
     /**
-     * {@inheritdoc}
+     * ロックする
+     *
+     * @return  $this
      */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
+    public function lock();
 
-        return $this->validType($container, $expectedType);
-    }
+    /**
+     * ロックされているか確認する
+     *
+     * @return  bool
+     */
+    public function isLocked(): bool;
 }

@@ -11,21 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Lazy\Exception;
 
-use Fratily\Container\Container;
-
-/**
- *
- */
-class LazyGetContainer extends AbstractLazy{
-
-    /**
-     * {@inheritdoc}
-     */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
-
-        return $this->validType($container, $expectedType);
-    }
+class LockedException extends LazyException{
 }

@@ -13,32 +13,45 @@
  */
 namespace Fratily\Container\Builder\Lazy;
 
+use Fratily\Container\Container;
+
 /**
  *
  */
-class LazyGet implements LazyInterface{
+class LazyGet extends AbstractLazy{
 
     /**
-     * @var string
+     * @var string|LazyInterface
      */
     private $id;
 
     /**
      * Constructor
      *
-     * @param   string  $id
+     * @param   string|LazyInterface    $id
      *  サービスID
      */
-    public function __construct(string $id){
+    public function __construct($id){
+        if(!is_string($id) && !$id instanceof LazyInterface){
+            throw new \InvalidArgumentException;
+        }
+
         $this->id   = $id;
     }
 
     /**
-     * @inheritdoc
-     *
-     * @return  object
+     * {@inheritdoc}
      */
-    public function load(\Fratily\Container\Container $container){
-        return $container->get($this->id);
+    public function load(Container $container, string $expectedType = null){
+        $this->lock();
+
+        return $this->validType(
+            $container->get(
+                $this->id instanceof LazyInterface
+                    ? $this->id->load($container, Container::T_STRING)
+                    : $this->id
+            ),
+            $expectedType
+        );
     }
 }

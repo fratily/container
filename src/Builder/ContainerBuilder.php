@@ -28,9 +28,15 @@ class ContainerBuilder{
     private $resolver;
 
     /**
-     * @var Service[]
+     * @var Value\Service[]
      */
     private $services   = [];
+
+    /**
+     *
+     * @var Value\Parameter[]
+     */
+    private $parameters = [];
 
     /**
      * Constructor
@@ -54,10 +60,28 @@ class ContainerBuilder{
     /**
      * サービスのリストを取得する
      *
-     * @return  Service[]
+     * @return  Value\Service[]
      */
     public function getServices(){
         return $this->services;
+    }
+
+    /**
+     * サービスを取得する
+     *
+     * @param   string  $id
+     *  サービスID
+     *
+     * @return  Value\Service
+     */
+    public function getService(string $id){
+        if(array_key_exists($id, $this->services)){
+            return $this->services[$id];
+        }
+
+        $this->addService($id, new Value\Service());
+
+        return $this->services[$id];
     }
 
     /**
@@ -65,17 +89,16 @@ class ContainerBuilder{
      *
      * @param   string  $id
      *  サービスID
-     * @param   string|LazyInterface|object $service
+     * @param   Value\Service   $service
      *  サービス
-     * @param   string[]    $tags
-     *  サービスにつけるタグの配列
-     * @param   string[]    $types
-     *  パラメータの型指定による自動解決時に、
-     *  このサービスがどのようなクラス指定に使用されるかを示す配列
      *
      * @return  $this
      */
-    public function add(string $id, Service $service){
+    public function addService(string $id, Value\Service $service){
+        if(array_key_exists($id, $this->services)){
+            throw new \LogicException;
+        }
+
         if(1 !== preg_match(Container::REGEX_KEY, $id)){
             throw new \InvalidArgumentException;
         }
@@ -86,163 +109,82 @@ class ContainerBuilder{
     }
 
     /**
-     * クラスのインスタンス化モードをシングルトンにする
+     * パラメーターのリストを取得する
      *
-     * @param   string  $class
-     *  クラス名
-     *
-     * @return  $this
+     * @return  Value\Parameter[]
      */
-    public function isSingleton(string $class){
-        $this->resolver->getClassResolver($class)
-            ->getInstanceGenerator()
-            ->setIsSingleton(true)
-        ;
-
-        return $this;
+    public function getParameters(){
+        return $this->parameters;
     }
 
     /**
-     * クラスのインスタンス化モードをプロトタイプにする
+     * パラメーターを取得する
      *
-     * @param   string  $class
-     *  クラス名
+     * @param   string  $id
+     *  パラメーターID
      *
-     * @return  $this
+     * @return  Value\Parameter
      */
-    public function isPrototype(string $class){
-        $this->resolver->getClassResolver($class)
-            ->getInstanceGenerator()
-            ->setIsSingleton(false)
-        ;
-
-        return $this;
-    }
-
-    /**
-     *  パラメーターを登録する
-     *
-     * @param   string  $class
-     *  クラス名
-     * @param   int|string  $parameter
-     *  パラメーター名もしくはパラメーターポジション
-     * @param   mixed   $value
-     *  インジェクションする値
-     *
-     * @return  $this
-     */
-    public function addParameter(string $class, $parameter, $value){
-        if(!is_string($parameter) && !is_int($parameter)){
-            throw new \InvalidArgumentException();
+    public function getParameter(string $id){
+        if(array_key_exists($id, $this->parameters)){
+            return $this->parameters[$id];
         }
 
-        if(is_string($parameter)){
-            if("" === $parameter){
-                throw new \InvalidArgumentException();
-            }
+        $this->addParameter($id, new Value\Parameter());
 
-            $this->resolver
-                ->getClassResolver($class)
-                ->addNameParameter($parameter, $value)
-            ;
-        }else{
-            if(0 > $parameter){
-                throw new \InvalidArgumentException();
-            }
+        return $this->parameters[$id];
+    }
 
-            $this->resolver
-                ->getClassResolver($class)
-                ->addPositionParameter($parameter, $value)
-            ;
+    /**
+     * パラメーターを登録する
+     *
+     * @param   string  $id
+     *  パラメーターID
+     * @param   Value\Parameter $parameter
+     *  パラメーター
+     *
+     * @return  $this
+     */
+    public function addParameter(string $id, Value\Parameter $parameter){
+        if(array_key_exists($id, $this->parameters)){
+            throw new \LogicException;
         }
 
-        return $this;
-    }
+        if(1 !== preg_match(Container::REGEX_KEY, $id)){
+            throw new \InvalidArgumentException;
+        }
 
-    /**
-     * セッターを登録する
-     *
-     * @param   string  $class
-     *  クラス名
-     * @param   string  $setter
-     *  メソッド名
-     * @param type $value
-     *  インジェクションする値
-     *
-     * @return  $this
-     */
-    public function addSetter(string $class, string $setter, $value){
-        $this->resolver->getClassResolver($class)->addSetter($setter, $value);
+        $this->parameters[$id]  = $parameter;
 
         return $this;
     }
 
     /**
-     * プロパティを登録する
+     * サービスもしくはパラメーターを登録する
      *
-     * @param   string  $class
-     *  クラス名
-     * @param   string  $property
-     *  プロパティ名
-     * @param   mixed   $value
-     *  インジェクションする値
+     * @param   string  $id
+     *  サービスもしくはパラメータのID
+     * @param   Value\Service|Value\Parameter   $value
+     *  サービスもしくはパラメーター
      *
      * @return  $this
      */
-    public function addProperty(string $class, string $property, $value){
-        $this->resolver->getClassResolver($class)->addProperty($property, $value);
+    public function add($value){
+        if(
+            !is_object($value)
+            || (
+                !$value instanceof Value\Service
+                && !$value instanceof Value\Parameter
+            )
+        ){
+            throw new \InvalidArgumentException;
+        }
 
-        return $this;
-    }
-
-    /**
-     * パラメータ登録のオブジェクティブ版を取得する
-     *
-     * @param   string  $class
-     *  クラス名
-     *
-     * @return  ParameterBuilder
-     */
-    public function parameter(string $class){
-        return new ParameterBuilder($this, $class);
-    }
-
-    /**
-     * セッター登録のオブジェクティブ版を取得する
-     *
-     * @param   string  $class
-     *  クラス名
-     *
-     * @return  SetterBuilder
-     */
-    public function setter(string $class){
-        return new SetterBuilder($this, $class);
-    }
-
-    /**
-     * プロパティ登録のオブジェクティブ版を取得する
-     *
-     * @param   string  $class
-     *  クラス名
-     *
-     * @return  PropertyBuilder
-     */
-    public function property(string $class){
-        return new PropertyBuilder($this, $class);
-    }
-
-    /**
-     * サービスコンテナ内共有値を登録する
-     *
-     * @param   string  $name
-     *  共有値名
-     * @param   mixed   $value
-     *  値
-     *
-     * @return  $this
-     */
-    public function addShareValue(string $name, $value){
-        $this->resolver->addShareValue($name, $value);
+        if($value instanceof Value\Service){
+            $this->addService($id, $value);
+        }elseif($value instanceof  Value\Parameter){
+            $this->addParameter($id, $value);
+        }
 
         return $this;
     }

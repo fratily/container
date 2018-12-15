@@ -13,18 +13,25 @@
  */
 namespace Fratily\Container\Builder\Lazy;
 
+use Fratily\Container\Container;
+use Fratily\Container\Builder\LockableInterface;
+
 /**
  *
  */
-interface LazyInterface{
+interface LazyInterface extends LockableInterface{
 
     /**
      * 遅延実行用メソッド
      *
-     * @param   \Fratily\Container\Container    $container
+     * @param   Container   $container
      *  サービスコンテナ
+     * @param   string  $expectedType
+     *  期待する型
      *
      * @return  mixed
+     *
+     * @throws  Exception\ExpectedTypeException
      */
-    public function load(\Fratily\Container\Container $container);
+    public function load(Container $container, string $expectedType = null);
 }
