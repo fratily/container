@@ -23,7 +23,7 @@ final class Type{
      */
     private static $validators  = [
         // special
-        "mixed"     => self::class . "isMixed",
+        "mixed"     => self::class . "::isMixed",
         // scalar
         "bool"      => "is_bool",
         "int"       => "is_int",
