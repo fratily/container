@@ -13,9 +13,9 @@
  */
 namespace Fratily\Container\Builder\Lazy;
 
-use Fratily\Container\Container;
 use Fratily\Container\Builder\LockableInterface;
 use Fratily\Container\Builder\LockableTrait;
+use Fratily\Container\Builder\Type;
 
 /**
  *
@@ -37,46 +37,8 @@ abstract class AbstractLazy implements LazyInterface, LockableInterface{
      * @throws  \LogicException
      */
     protected function validType($value, string $expectedType = null){
-        if(null === $expectedType){
-            return $value;
-        }
-
-        if(
-            !array_key_exists($expectedType, Container::TYPE_VALID)
-            && !class_exists($expectedType)
-        ){
-            throw new \InvalidArgumentException;
-        }
-
-        if(array_key_exists($expectedType, Container::TYPE_VALID)){
-            $callback   = Container::TYPE_VALID[$expectedType];
-
-            if(!is_callable($callback)){
-                throw new \LogicException("このエラーを起こしてはならない");
-            }
-
-            if(!$callback($value)){
-                throw new Exception\ExpectedTypeException(
-                    "Expected {$expectedType}, but the value is " . gettype($value)
-                );
-            }
-
-            return $value;
-        }
-
-        if(!is_object($value)){
-            throw new Exception\ExpectedTypeException(
-                ""
-            );
-        }
-
-        if(
-            $expectedType !== get_class($value)
-            && !is_subclass_of($value, $expectedType)
-        ){
-            throw new Exception\ExpectedTypeException(
-                ""
-            );
+        if(null !== $expectedType && !Type::valid($expectedType, $value)){
+            throw new Exception\ExpectedTypeException();
         }
 
         return $value;
