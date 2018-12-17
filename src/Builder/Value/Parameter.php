@@ -28,7 +28,7 @@ class Parameter{
     /**
      * @var bool
      */
-    private $valueOverwritable      = true;
+    private $valueOverwritable  = true;
 
     /**
      * @var string
