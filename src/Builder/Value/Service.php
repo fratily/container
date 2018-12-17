@@ -14,7 +14,6 @@
 namespace Fratily\Container\Builder\Value;
 
 use Fratily\Container\Container;
-use Fratily\Container\Builder\Lazy\LazyResolver;
 
 /**
  *
@@ -45,6 +44,18 @@ class Service{
      * @var string
      */
     private $tags   = [];
+
+    /* インスタンス生成用の値 */
+
+    /**
+     * @var mixed[]
+     */
+    private $parameters = [];
+
+    /**
+     * @var string[]
+     */
+    private $setters    = [];
 
     /**
      * 値を取得する
@@ -167,5 +178,9 @@ class Service{
         $this->tags[$tag]   = true;
 
         return $this;
+    }
+
+    public function getInjection(){
+        
     }
 }
