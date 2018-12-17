@@ -69,8 +69,13 @@ class ContainerBuilder{
     /**
      * サービスを取得する
      *
+     * 存在しないサービス取得時にIDがクラス名のものを取得しようとすると、
+     * そのクラスの遅延インスタンス生成サービスが生成される。
+     *
+     * 生成されたサービスの値や期待クラス名は上書きすることはできない。
+     *
      * @param   string  $id
-     *  サービスID
+     *  サービスIDもしくはクラス名
      *
      * @return  Value\Service
      */
@@ -80,6 +85,13 @@ class ContainerBuilder{
         }
 
         $this->addService($id, new Value\Service());
+
+        if(class_exists($id)){
+            $this->services[$id]
+                ->setValue(new Lazy\LazyNew($id), false)
+                ->setClass($id, false)
+            ;
+        }
 
         return $this->services[$id];
     }
