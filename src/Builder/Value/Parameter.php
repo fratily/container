@@ -20,6 +20,8 @@ use Fratily\Container\Container;
  */
 class Parameter{
 
+    use TagTrait;
+
     /**
      * @var mixed
      */
@@ -29,11 +31,6 @@ class Parameter{
      * @var bool
      */
     private $valueOverwritable  = true;
-
-    /**
-     * @var string
-     */
-    private $tags   = [];
 
     /**
      * 値を取得する
@@ -70,33 +67,6 @@ class Parameter{
 
         $this->value                = $value;
         $this->valueOverwritable    = $allowOverwrite;
-
-        return $this;
-    }
-
-    /**
-     * タグを取得する
-     *
-     * @return  string[]
-     */
-    public function getTags(){
-        return array_keys($this->tags);
-    }
-
-    /**
-     * タグを追加する
-     *
-     * @param   string  $tag
-     *  タグ名
-     *
-     * @return  $this
-     */
-    public function addTag(string $tag){
-        if(1 !== preg_match(Container::REGEX_KEY, $tag)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->tags[$tag]   = true;
 
         return $this;
     }
