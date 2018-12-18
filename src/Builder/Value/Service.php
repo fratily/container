@@ -38,12 +38,13 @@ class Service implements LockableInterface{
      */
     private $value;
 
-    /* インスタンス生成用の値 */
-
     /**
      * @var mixed[]
      */
-    private $parameters = [];
+    private $parameters = [
+        self::PROP_POS  => [],
+        self::PROP_NAME => [],
+    ];
 
     /**
      * @var string[]
@@ -121,19 +122,63 @@ class Service implements LockableInterface{
         return $this;
     }
 
+    /**
+     * パラメータのリストを取得する
+     *
+     * @return  mixed[][]
+     */
     public function getParameters(){
         return $this->parameters;
     }
 
-    public function parameter(){
+    /**
+     * パラメーターを追加する
+     *
+     * @param   int|string  $key
+     *  パラメーターキー
+     * @param   mixed   $value
+     *  パラメータに渡す値
+     *
+     * @return  $this
+     */
+    public function parameter($key, $value){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
 
+        if(!is_int($key) && !is_string($key)){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->parameters[is_int($key) ? self::PROP_POS : self::PROP_NAME]  = $value;
+
+        return $this;
     }
 
+    /**
+     * セッターのリストを取得する
+     *
+     * @return  array[]
+     */
     public function getSetters(){
         return $this->setters;
     }
 
-    public function setter(){
+    /**
+     * セッターを追加する
+     *
+     * @param   string  $method
+     *  メソッド名
+     * @param   mixed   ...$args
+     *  セッター実行時に渡す引数
+     */
+    public function setter(string $method, ...$args){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
 
+        $this->setters[$method] = $args;
+
+        return $this;
     }
 }
