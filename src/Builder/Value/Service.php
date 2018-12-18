@@ -90,6 +90,12 @@ class Service{
             throw new \LogicException;
         }
 
+        if(is_string($value) && class_exists($value)){
+            $this->setClass($class);
+
+            $value  = new Lazy\LazyNew($class);
+        }
+
         if(!is_object($value)){
             throw new \InvalidArgumentException;
         }
@@ -181,6 +187,6 @@ class Service{
     }
 
     public function getInjection(){
-        
+
     }
 }
