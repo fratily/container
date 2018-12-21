@@ -11,14 +11,14 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
 
 /**
  *
  */
-class LazyGetParameter extends AbstractLazy{
+class LazyGet extends AbstractLazy{
 
     /**
      * @var string|LazyInterface
@@ -29,10 +29,10 @@ class LazyGetParameter extends AbstractLazy{
      * Constructor
      *
      * @param   string|LazyInterface    $id
-     *  パラメーターID
+     *  サービスID
      */
     public function __construct($id){
-        if(!is_string($id) && !$id instanceof LazyInterface){
+        if(!is_string($id) && !$this->isLazyObject($id)){
             throw new \InvalidArgumentException;
         }
 
@@ -42,16 +42,11 @@ class LazyGetParameter extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
-
-        return $this->validType(
-            $container->getParameter(
-                $this->id instanceof LazyInterface
-                    ? $this->id->load($container, Container::T_STRING)
-                    : $this->id
-            ),
-            $expectedType
+    protected function loadValue(Container $container){
+        return $container->get(
+            $this->isLazyObject($this->id)
+                ? $this->id->load($container, "string")
+                : $this->id
         );
     }
 }

@@ -11,14 +11,14 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
 
 /**
  *
  */
-class LazyGetTaggedIdList extends AbstractLazy{
+class LazyGetTagged extends AbstractLazy{
 
     /**
      * @var string|LazyInterface
@@ -28,11 +28,11 @@ class LazyGetTaggedIdList extends AbstractLazy{
     /**
      * Constructor
      *
-     * @param   string  $tag
+     * @param   string|LazyInterface    $tag
      *  タグ名
      */
     public function __construct($tag){
-        if(!is_string($tag) && !$tag instanceof LazyInterface){
+        if(!is_string($tag) && !$this->isLazyObject($tag)){
             throw new \InvalidArgumentException;
         }
 
@@ -42,16 +42,11 @@ class LazyGetTaggedIdList extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
-
-        return $this->validType(
-            $container->getTaggedIdList(
-                $this->tag instanceof LazyInterface
-                    ? $this->tag->load($container, Container::T_STRING)
-                    : $this->tag
-            ),
-            $expectedType
+    protected function loadValue(Container $container){
+        return $container->getTagged(
+            $this->isLazyObject($this->tag)
+                ? $this->tag->load($container, "string")
+                : $this->tag
         );
     }
 }

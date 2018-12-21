@@ -11,7 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
 use Fratily\Container\Builder\LockableInterface;
@@ -33,5 +33,5 @@ interface LazyInterface extends LockableInterface{
      *
      * @throws  Exception\ExpectedTypeException
      */
-    public function load(Container $container, string $expectedType = null);
+    public function load(Container $container, string $expectedType = "mixed");
 }

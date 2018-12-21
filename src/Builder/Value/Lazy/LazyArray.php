@@ -11,7 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
 
@@ -36,12 +36,9 @@ class LazyArray extends AbstractLazy{
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
-    public function load(Container $container, string $expectedType = null){
-        return $this->validType(
-            LazyResolver::resolveLazyArray($container, $this->values),
-            $expectedType
-        );
+    protected function loadValue(Container $container){
+        return LazyResolver::resolveLazyArray($container, $this->values);
     }
 }

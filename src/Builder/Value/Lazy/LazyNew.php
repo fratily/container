@@ -11,9 +11,10 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -21,31 +22,28 @@ use Fratily\Container\Container;
 class LazyNew extends AbstractLazy{
 
     /**
-     * @var string
+     * @var string|LazyInterface
      */
     private $class;
 
     /**
      * @var mixed[]
      */
-    private $parameters;
+    private $parameters = [];
 
     /**
      * @var mixed[]
      */
-    private $types;
+    private $types      = [];
 
     /**
      * Constructor
      *
-     * @param   string  $class
+     * @param   string|LazyInterface  $class
      *  クラス名
      */
     public function __construct($class){
-        if(
-            !is_string($class)
-            && !(is_object($class) && $class instanceof LazyInterface)
-        ){
+        if(!(is_string($class) && class_exists($class)) && !$this->isLazyObject($class)){
             throw new \InvalidArgumentException;
         }
 
@@ -55,31 +53,22 @@ class LazyNew extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
-
-        $class  = $this->class instanceof LazyInterface
-            ? $this->class->load($container, Container::T_STRING)
+    protected function loadValue(Container $container){
+        $class  = $this->isLazyObject($this->class)
+            ? $this->class->load($container, "string")
             : $this->class
         ;
 
-        if(!is_string($class)){
-            throw new \LogicException("ここに来ることはない");
-        }
-
         if(!class_exists($class)){
-            throw new Exception\LazyException;
+            throw new LazyException;
         }
 
-        return $this->validType(
-            $container
-                ->getResolver()
-                ->getClassResolver($this->class)
-                ->getInstanceGenerator()
-                ->generate($container, $this->parameters, $this->types)
-            ,
-            $expectedType
-        );
+        return $container
+            ->getResolver()
+            ->getClassResolver($class)
+            ->getInstanceGenerator()
+            ->generate($container, $this->parameters, $this->types)
+        ;
     }
 
     /**
@@ -94,9 +83,9 @@ class LazyNew extends AbstractLazy{
      *
      * @throws  Exception\LockedException
      */
-    public function addParameter($key, $value){
+    public function parameter($key, $value){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
         if(!is_int($key) && !is_string($key)){
@@ -120,9 +109,9 @@ class LazyNew extends AbstractLazy{
      *
      * @throws Exception\LockedException
      */
-    public function addType(string $class, $value){
+    public function type(string $class, $value){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
         if(!class_exists($class)){

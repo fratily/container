@@ -11,9 +11,10 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -31,13 +32,13 @@ class LazyCallback extends AbstractLazy{
     private $args   = [];
 
     /**
-     * Constructor.
+     * Constructor
      *
      * @param   mixed   $callback
      *  実行するコールバック
      */
     public function __construct($callback){
-        if(!is_callable($callback) && !$callback instanceof LazyInterface){
+        if(!is_callable($callback) && !$this->isLazyObject($callback)){
             throw new \InvalidArgumentException();
         }
 
@@ -47,25 +48,15 @@ class LazyCallback extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
-
-        $callback   = $this->callback instanceof LazyInterface
-            ? $this->callback->load($container, Container::T_CALLABLE)
-            : $this->callback
-        ;
-        $args       = $this->args instanceof LazyInterface
-            ? $this->args->load($container, Container::T_ARRAY)
-            : $this->args
-        ;
-
-        if(!is_callable($callback) || !is_array($args)){
-            throw new \LogicException("ここに来ることはない");
-        }
-
-        return $this->validType(
-            call_user_func_array($callback, $args),
-            $expectedType
+    protected function loadValue(Container $container){
+        return call_user_func_array(
+            $this->isLazyObject($this->callback)
+                ? $this->callback->load($container, "callable")
+                : $this->callback
+            ,
+            $this->isLazyObject($this->args)
+                ? $this->args->load($container, "array")
+                : $this->args
         );
     }
 
@@ -77,9 +68,9 @@ class LazyCallback extends AbstractLazy{
      *
      * @return  $this
      */
-    public function setArgs($args){
+    public function args($args){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
         if(!is_array($args) && !$args instanceof LazyInterface){

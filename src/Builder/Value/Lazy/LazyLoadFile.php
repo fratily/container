@@ -11,9 +11,10 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -21,7 +22,7 @@ use Fratily\Container\Container;
 class LazyLoadFile extends AbstractLazy{
 
     /**
-     * @var string|\SplFileInfo|LazyInterface
+     * @var string|LazyInterface
      */
     private $file;
 
@@ -46,10 +47,7 @@ class LazyLoadFile extends AbstractLazy{
      *  必須フラグ
      */
     public function __construct($file){
-        if(
-            !is_string($file)
-            && !(is_object($file) && $file instanceof LazyInterface)
-        ){
+        if(!is_string($file) && !$this->isLazyObject($file)){
             throw new \InvalidArgumentException;
         }
 
@@ -59,37 +57,28 @@ class LazyLoadFile extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
-
-        $path       = $this->file instanceof LazyInterface
-            ? $this->file->load($container, Container::T_STRING)
+    protected function loadValue(Container $container){
+        $path       = $this->isLazyObject($this->file)
+            ? $this->file->load($container, "string")
             : $this->file
         ;
-        $require    = $this->require instanceof LazyInterface
-            ? $this->require->load($container, Container::T_BOOL)
+        $require    = $this->isLazyObject($this->require)
+            ? $this->require->load($container, "bool")
             : $this->require
         ;
-        $once       = $this->once instanceof LazyInterface
-            ? $this->once->load($container, Container::T_BOOL)
+        $once       = $this->isLazyObject($this->once)
+            ? $this->once->load($container, "bool")
             : $this->once
         ;
-
-        if(!is_string($path) || !is_bool($require) || !is_bool($once)){
-            throw new \LogicException("ここに来ることはない");
-        }
 
         if(!is_file($path)){
             throw new Exception\LazyException;
         }
 
-        return $this->validType(
-            $require
-                ? ($once ? require_once $path : require $path)
-                : ($once ? include_once $path : include $path)
-            ,
-            $expectedType
-        );
+        return $require
+            ? ($once ? require_once $path : require $path)
+            : ($once ? include_once $path : include $path)
+        ;
     }
 
     /**
@@ -100,11 +89,11 @@ class LazyLoadFile extends AbstractLazy{
      *
      * @return  $this
      *
-     * @throws  Exception\LockedException
+     * @throws  LockedException
      */
-    public function isRequire($require){
+    public function isRrequire($require){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
         if(
@@ -127,11 +116,11 @@ class LazyLoadFile extends AbstractLazy{
      *
      * @return  $this
      *
-     * @throws  Exception\LockedException
+     * @throws  LockedException
      */
     public function isOnce($once){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
         if(

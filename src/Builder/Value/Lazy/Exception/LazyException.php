@@ -11,7 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy\Exception;
+namespace Fratily\Container\Builder\Value\Lazy\Exception;
 
-class LockedException extends LazyException{
+class LazyException extends \Exception{
 }

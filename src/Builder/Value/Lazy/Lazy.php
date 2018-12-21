@@ -11,10 +11,10 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
-use Fratily\Container\Builder\Resolver\CallbackInvoker;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -37,18 +37,13 @@ class Lazy extends AbstractLazy{
     private $types;
 
     /**
-     * @var CallbackInvoker|null
-     */
-    private $callbackInvoker;
-
-    /**
      * Constructor
      *
      * @param   mixed   $callback
      *  実行するコールバック
      */
     public function __construct($callback){
-        if(!is_callable($callback) && !$callback instanceof LazyInterface){
+        if(!is_callable($callback) && !$this->isLazyObject($callback)){
             throw new \InvalidArgumentException();
         }
 
@@ -58,29 +53,14 @@ class Lazy extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container, string $expectedType = null){
-        $this->lock();
-
-        if(null === $this->callbackInvoker){
-            $callback   = $this->callback instanceof LazyInterface
-                ? $this->callback->load($container, Container::T_CALLABLE)
+    protected function loadValue(Container $container){
+        return $container->invokeCallback(
+            $this->isLazyObject($this->callback)
+                ? $this->callback->load($container, "callable")
                 : $this->callback
-            ;
-
-            if(!is_callable($this->callback)){
-                throw new \LogicException("ここに来ることはない");
-            }
-
-            $this->callbackInvoker  = new CallbackInvoker($container->getResolver(), $callback);
-        }
-
-        return $this->validType(
-            $this->callbackInvoker->invoke(
-                $container,
-                $this->parameters,
-                $this->types
-            ),
-            $expectedType
+            ,
+            $this->parameters,
+            $this->types
         );
     }
 
@@ -89,16 +69,16 @@ class Lazy extends AbstractLazy{
      *
      * @param   string  $key
      *  ポジションもしくはパラメータ名
-     * @param   mixed   $value
+     * @param   mixed|LazyInterface $value
      *  値
      *
      * @return  $this
      *
-     * @throws  Exception\LockedException
+     * @throws  LockedException
      */
-    public function addParameter($key, $value){
+    public function parameter($key, $value){
         if($this->isLocked()){
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
         if(!is_int($key) && !is_string($key)){
@@ -120,14 +100,24 @@ class Lazy extends AbstractLazy{
      *
      * @return  $this
      *
-     * @throws Exception\LockedException
+     * @throws LockedException
      */
-    public function addType(string $class, $value){
+    public function type(string $class, $value){
+        $class  = ltrim($class, "\\");
+
         if($this->isLocked()){
             throw new Exception\LockedException();
         }
 
-        if(!class_exists($class)){
+        if(!class_exists($class) && !interface_exists($class)){
+            throw new \InvalidArgumentException;
+        }
+
+        if(!is_object($value)){
+            throw new \InvalidArgumentException;
+        }
+
+        if(!$this->isLazyObject($value) && !$value instanceof $class){
             throw new \InvalidArgumentException;
         }
 

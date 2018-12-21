@@ -20,8 +20,6 @@ use Fratily\Container\Container;
  */
 class ContainerBuilder{
 
-    use LazyBuilderTrait;
-
     /**
      * @var Resolver\Resolver
      */
@@ -37,6 +35,11 @@ class ContainerBuilder{
      * @var Value\Parameter[]
      */
     private $parameters = [];
+
+    /**
+     * @var Injection
+     */
+    private $injections = [];
 
     /**
      * Constructor
@@ -131,5 +134,35 @@ class ContainerBuilder{
         }
 
         return $this->parameters[$id];
+    }
+
+    /**
+     * DI設定のリストを取得する
+     *
+     * @return  Injection[]
+     */
+    public function getInjections(){
+        return $this->injections;
+    }
+
+    /**
+     * DI設定を取得する
+     *
+     * @param string $class
+     * @return type
+     * @throws \InvalidArgumentException
+     */
+    public function injection(string $class){
+        $class  = ltrim($class, "\\");
+
+        if(!class_exists($class) && !interface_exists($class)){
+            throw new \InvalidArgumentException;
+        }
+
+        if(!array_key_exists($class, $this->injections)){
+            $this->injections[$class]   = new Injection();
+        }
+
+        return $this->injections[$class];
     }
 }
