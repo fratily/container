@@ -13,19 +13,10 @@
  */
 namespace Fratily\Container\Builder\Value;
 
-use Fratily\Container\Builder\Exception\LockedException;
-use Fratily\Container\Builder\Lazy\LazyInterface;
-use Fratily\Container\Builder\Lazy\LazyNew;
-
 /**
  *
  */
 final class Service extends AbstractValue{
-
-    /**
-     * @var string[]
-     */
-    private $setters    = [];
 
     /**
      * {@inheritdoc}
@@ -36,7 +27,7 @@ final class Service extends AbstractValue{
                 throw new \InvalidArgumentException;
             }
 
-            $value  = new LazyNew($class);
+            $value  = new Lazy\LazyNew($class);
         }
 
         if(!is_object($value)){
@@ -55,32 +46,5 @@ final class Service extends AbstractValue{
         }
 
         parent::setType($type, $overwritable);
-    }
-
-    /**
-     * セッターのリストを取得する
-     *
-     * @return  array[]
-     */
-    public function getSetters(){
-        return $this->setters;
-    }
-
-    /**
-     * セッターを追加する
-     *
-     * @param   string  $method
-     *  メソッド名
-     * @param   mixed   ...$args
-     *  セッター実行時に渡す引数
-     */
-    public function addSetter(string $method, ...$args){
-        if($this->isLocked()){
-            throw new LockedException();
-        }
-
-        $this->setters[$method] = $args;
-
-        return $this;
     }
 }
