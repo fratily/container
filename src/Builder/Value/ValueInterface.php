@@ -13,29 +13,54 @@
  */
 namespace Fratily\Container\Builder\Value;
 
-use Fratily\Container\Container;
 use Fratily\Container\Builder\LockableInterface;
 use Fratily\Container\Builder\Exception\LockedException;
-
 
 /**
  *
  */
-trait TagTrait{
+interface ValueInterface extends LockableInterface{
 
     /**
-     * @var mixed[]
+     * Constructor
+     *
+     * @param   string  $type
+     *  型
      */
-    private $tags   = [];
+    public function __construct(string $type = "mixed");
+
+    /**
+     * 値を取得する
+     *
+     * @return  mixed
+     */
+    public function get();
+
+    /**
+     * 値を設定する
+     *
+     * @param   mixed   $value
+     *  値
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function set($value);
+
+    /**
+     * 型を取得する
+     *
+     * @return  string
+     */
+    public function getType();
 
     /**
      * タグを取得する
      *
      * @return  string[]
      */
-    public function getTags(){
-        return array_keys($this->tags);
-    }
+    public function getTags();
 
     /**
      * タグを追加する
@@ -44,18 +69,8 @@ trait TagTrait{
      *  タグ名
      *
      * @return  $this
+     *
+     * @throws  LockedException
      */
-    public function addTag(string $tag){
-        if($this instanceof LockableInterface && $this->isLocked()){
-            throw new LockedException();
-        }
-
-        if(1 !== preg_match(Container::REGEX_KEY, $tag)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->tags[$tag]   = true;
-
-        return $this;
-    }
+    public function addTag(string $tag);
 }

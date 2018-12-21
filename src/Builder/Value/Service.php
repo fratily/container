@@ -13,38 +13,17 @@
  */
 namespace Fratily\Container\Builder\Value;
 
-use Fratily\Container\Builder\Lazy\LazyInterface;
 use Fratily\Container\Builder\Exception\LockedException;
-use Fratily\Container\Builder\LockableInterface;
-use Fratily\Container\Builder\LockableTrait;
+use Fratily\Container\Builder\Lazy\LazyInterface;
+use Fratily\Container\Builder\Lazy\LazyNew;
 
 /**
  *
  */
-class Service implements LockableInterface{
-
-    use TagTrait, LockableTrait;
+class Service extends AbstractValue{
 
     const PROP_POS  = "pos";
     const PROP_NAME = "name";
-
-    /**
-     * @var string
-     */
-    private $class;
-
-    /**
-     * @var LazyInterface|object
-     */
-    private $value;
-
-    /**
-     * @var mixed[]
-     */
-    private $parameters = [
-        self::PROP_POS  => [],
-        self::PROP_NAME => [],
-    ];
 
     /**
      * @var string[]
@@ -52,41 +31,14 @@ class Service implements LockableInterface{
     private $setters    = [];
 
     /**
-     * Constructor
-     *
-     * @param   string  $class
-     *  クラス名
-     * @param   LazyInterface|object|string|null    $value
-     *  サービスの値
+     * {@inheritdoc}
      */
-    public function __construct(string $class, $value = null){
-        if(null !== $value && !is_object($value)){
+    public function __construct(string $type = "mixed"){
+        if(!class_exists($type)){
             throw new \InvalidArgumentException;
         }
 
-        $this->class    = ltrim($class, "\\");
-
-        if(null !== $value){
-            $this->set($value);
-        }
-    }
-
-    /**
-     * クラス名を取得する
-     *
-     * @return  string
-     */
-    public function getClass(){
-        return $this->class;
-    }
-
-    /**
-     * 値を取得する
-     *
-     * @return  Lazy\LazyInterface|object|null
-     */
-    public function getValue(){
-        return $this->value;
+        parent::__construct($type);
     }
 
     /**
@@ -98,63 +50,19 @@ class Service implements LockableInterface{
      * @return  $this
      */
     public function set($value){
-        if($this->isLocked()){
-            throw new LockedException();
-        }
-
-        if(is_string($value) && class_exists($value)){
-            if(
-                $this->class !== ltrim($value, "\\")
-                && !is_subclass_of($value, $this->class)
-            ){
+        if(is_string($value)){
+            if(!class_exists($value)){
                 throw new \InvalidArgumentException;
             }
 
-            $value  = new Lazy\LazyNew($class);
-        }elseif(!is_object($value)){
+            $value  = new LazyNew($class);
+        }
+
+        if(!is_object($value)){
             throw new \InvalidArgumentException;
         }
 
-        if(!$value instanceof LazyInterface && !$value instanceof $this->class){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->value    = $value;
-
-        return $this;
-    }
-
-    /**
-     * パラメータのリストを取得する
-     *
-     * @return  mixed[][]
-     */
-    public function getParameters(){
-        return $this->parameters;
-    }
-
-    /**
-     * パラメーターを追加する
-     *
-     * @param   int|string  $key
-     *  パラメーターキー
-     * @param   mixed   $value
-     *  パラメータに渡す値
-     *
-     * @return  $this
-     */
-    public function parameter($key, $value){
-        if($this->isLocked()){
-            throw new LockedException();
-        }
-
-        if(!is_int($key) && !is_string($key)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->parameters[is_int($key) ? self::PROP_POS : self::PROP_NAME]  = $value;
-
-        return $this;
+        return parent::set($value);
     }
 
     /**
@@ -174,7 +82,7 @@ class Service implements LockableInterface{
      * @param   mixed   ...$args
      *  セッター実行時に渡す引数
      */
-    public function setter(string $method, ...$args){
+    public function addSetter(string $method, ...$args){
         if($this->isLocked()){
             throw new LockedException();
         }

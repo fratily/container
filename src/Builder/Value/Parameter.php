@@ -13,61 +13,8 @@
  */
 namespace Fratily\Container\Builder\Value;
 
-use Fratily\Container\Container;
-
 /**
  *
  */
-class Parameter{
-
-    use TagTrait;
-
-    /**
-     * @var mixed
-     */
-    private $value;
-
-    /**
-     * @var bool
-     */
-    private $valueOverwritable  = true;
-
-    /**
-     * 値を取得する
-     *
-     * @return  mixed
-     */
-    public function getValue(){
-        return $this->value;
-    }
-
-    /**
-     * 値が書き換え可能か確認する
-     *
-     * @return  bool
-     */
-    public function isOverWritableValue(){
-        return $this->valueOverwritable;
-    }
-
-    /**
-     * 値を設定する
-     *
-     * @param   mixed   $value
-     *  値
-     * @param   bool    $allowOverwrite
-     *  書き換えを許可するか
-     *
-     * @return  $this
-     */
-    public function setValue($value, bool $allowOverwrite = true){
-        if(!$this->isOverWritableValue()){
-            throw new \LogicException;
-        }
-
-        $this->value                = $value;
-        $this->valueOverwritable    = $allowOverwrite;
-
-        return $this;
-    }
+class Parameter extends AbstractValue{
 }
