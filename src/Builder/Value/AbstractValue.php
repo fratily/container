@@ -29,33 +29,17 @@ abstract class AbstractValue implements ValueInterface{
     /**
      * @var string
      */
-    private $type;
+    private $type   = "mixed";
+
+    /**
+     * @var bool
+     */
+    private $typeOverwritable   = true;
 
     /**
      * @var mixed[]
      */
     private $tags   = [];
-
-    /**
-     * インスタンス生成から値登録までのショートカット
-     *
-     * @param   mixed   $value
-     *  値
-     * @param   string  $type
-     *  型
-     *
-     * @return type
-     */
-    public static function create($value, string $type = "mixed"){
-        return (new static($type))->set($value);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function __construct(string $type = "mixed"){
-        $this->type = $type;
-    }
 
     /**
      * {@inheritdoc}
@@ -82,6 +66,24 @@ abstract class AbstractValue implements ValueInterface{
      */
     public function getType(){
         return $this->type;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setType(string $type, bool $overwritable = false){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        if(!$this->typeOverwritable){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->type             = $type;
+        $this->typeOverwritable = $overwritable;
+
+        return $this;
     }
 
     /**

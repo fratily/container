@@ -16,5 +16,5 @@ namespace Fratily\Container\Builder\Value;
 /**
  *
  */
-class Parameter extends AbstractValue{
+final class Parameter extends AbstractValue{
 }

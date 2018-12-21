@@ -20,10 +20,7 @@ use Fratily\Container\Builder\Lazy\LazyNew;
 /**
  *
  */
-class Service extends AbstractValue{
-
-    const PROP_POS  = "pos";
-    const PROP_NAME = "name";
+final class Service extends AbstractValue{
 
     /**
      * @var string[]
@@ -32,22 +29,6 @@ class Service extends AbstractValue{
 
     /**
      * {@inheritdoc}
-     */
-    public function __construct(string $type = "mixed"){
-        if(!class_exists($type)){
-            throw new \InvalidArgumentException;
-        }
-
-        parent::__construct($type);
-    }
-
-    /**
-     * 値を設定する
-     *
-     * @param   LazyInterface|object|string $value
-     *  サービスの値
-     *
-     * @return  $this
      */
     public function set($value){
         if(is_string($value)){
@@ -63,6 +44,17 @@ class Service extends AbstractValue{
         }
 
         return parent::set($value);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setType(string $type, bool $overwritable = false){
+        if(!class_exists($type) && !interface_exists($type)){
+            throw new \InvalidArgumentException;
+        }
+
+        parent::setType($type, $overwritable);
     }
 
     /**

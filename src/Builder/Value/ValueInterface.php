@@ -22,14 +22,6 @@ use Fratily\Container\Builder\Exception\LockedException;
 interface ValueInterface extends LockableInterface{
 
     /**
-     * Constructor
-     *
-     * @param   string  $type
-     *  型
-     */
-    public function __construct(string $type = "mixed");
-
-    /**
      * 値を取得する
      *
      * @return  mixed
@@ -54,6 +46,20 @@ interface ValueInterface extends LockableInterface{
      * @return  string
      */
     public function getType();
+
+    /**
+     * 型を設定する
+     *
+     * @param   string  $type
+     *  型
+     * @param   bool    $overwritable
+     *  上書き可能か
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function setType(string $type, bool $overwritable = false);
 
     /**
      * タグを取得する

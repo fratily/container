@@ -69,55 +69,35 @@ class ContainerBuilder{
     /**
      * サービスを取得する
      *
-     * 存在しないサービス取得時にIDがクラス名のものを取得しようとすると、
-     * そのクラスの遅延インスタンス生成サービスが生成される。
-     *
-     * 生成されたサービスの値や期待クラス名は上書きすることはできない。
-     *
      * @param   string  $id
-     *  サービスIDもしくはクラス名
+     *  サービスID
      *
      * @return  Value\Service
      */
-    public function getService(string $id){
-        if(array_key_exists($id, $this->services)){
-            return $this->services[$id];
-        }
+    public function service(string $id){
+        $id = ltrim($id, "\\");
 
-        $this->addService($id, new Value\Service());
+        if(!array_key_exists($id, $this->services)){
+            if(
+                1 !== preg_match(Container::REGEX_KEY, $id)
+                && !class_exists($id)
+                && !interface_exists($id)
+            ){
+                throw new \InvalidArgumentException;
+            }
 
-        if(class_exists($id)){
-            $this->services[$id]
-                ->setValue(new Lazy\LazyNew($id), false)
-                ->setClass($id, false)
-            ;
+            if(array_key_exists($id, $this->parameters)){
+                throw new \InvalidArgumentException;
+            }
+
+            $this->services[$id]    = new Value\Service();
+
+            if(class_exists($id) || interface_exists($id)){
+                $this->services[$id]->setType($id, false);
+            }
         }
 
         return $this->services[$id];
-    }
-
-    /**
-     * サービスを登録する
-     *
-     * @param   string  $id
-     *  サービスID
-     * @param   Value\Service   $service
-     *  サービス
-     *
-     * @return  $this
-     */
-    public function addService(string $id, Value\Service $service){
-        if(array_key_exists($id, $this->services)){
-            throw new \LogicException;
-        }
-
-        if(1 !== preg_match(Container::REGEX_KEY, $id)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->services[$id]    = $service;
-
-        return $this;
     }
 
     /**
@@ -137,67 +117,19 @@ class ContainerBuilder{
      *
      * @return  Value\Parameter
      */
-    public function getParameter(string $id){
-        if(array_key_exists($id, $this->parameters)){
-            return $this->parameters[$id];
-        }
+    public function parameter(string $id){
+        if(!array_key_exists($id, $this->parameters)){
+            if(1 !== preg_match(Container::REGEX_KEY, $id)){
+                throw new \InvalidArgumentException;
+            }
 
-        $this->addParameter($id, new Value\Parameter());
+            if(array_key_exists($id, $this->services)){
+                throw new \InvalidArgumentException;
+            }
+
+            $this->parameters[$id]  = new Value\Parameter();
+        }
 
         return $this->parameters[$id];
-    }
-
-    /**
-     * パラメーターを登録する
-     *
-     * @param   string  $id
-     *  パラメーターID
-     * @param   Value\Parameter $parameter
-     *  パラメーター
-     *
-     * @return  $this
-     */
-    public function addParameter(string $id, Value\Parameter $parameter){
-        if(array_key_exists($id, $this->parameters)){
-            throw new \LogicException;
-        }
-
-        if(1 !== preg_match(Container::REGEX_KEY, $id)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->parameters[$id]  = $parameter;
-
-        return $this;
-    }
-
-    /**
-     * サービスもしくはパラメーターを登録する
-     *
-     * @param   string  $id
-     *  サービスもしくはパラメータのID
-     * @param   Value\Service|Value\Parameter   $value
-     *  サービスもしくはパラメーター
-     *
-     * @return  $this
-     */
-    public function add($value){
-        if(
-            !is_object($value)
-            || (
-                !$value instanceof Value\Service
-                && !$value instanceof Value\Parameter
-            )
-        ){
-            throw new \InvalidArgumentException;
-        }
-
-        if($value instanceof Value\Service){
-            $this->addService($id, $value);
-        }elseif($value instanceof  Value\Parameter){
-            $this->addParameter($id, $value);
-        }
-
-        return $this;
     }
 }
