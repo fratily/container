@@ -56,17 +56,19 @@ class Service implements LockableInterface{
      *
      * @param   string  $class
      *  クラス名
-     * @param   LazyInterface|object|string $value
+     * @param   LazyInterface|object|string|null    $value
      *  サービスの値
      */
-    public function __construct(string $class, $value){
-        if(!is_object($value)){
+    public function __construct(string $class, $value = null){
+        if(null !== $value && !is_object($value)){
             throw new \InvalidArgumentException;
         }
 
         $this->class    = ltrim($class, "\\");
 
-        $this->set($value);
+        if(null !== $value){
+            $this->set($value);
+        }
     }
 
     /**
