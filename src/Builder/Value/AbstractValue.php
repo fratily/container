@@ -37,6 +37,20 @@ abstract class AbstractValue implements ValueInterface{
     private $tags   = [];
 
     /**
+     * インスタンス生成から値登録までのショートカット
+     *
+     * @param   mixed   $value
+     *  値
+     * @param   string  $type
+     *  型
+     *
+     * @return type
+     */
+    public static function create($value, string $type = "mixed"){
+        return (new static($type))->set($value);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function __construct(string $type = "mixed"){
