@@ -18,7 +18,9 @@ use Fratily\Container\Container;
 /**
  *
  */
-class ContainerBuilder{
+class ContainerBuilder implements LockableInterface{
+
+    use LockableTrait;
 
     /**
      * @var Resolver\Resolver
@@ -52,6 +54,25 @@ class ContainerBuilder{
     }
 
     /**
+     * {@inheritdoc}
+     */
+    public function lock(){
+        foreach($this->services as $service){
+            $service->lock();
+        }
+
+        foreach($this->parameters as $parameter){
+            $parameter->lock();
+        }
+
+        foreach($this->injections as $injection){
+            $injection->lock();
+        }
+
+        $this->locked   = true;
+    }
+
+    /**
      * リゾルバを取得する
      *
      * @return  Resolver\Resolver
@@ -78,6 +99,10 @@ class ContainerBuilder{
      * @return  Value\Service
      */
     public function service(string $id){
+        if($this->isLocked()){
+            throw new Exception\LockedException;
+        }
+
         $id = ltrim($id, "\\");
 
         if(!array_key_exists($id, $this->services)){
@@ -121,6 +146,10 @@ class ContainerBuilder{
      * @return  Value\Parameter
      */
     public function parameter(string $id){
+        if($this->isLocked()){
+            throw new Exception\LockedException;
+        }
+
         if(!array_key_exists($id, $this->parameters)){
             if(1 !== preg_match(Container::REGEX_KEY, $id)){
                 throw new \InvalidArgumentException;
@@ -154,6 +183,10 @@ class ContainerBuilder{
      * @return  Value\Injection
      */
     public function injection(string $id){
+        if($this->isLocked()){
+            throw new Exception\LockedException;
+        }
+
         $id = ltrim($id, "\\");
 
         if(!array_key_exists($id, $this->injections)){
