@@ -37,7 +37,7 @@ class ContainerBuilder{
     private $parameters = [];
 
     /**
-     * @var Injection
+     * @var Value\Injection
      */
     private $injections = [];
 
@@ -139,7 +139,7 @@ class ContainerBuilder{
     /**
      * DI設定のリストを取得する
      *
-     * @return  Injection[]
+     * @return  Value\Injection[]
      */
     public function getInjections(){
         return $this->injections;
@@ -148,21 +148,26 @@ class ContainerBuilder{
     /**
      * DI設定を取得する
      *
-     * @param string $class
-     * @return type
-     * @throws \InvalidArgumentException
+     * @param   string  $id
+     *  クラス名もしくはサービスID
+     *
+     * @return  Value\Injection
      */
-    public function injection(string $class){
-        $class  = ltrim($class, "\\");
+    public function injection(string $id){
+        $id = ltrim($id, "\\");
 
-        if(!class_exists($class) && !interface_exists($class)){
+        if(
+            1 !== preg_match(Container::REGEX_KEY, $id)
+            && !class_exists($id)
+            && !interface_exists($id)
+        ){
             throw new \InvalidArgumentException;
         }
 
-        if(!array_key_exists($class, $this->injections)){
-            $this->injections[$class]   = new Injection();
+        if(!array_key_exists($id, $this->injections)){
+            $this->injections[$id]   = new Value\Injection();
         }
 
-        return $this->injections[$class];
+        return $this->injections[$id];
     }
 }

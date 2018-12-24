@@ -11,7 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder;
+namespace Fratily\Container\Builder\Value;
 
 use Fratily\Container\Builder\LockableInterface;
 use Fratily\Container\Builder\LockableTrait;
