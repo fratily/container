@@ -156,15 +156,15 @@ class ContainerBuilder{
     public function injection(string $id){
         $id = ltrim($id, "\\");
 
-        if(
-            1 !== preg_match(Container::REGEX_KEY, $id)
-            && !class_exists($id)
-            && !interface_exists($id)
-        ){
-            throw new \InvalidArgumentException;
-        }
-
         if(!array_key_exists($id, $this->injections)){
+            if(
+                1 !== preg_match(Container::REGEX_KEY, $id)
+                && !class_exists($id)
+                && !interface_exists($id)
+            ){
+                throw new \InvalidArgumentException;
+            }
+
             $this->injections[$id]   = new Value\Injection();
         }
 
