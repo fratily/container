@@ -13,6 +13,7 @@
  */
 namespace Fratily\Container;
 
+use Fratily\Container\Builder\Value\Injection;
 use Psr\Container\ContainerInterface;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -24,61 +25,32 @@ class Container implements ContainerInterface{
     const REGEX_KEY = "/\A[A-Z_][0-9A-Z_]*(\.[A-Z_][0-9A-Z_]*)*\z/i";
 
     /**
-     * @var Builder\Resolver\Resolver
+     * @var Repository
+     */
+    private $repository;
+
+    /**
+     * @var Resolver
      */
     private $resolver;
 
     /**
-     * @var object[]|Builder\Lazy\LazyInterface[]
-     */
-    private $services;
-
-    /**
-     * @var object[]
-     */
-    private $serviceInstances   = [];
-
-    /**
-     * @var string[][]
-     */
-    private $taggedServices;
-
-    /**
-     * @var ContainerInterface[]
-     */
-    private $delegateContainers;
-
-    /**
      * Constructor
      *
-     * @param   Resolver\Resolver   $resolver
-     *  依存関係を統括するリゾルバオブジェクト
-     * @param   object[]|Builder\Lazy\LazyInterface[]   $services
-     *  サービスとそのIDの連想配列
-     * @param   string[][]  $taggedServices
-     *  タグ付けされたサービスの二次元連想配列
-     * @param   ContainerInterface[]    $delegateContainers
-     *  サービスコンテナに登録するデリゲートコンテナの配列
+     * @param   Repository  $repository
+     *  リポジトリ
      */
-    public function __construct(
-        Builder\Resolver\Resolver $resolver,
-        array $services,
-        array $taggedServices,
-        array $delegateContainers
-    ){
-        $this->resolver             = $resolver;
-        $this->services             = $services;
-        $this->taggedServices       = $taggedServices;
-        $this->delegateContainers   = $delegateContainers;
+    public function __construct(Repository $repository){
+        $this->repository   = $repository;
     }
 
     /**
-     * リゾルバを取得する
+     * リポジトリを取得する
      *
-     * @return  Builder\Resolver\Resolver
+     * @return  Repository
      */
-    public function getResolver(){
-        return $this->resolver;
+    public function getRepository(){
+        return $this->repository;
     }
 
     /**
@@ -86,78 +58,33 @@ class Container implements ContainerInterface{
      *
      * @param   string  $class
      *  対象クラス名
-     * @param   mixed[] $parameters
-     *  追加指定パラメータの連想配列
-     * @param   mixed[] $types
-     *  追加指定型の連想配列
+     * @param   Injection   $injection
+     *  追加DI設定
      *
      * @return  object
      */
-    public function getInstance(
-        string $class,
-        array $parameters = [],
-        array $types = []
-    ){
-        if(!class_exists($class)){
-            throw new \InvalidArgumentException("Class '{$class}' not found.");
-        }
-
-        return $this->resolver
-            ->getClassResolver($class)
-            ->getInstanceGenerator()
-            ->generate($this, $parameters, $types)
-        ;
+    public function getInstance(string $class, Injection $injection = null){
     }
 
     /**
      * コールバックを実行しその結果を取得する
      *
-     * DI定義を用いたパラメータの自動解決が行われる。
-     *
      * @param   callable    $callback
      *  実行対象コールバック
      * @param   mixed[] $parameters
-     *  パラメータの連想配列
-     * @param   mixed[] $types
-     *  型の連想配列
+     *  パラメータの連想配列。キーに指定する値で解決方法が変わる。
+     *  数値ならパラメーターの位置で解決。文字列であればパラメータ名で解決。
+     *  文字列かつクラスもしくはインターフェース名であれば型名で解決する。
      *
      * @return  mixed
      */
-    public function invokeCallback(
-        callable $callback,
-        array $parameters = [],
-        array $types = []
-    ){
-        return $this->resolver
-            ->createCallbackInvoker($callback)
-            ->invoke($this, $parameters, $types)
-        ;
+    public function invokeCallback(callable $callback, array $parameters = []){
     }
 
     /**
      * {@inheritdoc}
      */
     public function get($id){
-        if(!is_string($id)){
-            throw new \InvalidArgumentException(
-                "The service ID must be a string."
-            );
-        }
-
-        if(!$this->has($id)){
-            throw new Exception\ServiceNotFoundException(
-                "Service '{$id}' is not found in container."
-            );
-        }
-
-        if(!array_key_exists($id, $this->serviceInstances)){
-            $this->serviceInstances[$id]    = $this->hasInThisContainer($id)
-                ? Builder\Lazy\LazyResolver::resolveLazy($this, $this->services[$id])
-                : $this->getFromDelegateContainer($id)
-            ;
-        }
-
-        return $this->serviceInstances[$id];
     }
 
     /**
@@ -168,61 +95,7 @@ class Container implements ContainerInterface{
      *
      * @return  object[]
      */
-    public function getTagged(string $tag){
-        if(!array_key_exists($tag, $this->taggedServices)){
-            return [];
-        }
-
-        $result = [];
-
-        foreach($this->taggedServices[$tag] as $id){
-            $result[]   = $this->get($id);
-        }
-
-        return $result;
-    }
-
-    /**
-     * タグ付けられたサービスのIDの配列を取得する
-     *
-     * @param   string  $tag
-     *  タグ
-     *
-     * @return  object[]
-     */
-    public function getTaggedIdList(string $tag){
-        if(!array_key_exists($tag, $this->taggedServices)){
-            return [];
-        }
-
-        return $this->taggedServices[$tag];
-    }
-
-    /**
-     * デリゲートコンテナからサービスを取得する
-     *
-     * @param   string  $id
-     *
-     * @return  mixed
-     *
-     * @throws  \InvalidArgumentException
-     * @throws  Exception\DelegateContainerException
-     * @throws  Exception\ServiceNotFoundException
-     */
-    protected function getFromDelegateContainer(string $id){
-        try{
-            foreach($this->delegateContainers as $container){
-                if($container->has($id)){
-                    return $container->get($id);
-                }
-            }
-        }catch(ContainerExceptionInterface $e){
-            throw new Exception\DelegateContainerException(
-                "Delegate container threw an exception.",
-                0,
-                $e
-            );
-        }
+    public function getWithTagged(string $tag){
     }
 
     /**
@@ -231,44 +104,39 @@ class Container implements ContainerInterface{
      * @throws  \InvalidArgumentException
      */
     public function has($id){
-        if(!is_string($id)){
-            throw new \InvalidArgumentException(
-                "The service ID must be a string."
-            );
-        }
-
-        return $this->hasInThisContainer($id) || $this->hasInDelegateContainer($id);
     }
 
     /**
-     * このコンテナに指定したIDのサービスが存在するか確認する
+     * パラメーターを取得する
      *
      * @param   string  $id
+     *  パラメーターID
      *
-     * @return  bool
-     *
-     * @throws  \InvalidArgumentException
+     * @return  mixed
      */
-    protected function hasInThisContainer(string $id){
-        return array_key_exists($id, $this->services);
+    public function getParameter(string $id){
     }
 
     /**
-     * デリゲートコンテナに指定したIDのサービスが存在するか確認する
+     * タグ付けされたパラメーターの配列を取得する
+     *
+     * @param   string  $tag
+     *  タグ名
+     *
+     * @return  mixed[]
+     */
+    public function getParameterWithTagged(string $tag){
+    }
+
+    /**
+     * パラメーターが存在するか確認する
      *
      * @param   string  $id
+     *  パラメーターID
      *
      * @return  bool
-     *
-     * @throws  \InvalidArgumentException
      */
-    protected function hasInDelegateContainer(string $id){
-        foreach($this->delegateContainers as $container){
-            if($container->has($id)){
-                return true;
-            }
-        }
+    public function hasParameter(string $id){
 
-        return false;
     }
 }
