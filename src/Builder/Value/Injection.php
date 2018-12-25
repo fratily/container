@@ -23,6 +23,7 @@ class Injection implements LockableInterface{
 
     const PARAM_POS     = "pos";
     const PARAM_NAME    = "name";
+    const PARAM_TYPE    = "type";
 
     /**
      * @var mixed[][]
@@ -30,6 +31,7 @@ class Injection implements LockableInterface{
     private $parameters = [
         self::PARAM_POS     => [],
         self::PARAM_NAME    => [],
+        self::PARAM_TYPE    => [],
     ];
 
     /**
@@ -40,17 +42,17 @@ class Injection implements LockableInterface{
     /**
      * パラメーターを取得する
      *
-     * @param   string  $type
+     * @param   string  $paramType
      *  パラメータータイプ
      *
      * @return  mixed[]
      */
-    public function getParameters(string $type = self::PARAM_POS){
-        if(self::PARAM_POS !== $type && self::PARAM_NAME !== $type){
+    public function getParameters(string $paramType = self::PARAM_POS){
+        if(!array_key_exists($paramType, $this->parameters)){
             throw new \InvalidArgumentException;
         }
 
-        return $this->parameters[$type];
+        return $this->parameters[$paramType];
     }
 
     /**
@@ -72,7 +74,17 @@ class Injection implements LockableInterface{
             throw new \InvalidArgumentException;
         }
 
-        $this->parameters[is_int($key) ? self::PARAM_POS : self::PARAM_NAME][$key]  = $value;
+        $paramType  = self::PARAM_POS;
+
+        if(is_string($key)){
+            if(class_exists($key) || interface_exists($key)){
+                $paramType  = self::PARAM_TYPE;
+            }else{
+                $paramType  = self::PARAM_NAME;
+            }
+        }
+
+        $this->parameters[$paramType][$key]  = $value;
 
         return $this;
     }
