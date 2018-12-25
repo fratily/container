@@ -11,7 +11,7 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Lazy;
+namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
 
