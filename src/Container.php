@@ -63,7 +63,7 @@ class Container implements ContainerInterface{
      *
      * @return  object
      */
-    public function getInstance(string $class, Injection $injection = null){
+    public function new(string $class, Injection $injection = null){
     }
 
     /**
@@ -78,7 +78,7 @@ class Container implements ContainerInterface{
      *
      * @return  mixed
      */
-    public function invokeCallback(callable $callback, array $parameters = []){
+    public function invoke(callable $callback, array $parameters = []){
     }
 
     /**
