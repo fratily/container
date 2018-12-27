@@ -17,4 +17,15 @@ namespace Fratily\Container\Builder\Value;
  *
  */
 final class Parameter extends AbstractValue{
+
+    /**
+     * {@inheritdoc}
+     */
+    public function addAlias(string $alias){
+        if(class_exists($alias) || interface_exists($alias)){
+            throw new \InvalidArgumentException;
+        }
+
+        return parent::addAlias($alias);
+    }
 }
