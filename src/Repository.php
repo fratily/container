@@ -147,6 +147,10 @@ class Repository{
     public function getService(string $id){
         $id = ltrim($id, "\\");
 
+        if(array_key_exists($id, $this->aliasedServices)){
+            $id = $this->aliasedParameters[$id];
+        }
+
         if(!array_key_exists($id, $this->services)){
             throw new \LogicException;
         }
@@ -165,7 +169,10 @@ class Repository{
     public function hasService(string $id){
         $id = ltrim($id, "\\");
 
-        return array_key_exists($id, $this->services);
+        return
+            array_key_exists($id, $this->services)
+            || array_key_exists($id, $this->aliasedServices)
+        ;
     }
 
     /**
@@ -203,6 +210,10 @@ class Repository{
      * @throws  \LogicException
      */
     public function getParameter(string $id){
+        if(array_key_exists($id, $this->aliasedParameters)){
+            $id = $this->aliasedParameters[$id];
+        }
+
         if(!array_key_exists($id, $this->parameters)){
             throw new \LogicException;
         }
@@ -219,7 +230,10 @@ class Repository{
      * @return  bool
      */
     public function hasParameter(string $id){
-        return array_key_exists($id, $this->parameters);
+        return
+            array_key_exists($id, $this->parameters)
+            || array_key_exists($id, $this->aliasedParameters)
+        ;
     }
 
     /**
