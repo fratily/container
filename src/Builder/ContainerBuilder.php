@@ -23,11 +23,6 @@ class ContainerBuilder implements LockableInterface{
     use LockableTrait;
 
     /**
-     * @var Resolver\Resolver
-     */
-    private $resolver;
-
-    /**
      * @var Value\Service[]
      */
     private $services   = [];
@@ -42,16 +37,6 @@ class ContainerBuilder implements LockableInterface{
      * @var Value\Injection
      */
     private $injections = [];
-
-    /**
-     * Constructor
-     *
-     * @param   Resolver\Resolver   $resolver
-     *  リゾルバ
-     */
-    public function __construct(Resolver\Resolver $resolver){
-        $this->resolver = $resolver;
-    }
 
     /**
      * {@inheritdoc}
@@ -70,15 +55,6 @@ class ContainerBuilder implements LockableInterface{
         }
 
         $this->locked   = true;
-    }
-
-    /**
-     * リゾルバを取得する
-     *
-     * @return  Resolver\Resolver
-     */
-    public function getResolver(){
-        return $this->resolver;
     }
 
     /**
