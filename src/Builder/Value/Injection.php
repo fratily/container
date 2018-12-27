@@ -40,6 +40,15 @@ class Injection implements LockableInterface{
     private $setters    = [];
 
     /**
+     * @var bool
+     */
+    private $isTrait;
+
+    public function __construct(bool $isTrait = false){
+        $this->isTrait  = $isTrait;
+    }
+
+    /**
      * パラメーターを取得する
      *
      * @param   string  $paramType
@@ -68,6 +77,10 @@ class Injection implements LockableInterface{
     public function parameter($key, $value){
         if($this->isLocked()){
             throw new LockedException();
+        }
+
+        if($this->isTrait){
+            throw new \LogicException;
         }
 
         if(!is_int($key) && !is_string($key)){
