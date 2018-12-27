@@ -38,6 +38,16 @@ class Repository{
     private $injections;
 
     /**
+     * @var string[]
+     */
+    private $aliasedServices    = [];
+
+    /**
+     * @var string[]
+     */
+    private $aliasedParameters  = [];
+
+    /**
      * @var string[][]
      */
     private $taggedServiceLists     = [];
@@ -62,6 +72,7 @@ class Repository{
         $this->parameters   = $parameters;
         $this->injections   = $injections;
 
+        // せっかくAbstractValueで抽象化しているんだから処理をまとめたい
         foreach($this->services as $id => $service){
             foreach($service->getTags() as $tag){
                 if(!array_key_exists($tag, $this->taggedServiceLists)){
@@ -69,6 +80,14 @@ class Repository{
                 }
 
                 $this->taggedServiceLists[$tag][]   = $id;
+            }
+
+            foreach($service->getAliases() as $alias){
+                if(array_key_exists($alias, $this->aliasedServices)){
+                    throw new \LogicException;
+                }
+
+                $this->aliasedServices[$alias]  = $id;
             }
         }
 
@@ -79,6 +98,14 @@ class Repository{
                 }
 
                 $this->taggedParameterLists[$tag][]    = $id;
+            }
+
+            foreach($parameter->getAliases() as $alias){
+                if(array_key_exists($alias, $this->aliasedParameters)){
+                    throw new \LogicException;
+                }
+
+                $this->aliasedParameters[$alias]    = $id;
             }
         }
     }
