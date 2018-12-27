@@ -133,6 +133,8 @@ abstract class AbstractValue implements ValueInterface{
      * @return  $this
      */
     public function addAlias(string $alias){
+        $alias  = ltrim($alias, "\\");
+
         if(
             1 !== preg_match(Container::REGEX_KEY, $alias)
             && !class_exists($alias)
