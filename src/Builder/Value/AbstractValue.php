@@ -29,7 +29,7 @@ abstract class AbstractValue implements ValueInterface{
     /**
      * @var string
      */
-    private $type   = "mixed";
+    private $type               = "mixed";
 
     /**
      * @var bool
@@ -39,7 +39,12 @@ abstract class AbstractValue implements ValueInterface{
     /**
      * @var mixed[]
      */
-    private $tags   = [];
+    private $tags               = [];
+
+    /**
+     * @var string[]
+     */
+    private $aliases            = [];
 
     /**
      * {@inheritdoc}
@@ -106,6 +111,53 @@ abstract class AbstractValue implements ValueInterface{
         }
 
         $this->tags[$tag]   = true;
+
+        return $this;
+    }
+
+    /**
+     * エイリアスのリストを取得する
+     *
+     * @return  string[]
+     */
+    public function getAliases(){
+        return array_keys($this->aliases);
+    }
+
+    /**
+     * エイリアスを追加する
+     *
+     * @param   string  $alias
+     *  エイリアス
+     *
+     * @return  $this
+     */
+    public function addAlias(string $alias){
+        if(
+            1 !== preg_match(Container::REGEX_KEY, $alias)
+            && !class_exists($alias)
+            && !interface_exists($alias)
+        ){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->aliases[$alias]  = true;
+
+        return $this;
+    }
+
+    /**
+     * エイリアスを削除する
+     *
+     * @param   string  $alias
+     *  エイリアス
+     *
+     * @return  $this
+     */
+    public function removeAlias(string $alias){
+        if(array_key_exists($alias, $this->aliases)){
+            unset($this->aliases[$alias]);
+        }
 
         return $this;
     }
