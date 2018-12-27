@@ -132,6 +132,8 @@ class ContainerBuilder implements LockableInterface{
         if(
             !array_key_exists($alias, $this->aliases)
             && 1 !== preg_match(Container::REGEX_KEY, $alias)
+            && !class_exists($id)
+            && !interface_exists($id)
         ){
             throw new \InvalidArgumentException;
         }
