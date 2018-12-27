@@ -13,17 +13,10 @@
  */
 namespace Fratily\Container\Builder\Value;
 
-use Fratily\Container\Container;
-
 /**
  *
  */
 final class Service extends AbstractValue{
-
-    /**
-     * @var string[]
-     */
-    private $aliases    = [];
 
     /**
      * {@inheritdoc}
@@ -53,34 +46,5 @@ final class Service extends AbstractValue{
         }
 
         parent::setType($type, $overwritable);
-    }
-
-    /**
-     * サービスの別名のリストを取得する
-     *
-     * @return  string[]
-     */
-    public function getAliases(){
-        return array_keys($this->aliases);
-    }
-
-    /**
-     * サービスの別名を追加する
-     *
-     * @param   string  $alias
-     *  別名
-     * @param   string  $id
-     *  サービスID
-     *
-     * @return  $this
-     */
-    public function addAlias(string $alias){
-        if(1 !== preg_match(Container::REGEX_KEY, $alias)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->aliases[$alias]  = true;
-
-        return $this;
     }
 }

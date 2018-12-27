@@ -28,6 +28,11 @@ class ContainerBuilder implements LockableInterface{
     private $services   = [];
 
     /**
+     * @var string[]
+     */
+    private $aliases    = [];
+
+    /**
      *
      * @var Value\Parameter[]
      */
@@ -102,6 +107,54 @@ class ContainerBuilder implements LockableInterface{
         }
 
         return $this->services[$id];
+    }
+
+    /**
+     * エイリアスをキーとした基サービスIDの連想配列を取得する
+     *
+     * @return  string[]
+     */
+    public function getAliases(){
+        return $this->aliases;
+    }
+
+    /**
+     * サービスの別名を追加する
+     *
+     * @param   string  $alias
+     *  エイリアス
+     * @param   string  $service
+     *  基サービスID
+     *
+     * @return  $this
+     */
+    public function addAlias(string $alias, $service){
+        if(
+            !array_key_exists($alias, $this->aliases)
+            && 1 !== preg_match(Container::REGEX_KEY, $alias)
+        ){
+            throw new \InvalidArgumentException;
+        }
+
+        $this->aliases[$alias]  = $service;
+
+        return $this;
+    }
+
+    /**
+     * サービスのエイリアスを削除する
+     *
+     * @param   string  $alias
+     *  エイリアス
+     *
+     * @return  $this
+     */
+    public function removeAlias(string $alias){
+        if(array_key_exists($alias, $this->aliases)){
+            unset($this->aliases[$alias]);
+        }
+
+        return $this;
     }
 
     /**
