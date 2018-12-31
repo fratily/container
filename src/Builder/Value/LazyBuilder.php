@@ -113,4 +113,15 @@ class LazyBuilder{
     public static function lazyNew(string $class){
         return new Lazy\LazyNew($class);
     }
+
+    /**
+     * 値をそのまま返す遅延取得インスタンスを生成する
+     *
+     * @param   mixed   $value
+     *
+     * @return  Lazy\LazyPlain
+     */
+    public static function lazyPlain($value){
+        return new Lazy\LazyPlain($value);
+    }
 }
