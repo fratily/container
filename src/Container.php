@@ -39,9 +39,20 @@ class Container implements ContainerInterface{
      *
      * @param   Repository  $repository
      *  リポジトリ
+     * @param   string  $resolver
+     *  リゾルバクラス名
      */
-    public function __construct(Repository $repository){
+    public function __construct(Repository $repository, string $resolver = Resolver::class){
         $this->repository   = $repository;
+
+        if(
+            !class_exists($resolver)
+            || !(Resolver::class === $resolver || is_subclass_of($resolver, Resolver::class))
+        ){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->resolver = new $resolver($this);
     }
 
     /**
@@ -51,6 +62,15 @@ class Container implements ContainerInterface{
      */
     public function getRepository(){
         return $this->repository;
+    }
+
+    /**
+     * リゾルバを取得する
+     *
+     * @return  Resolver
+     */
+    public function getResolver(){
+        return $this->resolver;
     }
 
     /**
