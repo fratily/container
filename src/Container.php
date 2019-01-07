@@ -15,9 +15,7 @@ namespace Fratily\Container;
 
 use Fratily\Container\Builder\Value\Injection;
 use Fratily\Container\Builder\Value\Type;
-use Fratily\Container\Builder\Value\Lazy\LazyInterface;
 use Psr\Container\ContainerInterface;
-use Psr\Container\ContainerExceptionInterface;
 
 /**
  *
@@ -36,8 +34,14 @@ class Container implements ContainerInterface{
      */
     private $resolver;
 
+    /**
+     *@var object[]
+     */
     private $services   = [];
 
+    /**
+     * @var mixed[]
+     */
     private $parameters = [];
 
     /**
@@ -121,7 +125,7 @@ class Container implements ContainerInterface{
             }
 
             $service    = $this->getRepository()->getService($id);
-            $value      = $service->get() instanceof LazyInterface
+            $value      = $service->isLazy()
                 ? $service->get()->load($this)
                 : $service->get()
             ;
@@ -145,16 +149,16 @@ class Container implements ContainerInterface{
      *
      * @param   string  $tag
      *  タグ
-     * @param   bool    $useServiceId4Index
-     *  返り値のキーにサービス名を使用するか
+     * @param   bool    $useId4Index
+     *  返り値のキーにサービスIDを使用するか
      *
      * @return  object[]
      */
-    public function getWithTagged(string $tag, bool $useServiceId4Index = false){
+    public function getWithTagged(string $tag, bool $useId4Index = false){
         $services   = [];
 
         foreach($this->getRepository()->getServiceIdsWithTagged($tag) as $id){
-            if($useServiceId4Index){
+            if($useId4Index){
                 $services[$id]  = $this->get($id);
             }else{
                 $services[]     = $this->get($id);
@@ -186,17 +190,50 @@ class Container implements ContainerInterface{
      * @return  mixed
      */
     public function getParameter(string $id){
+        if(!array_key_exists($id, $this->parameters)){
+            if(!$this->hasParameter($id)){
+                throw new Exception\ParameterNotFoundException();
+            }
+
+            $parameter  = $this->getRepository()->getParameter($id);
+            $value      = $parameter->isLazy()
+                ? $parameter->get()->load($this)
+                : $parameter->get()
+            ;
+
+            if(!Type::valid($parameter->getType(), $value)){
+                throw new \LogicException();
+            }
+
+            $this->parameters[$id]  = $value;
+        }
+
+        return $this->parameters[$id];
     }
 
     /**
      * タグ付けされたパラメーターの配列を取得する
      *
-     * @param   string  $tag
+     * @param   string $tag
      *  タグ名
+     *
+     * @param   bool    $useId4Index
+     *  返り値のキーにパラメーターIDを使用するか
      *
      * @return  mixed[]
      */
-    public function getParameterWithTagged(string $tag){
+    public function getParameterWithTagged(string $tag, bool $useId4Index = false){
+        $parameters = [];
+
+        foreach($this->getRepository()->getParameterIdsWithTagged($tag) as $id){
+            if($useId4Index){
+                $parameters[$id]    = $this->get($id);
+            }else{
+                $parameters[]       = $this->get($id);
+            }
+        }
+
+        return $parameters;
     }
 
     /**
@@ -208,6 +245,6 @@ class Container implements ContainerInterface{
      * @return  bool
      */
     public function hasParameter(string $id){
-
+        return $this->getRepository()->hasParameter($id);
     }
 }
