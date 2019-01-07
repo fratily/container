@@ -42,7 +42,7 @@ class LazyGetTagged extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected function loadValue(Container $container){
+    public function load(Container $container){
         return $container->getTagged(
             $this->isLazyObject($this->tag)
                 ? $this->tag->load($container, "string")

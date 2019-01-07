@@ -38,7 +38,7 @@ class LazyArray extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected function loadValue(Container $container){
+    public function load(Container $container){
         return LazyResolver::resolveLazyArray($container, $this->values);
     }
 }

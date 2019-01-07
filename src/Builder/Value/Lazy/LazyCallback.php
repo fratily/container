@@ -48,7 +48,7 @@ class LazyCallback extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected function loadValue(Container $container){
+    public function load(Container $container){
         return call_user_func_array(
             $this->isLazyObject($this->callback)
                 ? $this->callback->load($container, "callable")

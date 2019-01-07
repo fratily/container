@@ -42,7 +42,7 @@ class LazyGet extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected function loadValue(Container $container){
+    public function load(Container $container){
         return $container->get(
             $this->isLazyObject($this->id)
                 ? $this->id->load($container, "string")

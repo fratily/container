@@ -57,7 +57,7 @@ class LazyLoadFile extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected function loadValue(Container $container){
+    public function load(Container $container){
         $path       = $this->isLazyObject($this->file)
             ? $this->file->load($container, "string")
             : $this->file

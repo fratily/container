@@ -53,7 +53,7 @@ class LazyNew extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected function loadValue(Container $container){
+    public function load(Container $container){
         $class  = $this->isLazyObject($this->class)
             ? $this->class->load($container, "string")
             : $this->class

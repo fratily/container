@@ -26,12 +26,10 @@ interface LazyInterface extends LockableInterface{
      *
      * @param   Container   $container
      *  サービスコンテナ
-     * @param   string  $expectedType
-     *  期待する型
      *
      * @return  mixed
      *
      * @throws  Exception\ExpectedTypeException
      */
-    public function load(Container $container, string $expectedType = "mixed");
+    public function load(Container $container);
 }

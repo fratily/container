@@ -35,29 +35,4 @@ abstract class AbstractLazy implements LazyInterface{
     protected function isLazyObject($value){
         return is_object($value) && $value instanceof LazyInterface;
     }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function load(Container $container, string $expectedType = "mixed"){
-        $this->lock();
-
-        if(!Type::valid($expectedType, $value = $this->loadValue($container))){
-            throw new Exception\ExpectedTypeException;
-        }
-
-        return $value;
-    }
-
-    /**
-     * 遅延実行用メソッド
-     *
-     * @param   Container   $container
-     *  サービスコンテナ
-     *
-     * @return  mixed
-     *
-     * @throws  Exception\LazyException
-     */
-    abstract protected function loadValue(Container $container);
 }

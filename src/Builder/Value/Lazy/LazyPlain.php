@@ -35,7 +35,7 @@ class LazyPlain extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected function loadValue(Container $container){
+    public function load(Container $container){
         return $this->value;
     }
 }
