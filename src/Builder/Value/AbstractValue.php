@@ -13,6 +13,7 @@
  */
 namespace Fratily\Container\Builder\Value;
 
+use Fratily\Container\Builder\Value\Lazy\LazyInterface;
 use Fratily\Container\Container;
 use Fratily\Container\Builder\LockableTrait;
 use Fratily\Container\Builder\Exception\LockedException;
@@ -45,6 +46,15 @@ abstract class AbstractValue implements ValueInterface{
      * @var string[]
      */
     private $aliases            = [];
+
+    /**
+     * 値が遅延取得系オブジェクトか確認する
+     *
+     * @return  bool
+     */
+    public function isLazy(){
+        return is_object($this->value) && $this->value instanceof LazyInterface;
+    }
 
     /**
      * {@inheritdoc}
