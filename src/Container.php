@@ -14,6 +14,8 @@
 namespace Fratily\Container;
 
 use Fratily\Container\Builder\Value\Injection;
+use Fratily\Container\Builder\Value\Type;
+use Fratily\Container\Builder\Value\Lazy\LazyInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\ContainerExceptionInterface;
 
@@ -33,6 +35,10 @@ class Container implements ContainerInterface{
      * @var Resolver
      */
     private $resolver;
+
+    private $services   = [];
+
+    private $parameters = [];
 
     /**
      * Constructor
@@ -105,6 +111,33 @@ class Container implements ContainerInterface{
      * {@inheritdoc}
      */
     public function get($id){
+        if(!is_string($id)){
+            throw new \InvalidArgumentException();
+        }
+
+        if(!array_key_exists($id, $this->services)){
+            if(!$this->getRepository()->hasService($id)){
+                throw new Exception\ServiceNotFoundException();
+            }
+
+            $service    = $this->getRepository()->getService($id);
+            $value      = $service->get() instanceof LazyInterface
+                ? $service->get()->load($this)
+                : $service->get()
+            ;
+
+            if(!Type::valid($service->getType(), $value)){
+                throw new \LogicException();
+            }
+
+            if(!is_object($value)){
+                throw new \LogicException();
+            }
+
+            $this->services[$id]    = $value;
+        }
+
+        return $this->services[$id];
     }
 
     /**
