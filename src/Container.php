@@ -116,7 +116,7 @@ class Container implements ContainerInterface{
         }
 
         if(!array_key_exists($id, $this->services)){
-            if(!$this->getRepository()->hasService($id)){
+            if(!$this->has($id)){
                 throw new Exception\ServiceNotFoundException();
             }
 
@@ -170,6 +170,11 @@ class Container implements ContainerInterface{
      * @throws  \InvalidArgumentException
      */
     public function has($id){
+        if(!is_string($id)){
+            throw new \InvalidArgumentException();
+        }
+
+        return $this->getRepository()->hasService($id);
     }
 
     /**
