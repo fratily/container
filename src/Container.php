@@ -145,10 +145,23 @@ class Container implements ContainerInterface{
      *
      * @param   string  $tag
      *  タグ
+     * @param   bool    $useServiceId4Index
+     *  返り値のキーにサービス名を使用するか
      *
      * @return  object[]
      */
-    public function getWithTagged(string $tag){
+    public function getWithTagged(string $tag, bool $useServiceId4Index = false){
+        $services   = [];
+
+        foreach($this->getRepository()->getServiceIdsWithTagged($tag) as $id){
+            if($useServiceId4Index){
+                $services[$id]  = $this->get($id);
+            }else{
+                $services[]     = $this->get($id);
+            }
+        }
+
+        return $services;
     }
 
     /**
