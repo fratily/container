@@ -25,13 +25,16 @@ class LazyResolver{
      *
      * @param   Container   $container
      *  サービスコンテナ
-     * @param   mixed   $val
+     * @param   mixed   $value
      *  解決対象値
      *
      * @return  mixed
      */
-    public static function resolveLazy(Container $container, $val){
-        return ($val instanceof LazyInterface) ? $val->load($container) : $val;
+    public static function resolve(Container $container, $value){
+        return (is_object($value) && $value instanceof LazyInterface)
+            ? $value->load($container)
+            : $value
+        ;
     }
 
     /**
@@ -39,18 +42,44 @@ class LazyResolver{
      *
      * @param   Container   $container
      *  サービスコンテナ
-     * @param   mixed[] $vals
+     * @param   mixed[] $value
      *  解決対象値の配列
      *
      * @return  mixed[]
      */
-    public static function resolveLazyArray(Container $container, array $vals){
-        $result = [];
+    public static function resolveArray(Container $container, array $value){
+        return array_map(
+            [static::class, "resolve"],
+            array_fill(0, count($value), $container),
+            $value
+        );
+    }
 
-        foreach($vals as $index => $val){
-            $result[$index] = self::resolveLazy($container, $val);
-        }
+    /**
+     * 値が遅延解決インスタンスなら解決を行う
+     *
+     * @param   Container   $container
+     *  サービスコンテナ
+     * @param   mixed   $val
+     *  解決対象値
+     *
+     * @return  mixed
+     */
+    public static function resolveLazy(Container $container, $val){
+        return static::resolve($container, $val);
+    }
 
-        return $result;
+    /**
+     * 配列に含まれる遅延解決インスタンスの解決を行う
+     *
+     * @param   Container   $container
+     *  サービスコンテナ
+     * @param   mixed[] $value
+     *  解決対象値の配列
+     *
+     * @return  mixed[]
+     */
+    public static function resolveLazyArray(Container $container, array $value){
+        return static::resolveArray($container, $value);
     }
 }
