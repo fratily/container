@@ -27,7 +27,7 @@ final class Service extends AbstractValue{
                 throw new \InvalidArgumentException;
             }
 
-            $value  = new Lazy\LazyNew($class);
+            $value  = new Lazy\LazyNew($value);
         }
 
         if(!is_object($value)){
