@@ -15,6 +15,7 @@ namespace Fratily\Container;
 
 use Fratily\Container\Builder\Value\Injection;
 use Fratily\Container\Builder\Value\Type;
+use Fratily\Reflection\ReflectionCallable;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -101,14 +102,35 @@ class Container implements ContainerInterface{
      *
      * @param   callable    $callback
      *  実行対象コールバック
-     * @param   mixed[] $parameters
-     *  パラメータの連想配列。キーに指定する値で解決方法が変わる。
-     *  数値ならパラメーターの位置で解決。文字列であればパラメータ名で解決。
-     *  文字列かつクラスもしくはインターフェース名であれば型名で解決する。
+     * @param   mixed[] $positions
+     *  ポジション指定パラメータ値リスト
+     * @param   mixed[] $names
+     *  名前指定パラメータ値リスト
+     * @param   mixed[] $types
+     *  クラス型指定パラメータ値リスト
      *
      * @return  mixed
      */
-    public function invoke(callable $callback, array $parameters = []){
+    public function invoke(
+        callable $callback,
+        array $positions,
+        array $names,
+        array $types
+    ){
+        try{
+            $parameters = $this->getResolver()->resolveFunctionParameters(
+                (new ReflectionCallable($callback))->getReflection(),
+                $positions,
+                $names,
+                $types
+            );
+        }catch(\Exception $e){
+            throw new \Exception("", 0, $e);
+        }
+
+        // TypeErrorやInvalidArgumentExceptionをキャッチしたいが、
+        // コールバックの中の別の関数で発生することもありうるのでできない。
+        return call_user_func_array($callback, $parameters);
     }
 
     /**
