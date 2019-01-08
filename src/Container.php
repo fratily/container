@@ -15,6 +15,7 @@ namespace Fratily\Container;
 
 use Fratily\Container\Builder\Value\Injection;
 use Fratily\Container\Builder\Value\Type;
+use Fratily\Container\Builder\Value\Lazy\LazyResolver;
 use Fratily\Reflection\ReflectionCallable;
 use Psr\Container\ContainerInterface;
 
@@ -95,6 +96,77 @@ class Container implements ContainerInterface{
      * @return  object
      */
     public function new(string $class, Injection $injection = null){
+        if(!$this->getResolver()->isInstantiable($class)){
+            throw new \InvalidArgumentException();
+        }
+
+        $instance   = null;
+        $injections = [];
+        $parent     = $class;
+
+        if(null !== $injection){
+            $injections[]           = $injection;
+            $posAllows[$injection]  = true;
+        }
+
+        do{
+            if($this->getRepository()->hasInjection($parent)){
+                $injection  = $this->getRepository()->getInjection($parent);
+
+                $injections[]           = $injection;
+                $posAllows[$injection]  = $class === $parent;
+            }
+        }while(false !== ($parent = get_parent_class($parent)));
+
+        foreach(class_implements($class) as $interface){
+            if($this->getRepository()->hasInjection($interface)) {
+                $injections[] = $this->getRepository()->getInjection($interface);
+            }
+        }
+
+        if(method_exists($class, "__construct")){
+            $posAllows  = new \SplObjectStorage();
+            $positions  = [];
+            $names      = [];
+            $types      = [];
+
+            foreach($injections as $injection){
+                if(isset($posAllows[$injection])){
+                    $positions  += $injection->getParameters(Injection::PARAM_POS);
+                }
+
+                $names  += $injection->getParameters(Injection::PARAM_NAME);
+                $types  += $injection->getParameters(Injection::PARAM_TYPE);
+            }
+
+            try{
+                $parameters = $this->getResolver()->resolveFunctionParameters(
+                    new \ReflectionMethod($class, "__construct"),
+                    $positions,
+                    $names,
+                    $types
+                );
+            }catch(\Exception $e){
+                throw new \Exception("", 0, $e);
+            }
+
+            $instance   = (new \ReflectionClass($class))
+                ->newInstanceArgs($parameters)
+            ;
+        }else{
+            $instance   = new $class();
+        }
+
+        foreach($injections as $injection){
+            foreach($injection->getSetters() as $method => $args){
+                call_user_func_array(
+                    [$instance, $method],
+                    LazyResolver::resolveArray($this, $args)
+                );
+            }
+        }
+
+        return $instance;
     }
 
     /**
