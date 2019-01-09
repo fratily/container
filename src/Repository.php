@@ -246,6 +246,36 @@ class Repository{
     }
 
     /**
+     * 指定クラスに関連するDI設定のリストを取得する
+     *
+     * @param   string  $class
+     *  クラス名
+     *
+     * @return  Injection[]
+     */
+    public function getInjectionsFromClass(string $class){
+        if(!class_exists($class)){
+            throw new \InvalidArgumentException();
+        }
+
+        $injections = [];
+
+        do{
+            if($this->hasInjection($class)){
+                $injections[]   = $this->getInjection($class);
+            }
+        }while(false !== ($class = get_parent_class($class)));
+
+        foreach(class_implements($class) as $interface){
+            if($this->hasInjection($interface)) {
+                $injections[]   = $this->getInjection($interface);
+            }
+        }
+
+        return $injections;
+    }
+
+    /**
      * DI設定を取得する
      *
      * @param   string  $id
