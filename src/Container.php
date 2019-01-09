@@ -88,50 +88,40 @@ class Container implements ContainerInterface{
     /**
      * インスタンスを生成する
      *
-     * @param   string  $class
+     * @param   string $class
      *  対象クラス名
-     * @param   Injection   $injection
+     * @param   Injection $addendInjection
      *  追加DI設定
      *
      * @return  object
+     *
+     * @throws  \InvalidArgumentException
      */
-    public function new(string $class, Injection $injection = null){
+    public function new(string $class, Injection $addendInjection = null){
         if(!$this->getResolver()->isInstantiable($class)){
             throw new \InvalidArgumentException();
         }
 
         $instance   = null;
-        $injections = [];
-        $parent     = $class;
+        $parameters = null;
+        $reflection = new \ReflectionClass($class);
+        $injections = $this->getRepository()->getInjectionsFromClass($class);
 
-        if(null !== $injection){
-            $injections[]           = $injection;
-            $posAllows[$injection]  = true;
+        if(null !== $addendInjection){
+            array_unshift($injections, $addendInjection);
         }
 
-        do{
-            if($this->getRepository()->hasInjection($parent)){
-                $injection  = $this->getRepository()->getInjection($parent);
-
-                $injections[]           = $injection;
-                $posAllows[$injection]  = $class === $parent;
-            }
-        }while(false !== ($parent = get_parent_class($parent)));
-
-        foreach(class_implements($class) as $interface){
-            if($this->getRepository()->hasInjection($interface)) {
-                $injections[] = $this->getRepository()->getInjection($interface);
-            }
-        }
-
-        if(method_exists($class, "__construct")){
-            $posAllows  = new \SplObjectStorage();
-            $positions  = [];
-            $names      = [];
-            $types      = [];
+        if(null !== $reflection->getConstructor()){
+            $positions      = [];
+            $names          = [];
+            $types          = [];
+            $mainInjection  = $this->getRepository()->hasInjection($class)
+                ? $this->getRepository()->getInjection($class)
+                : null
+            ;
 
             foreach($injections as $injection){
-                if(isset($posAllows[$injection])){
+                if($addendInjection === $injection || $mainInjection === $injection){
                     $positions  += $injection->getParameters(Injection::PARAM_POS);
                 }
 
@@ -141,20 +131,38 @@ class Container implements ContainerInterface{
 
             try{
                 $parameters = $this->getResolver()->resolveFunctionParameters(
-                    new \ReflectionMethod($class, "__construct"),
+                    $reflection->getConstructor(),
                     $positions,
                     $names,
                     $types
                 );
             }catch(\Exception $e){
-                throw new \Exception("", 0, $e);
+                throw new Exception\ClassInstantiationException(
+                    "Failed to resolve parameters of {$class}::__construct().",
+                    0,
+                    $e
+                );
+            }
+        }
+
+        try{
+            $instance   = null === $parameters
+                ? $reflection->newInstance()
+                : $reflection->newInstanceArgs(LazyResolver::resolveArray($parameters))
+            ;
+        }catch(\TypeError | \ArgumentCountError $e){
+            if(
+                $class === $e->getTrace()[0]["class"]
+                && "__construct" === $e->getTrace()[0]["function"]
+            ){
+                throw new Exception\ClassInstantiationException(
+                    "Failed to resolve parameters of {$class}::__construct().",
+                    0,
+                    $e
+                );
             }
 
-            $instance   = (new \ReflectionClass($class))
-                ->newInstanceArgs($parameters)
-            ;
-        }else{
-            $instance   = new $class();
+            throw $e;
         }
 
         foreach($injections as $injection){
