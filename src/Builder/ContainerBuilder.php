@@ -28,7 +28,6 @@ class ContainerBuilder implements LockableInterface{
     private $services   = [];
 
     /**
-     *
      * @var Value\Parameter[]
      */
     private $parameters = [];
