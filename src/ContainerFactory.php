@@ -13,7 +13,7 @@
  */
 namespace Fratily\Container;
 
-use Psr\Container\ContainerInterface;
+use Fratily\Container\Builder\ContainerBuilder;
 
 /**
  *
@@ -23,103 +23,71 @@ class ContainerFactory{
     /**
      * @var string[]
      */
-    private $containers = [];
+    private $providers  = [];
 
     /**
      * コンテナを生成する
      *
      * @param   mixed[] $options
-     *  ビルダー作成時に参照するオプションの連想配列
-     * @param   ContainerInterface[]    $delegate
-     *  サービスコンテナに追加するデリゲートコンテナの配列
+     * オプションの連想配列
+     * @param   string  $resolver
+     *  リゾルバクラス名
      *
      * @return  Container
      */
-    public function create(array $options = [], array $delegate = []){
-        foreach($delegate as $delegateContainer){
-            if(!$delegateContainer instanceof ContainerInterface){
-                $interface  = ContainerInterface::class;
+    public function create(array $options = [], string $resolver = Resolver::class){
+        $builder    = new ContainerBuilder();
+        $providers  = [];
 
-                throw new \InvalidArgumentException(
-                    "The delegate container must implement '{$interface}'."
-                );
-            }
+        foreach ($this->providers as $provider) {
+            $provider   = new $provider($builder);
+            $provider[] = $provider;
+
+            $provider->build($options);
         }
 
-        $resolver       = new Builder\Resolver\Resolver();
-        $services       = [];
-        $taggedServices = [];
+        $builder->lock();
 
-        foreach($this->containers as $container){
-            $builder    = new Builder\ContainerBuilder($resolver);
-
-            $container::build($builder, $options);
-
-            $services       = array_merge($services, $builder->getServices());
-            $taggedServices = array_merge_recursive(
-                $taggedServices,
-                $builder->getTaggedServicesId()
-            );
-        }
-
-        $resolver->lock();
-
-        $serviceContainer   = new Container(
-            $resolver,
-            $services,
-            $taggedServices,
-            $delegate
+        $container  = new Container(
+            new Repository(
+                $builder->getServices(),
+                $builder->getParameters(),
+                $builder->getInjections()
+            ),
+            $resolver
         );
 
-        foreach($this->containers as $container){
-            $container::modify($serviceContainer);
+        foreach ($providers as $provider) {
+            $provider->modify($container);
         }
 
-        return $serviceContainer;
+        return $container;
     }
 
     /**
-     * 設定クラスを追加する
+     * プロバイダを追加する
      *
-     * @param   string  $container
-     *  コンテナクラス
-     *
-     * @return  $this
-     */
-    public function append(string $container){
-        if(!is_subclass_of($container, Builder\AbstractContainer::class)){
-            $class  = Builder\AbstractContainer::class;
-
-            throw new \InvalidArgumentException(
-                "The container definition class must inherit '{$class}'."
-            );
-        }
-
-        $this->containers[] = $container;
-
-        return $this;
-    }
-
-    /**
-     * 設定クラスを追加する
-     *
-     * 先に実行されるように追加する
-     *
-     * @param   string  $container
-     *  コンテナクラス
+     * @param   string  $provider
+     *  プロバイダークラス名
+     * @param   bool    $prepend
+     *  先頭に追加するか
      *
      * @return  $this
      */
-    public function prepend(string $container){
-        if(!is_subclass_of($container, Builder\AbstractContainer::class)){
-            $class  = Builder\AbstractContainer::class;
-
+    public function add(string $provider, bool $prepend = false){
+        if(!is_subclass_of($provider, Builder\AbstractProvider::class)){
+            $class = Builder\AbstractProvider::class;
             throw new \InvalidArgumentException(
-                "The container definition class must inherit '{$class}'."
+                "{$provider} is not a provider class. The provider class must"
+                . " be a subclass of {$class}."
             );
         }
 
-        array_unshift($this->containers, $container);
+        if($prepend){
+            array_unshift($this->providers, $provider);
+        }else{
+            $this->providers[]  = $provider;
+        }
 
         return $this;
     }
