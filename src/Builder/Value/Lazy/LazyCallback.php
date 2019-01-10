@@ -22,7 +22,7 @@ use Fratily\Container\Builder\Exception\LockedException;
 class LazyCallback extends AbstractLazy{
 
     /**
-     * @var mixed
+     * @var callable|LazyInterface|null
      */
     private $callback;
 
@@ -32,34 +32,62 @@ class LazyCallback extends AbstractLazy{
     private $args   = [];
 
     /**
-     * Constructor
-     *
-     * @param   mixed   $callback
-     *  実行するコールバック
+     * {@inheritdoc}
      */
-    public function __construct($callback){
-        if(!is_callable($callback) && !$this->isLazyObject($callback)){
-            throw new \InvalidArgumentException();
-        }
-
-        $this->callback = $callback;
+    protected static function getDefaultType(): string{
+        return "callable";
     }
 
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container){
+    protected static function getAllowTypes(): ?array{
+        return ["callable"];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function loadValue(Container $container){
+        if(null === $this->callback){
+            throw new Exception\SettingIsNotCompletedException();
+        }
+
         return call_user_func_array(
-            $this->isLazyObject($this->callback)
-                ? $this->callback->load($container, "callable")
-                : $this->callback
-            ,
-            $this->isLazyObject($this->args)
-                ? $this->args->load($container, "array")
-                : $this->args
+            LazyResolver::resolve($container, $this->callback),
+            LazyResolver::resolveArray($container, $this->args)
         );
     }
 
+    /**
+     * 実行するコールバックを設定する
+     *
+     * @param   callable|LazyInterface  $callback
+     *  実行するコールバック
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function callback($callback){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        if(
+            !is_callable($callback)
+            && !(
+                static::isLazyObject($callback)
+                && "callable" === $callback->getType()
+            )
+        ){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->callback = $callback;
+
+        return $this;
+    }
     /**
      * 引数を設定する
      *
@@ -67,13 +95,21 @@ class LazyCallback extends AbstractLazy{
      *  引数
      *
      * @return  $this
+     *
+     * @throws  LockedException
      */
     public function args($args){
         if($this->isLocked()){
             throw new LockedException();
         }
 
-        if(!is_array($args) && !$args instanceof LazyInterface){
+        if(
+            !is_array($args)
+            && !(
+                $this->isLazyObject($args)
+                && "array" === $args->getType()
+            )
+        ){
             throw new \InvalidArgumentException;
         }
 

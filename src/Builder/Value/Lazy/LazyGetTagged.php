@@ -14,6 +14,7 @@
 namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -21,32 +22,61 @@ use Fratily\Container\Container;
 class LazyGetTagged extends AbstractLazy{
 
     /**
-     * @var string|LazyInterface
+     * @var string|LazyInterface|null
      */
     private $tag;
 
     /**
-     * Constructor
-     *
-     * @param   string|LazyInterface    $tag
-     *  タグ名
+     * {@inheritdoc}
      */
-    public function __construct($tag){
-        if(!is_string($tag) && !$this->isLazyObject($tag)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->tag  = $tag;
+    protected static function getDefaultType(): string{
+        return "array";
     }
 
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container){
-        return $container->getTagged(
-            $this->isLazyObject($this->tag)
-                ? $this->tag->load($container, "string")
-                : $this->tag
+    protected static function getAllowTypes(): ?array{
+        return ["array"];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function loadValue(Container $container){
+        if(null === $this->tag){
+            throw new Exception\SettingIsNotCompletedException();
+        }
+
+        return $container->getWithTagged(
+            LazyResolver::resolve($container, $this->tag)
         );
+    }
+
+    /**
+     * タグを設定する
+     *
+     * @param   string|LazyInterface    $tag
+     *  タグ
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function tag($tag){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        if(
+            !is_string($tag)
+            && !(static::isLazyObject($tag) && "string" === $tag->getType())
+        ){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->tag   = $tag;
+
+        return $this;
     }
 }

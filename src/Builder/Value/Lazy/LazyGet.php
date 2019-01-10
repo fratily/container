@@ -14,6 +14,7 @@
 namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -21,32 +22,66 @@ use Fratily\Container\Container;
 class LazyGet extends AbstractLazy{
 
     /**
-     * @var string|LazyInterface
+     * @var string|LazyInterface|null
      */
     private $id;
 
     /**
-     * Constructor
-     *
-     * @param   string|LazyInterface    $id
-     *  サービスID
+     * {@inheritdoc}
      */
-    public function __construct($id){
-        if(!is_string($id) && !$this->isLazyObject($id)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->id   = $id;
+    protected static function getDefaultType(): string{
+        return "object";
     }
 
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container){
-        return $container->get(
-            $this->isLazyObject($this->id)
-                ? $this->id->load($container, "string")
-                : $this->id
-        );
+    protected static function getAllowTypes(): ?array{
+        return ["object"];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected static function reliefTypeCheck(string $type): bool{
+        return class_exists($type) || interface_exists($type);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function loadValue(Container $container){
+        if(null === $this->id){
+            throw new Exception\SettingIsNotCompletedException();
+        }
+
+        return $container->get(LazyResolver::resolve($container, $this->id));
+    }
+
+    /**
+     * サービスIDを設定する
+     *
+     * @param   string|LazyInterface    $id
+     *  サービスID
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function id($id){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        if(
+            !is_string($id)
+            && !(static::isLazyObject($id) && "string" === $id->getType())
+        ){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->id   = $id;
+
+        return $this;
     }
 }

@@ -13,5 +13,5 @@
  */
 namespace Fratily\Container\Builder\Value\Lazy\Exception;
 
-class NotFoundSuperGlobalException extends LazyException{
+class SettingIsNotCompletedException extends LazyException{
 }

@@ -13,115 +13,99 @@
  */
 namespace Fratily\Container\Builder\Value;
 
+use Fratily\Container\Builder\Value\Lazy\LazyArray;
+use Fratily\Container\Builder\Value\Lazy\LazyCallback;
+use Fratily\Container\Builder\Value\Lazy\LazyGet;
+use Fratily\Container\Builder\Value\Lazy\LazyGetParameter;
+use Fratily\Container\Builder\Value\Lazy\LazyGetTagged;
+use Fratily\Container\Builder\Value\Lazy\LazyGetTaggedParameter;
+use Fratily\Container\Builder\Value\Lazy\LazyInvoke;
+use Fratily\Container\Builder\Value\Lazy\LazyNew;
+use Fratily\Container\Builder\Value\Lazy\LazyPlain;
+
 /**
  *
  */
 class LazyBuilder{
 
     /**
-     * パラメータ自動解決を行うコールバック遅延実行インスタンスを生成する
+     * 内部値の遅延解決を行う配列(連想配列)を生成する
      *
-     * @param   mixed   $callback
-     *  実行するコールバック
-     *
-     * @return  Lazy\Lazy
+     * @return  LazyArray
      */
-    public static function lazy($callback){
-        return new Lazy\Lazy($callback);
+    public function array(){
+        return new LazyArray();
     }
 
     /**
-     * 配列を遅延生成するインスタンスを生成する
+     * 遅延実行するコールバックを生成する
      *
-     * @param   mixed[] $values
-     *  配列
-     *
-     * @return  Lazy\LazyArray
+     * @return  LazyCallback
      */
-    public static function lazyArray(array $values){
-        return new Lazy\LazyArray($values);
+    public function callback(){
+        return new LazyCallback();
     }
 
     /**
-     * コールバック遅延実行インスタンスを生成する
+     * 遅延取得するサービス値を生成する
      *
-     * @param   mixed   $callback
-     *  実行するコールバック
-     *
-     * @return  Lazy\LazyCallable
+     * @return  LazyGet
      */
-    public static function lazyCallable($callback){
-        return new Lazy\LazyCallable($callback);
+    public function get(){
+        return new LazyGet();
     }
 
     /**
-     * サービス遅延取得インスタンスを生成する
+     * 遅延取得するパラメーター値を生成する
      *
-     * @param   string|Lazy\LazyInterface    $id
-     *  サービスID
-     *
-     * @return  Lazy\LazyGet
+     * @return  LazyGetParameter
      */
-    public static function lazyGet($id){
-        return new Lazy\LazyGet($id);
+    public function getParameter(){
+        return new LazyGetParameter();
     }
 
     /**
-     * パラメーター遅延取得インスタンスを生成する
+     * 遅延取得するタグ付きサービスのリストを生成する
      *
-     * @param   string|Lazy\LazyInterface    $id
-     *  パラメーターID
-     *
-     * @return  Lazy\LazyGetParameter
+     * @return  LazyGetTagged
      */
-    public static function lazyGetParameter($id){
-        return new Lazy\LazyGetParameter($id);
+    public function getTagged(){
+        return new LazyGetTagged();
     }
 
     /**
-     * タグ付きサービス遅延取得インスタンスを生成する
+     * 遅延取得するタグ付きパラメータリストを生成する
      *
-     * @param   string|Lazy\LazyInterface    $tag
-     *  タグ名
-     *
-     * @return  Lazy\LazyGetTagged
+     * @return  LazyGetTaggedParameter
      */
-    public static function lazyGetTagged($tag){
-        return new Lazy\LazyGetTagged($tag);
+    public function getTaggedParameter(){
+        return new LazyGetTaggedParameter();
     }
 
     /**
-     * ファイル遅延取得インスタンスを生成する
+     * パラメータ自動解決を行う遅延実行するコールバックを生成する
      *
-     * @param   string|Lazy\LazyInterface   $file
-     *  読み込むファイル
-     *
-     * @return  Lazy\LazyInclude
+     * @return  LazyInvoke
      */
-    public static function lazyLoadFile($file){
-        return new Lazy\LazyLoadFile($file);
+    public function invoke(){
+        return new LazyInvoke();
     }
 
     /**
-     * インスタンス遅延生成インスタンスを生成する
+     * 遅延生成されるインスタンスを生成する
      *
-     * @param   string|Lazy\LazyInterface   $class
-     *  クラス名
-     *
-     * @return  Lazy\LazyNew
+     * @return  LazyNew
      */
-    public static function lazyNew(string $class){
-        return new Lazy\LazyNew($class);
+    public function new(){
+        return new LazyNew();
     }
 
     /**
-     * 値をそのまま返す遅延取得インスタンスを生成する
+     * 値を生成する
      *
-     * @param   mixed   $value
-     *
-     * @return  Lazy\LazyPlain
+     * @return  LazyPlain
      */
-    public static function lazyPlain($value){
-        return new Lazy\LazyPlain($value);
+    public function plain(){
+        return new LazyPlain();
     }
 }

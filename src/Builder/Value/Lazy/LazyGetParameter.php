@@ -14,6 +14,7 @@
 namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -21,32 +22,45 @@ use Fratily\Container\Container;
 class LazyGetParameter extends AbstractLazy{
 
     /**
-     * @var string|LazyInterface
+     * @var string|LazyInterface|null
      */
     private $id;
 
     /**
-     * Constructor
-     *
-     * @param   string|LazyInterface    $id
-     *  パラメーターID
+     * {@inheritdoc}
      */
-    public function __construct($id){
-        if(!is_string($id) && !$this->isLazyObject($id)){
-            throw new \InvalidArgumentException;
+    public function loadValue(Container $container){
+        if(null === $this->id){
+            throw new Exception\SettingIsNotCompletedException();
         }
 
-        $this->id   = $id;
+        return $container->getParameter(LazyResolver::resolve($container, $this->id));
     }
 
     /**
-     * {@inheritdoc}
+     * パラメータIDを設定する
+     *
+     * @param   string|LazyInterface    $id
+     *  パラメータID
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
      */
-    public function load(Container $container){
-        return $container->getParameter(
-            $this->isLazyObject($this->id)
-                ? $this->id->load($container, "string")
-                : $this->id
-        );
+    public function id($id){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        if(
+            !is_string($id)
+            && !(static::isLazyObject($id) && "string" === $id->getType())
+        ){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->id   = $id;
+
+        return $this;
     }
 }

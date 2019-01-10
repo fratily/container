@@ -22,6 +22,21 @@ use Fratily\Container\Builder\LockableInterface;
 interface LazyInterface extends LockableInterface{
 
     /**
+     * Constructor
+     *
+     * @param   string  $type
+     *  この遅延取得の値の型
+     */
+    public function __construct(string $type);
+
+    /**
+     * この遅延取得の型を取得する
+     *
+     * @return  string
+     */
+    public function getType();
+
+    /**
      * 遅延実行用メソッド
      *
      * @param   Container   $container
@@ -30,6 +45,7 @@ interface LazyInterface extends LockableInterface{
      * @return  mixed
      *
      * @throws  Exception\ExpectedTypeException
+     * @throws  Exception\SettingIsNotCompletedException
      */
     public function load(Container $container);
 }

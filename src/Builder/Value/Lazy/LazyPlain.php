@@ -14,28 +14,41 @@
 namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
  */
 class LazyPlain extends AbstractLazy{
 
-    private $value;
-
     /**
-     * Constructor
-     *
-     * @param   mixed   $callback
-     *  実行するコールバック
+     * @var mixed
      */
-    public function __construct($value){
-        $this->value    = $value;
-    }
+    private $value;
 
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container){
+    public function loadValue(Container $container){
         return $this->value;
+    }
+
+    /**
+     * 値を設定する
+     * @param   mixed   $value
+     *  値
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function value($value){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        $this->value    = $value;
+
+        return $this;
     }
 }

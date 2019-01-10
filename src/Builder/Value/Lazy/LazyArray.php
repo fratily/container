@@ -14,6 +14,7 @@
 namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
@@ -21,24 +22,72 @@ use Fratily\Container\Container;
 class LazyArray extends AbstractLazy{
 
     /**
-     * @var mixed[]
+     * @var array
      */
-    private $values;
+    private $value;
 
     /**
-     * Constructor
-     *
-     * @param   mixed[] $values
-     *  配列
+     * {@inheritdoc}
      */
-    public function __construct(array $values){
-        $this->values   = $values;
+    protected static function getDefaultType(): string{
+        return "array";
     }
 
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container){
-        return LazyResolver::resolveLazyArray($container, $this->values);
+    protected static function getAllowTypes(): ?array{
+        return ["array"];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function loadValue(Container $container){
+        if(null === $this->value){
+            throw new Exception\SettingIsNotCompletedException();
+        }
+
+        return LazyResolver::resolveArray($container, $this->value);
+    }
+
+    /**
+     * 配列もしくは連想配列を設定する
+     *
+     * @param   array $value
+     *  遅延解決する配列もしくは連想配列
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function value(array $value){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        $this->value    = $value;
+
+        return $this;
+    }
+
+    /**
+     * 配列を設定する
+     *
+     * 可変長引数を取るので、配列を設定したくて[]を書くのが面倒な時に使う。
+     * 基本的に$this->value()を使うように。
+     *
+     * このメソッドはarrayという名前を使っているため、今後のPHPのアップデートによっては
+     * 使用できなくなる可能性がある。
+     *
+     * @param   mixed   ...$vars
+     *  遅延解決する値のリスト
+     *
+     * @return  $this
+     *
+     * @throws  LockedException
+     */
+    public function array(...$vars){
+        return $this->value($vars);
     }
 }

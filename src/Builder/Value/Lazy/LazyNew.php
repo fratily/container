@@ -14,6 +14,7 @@
 namespace Fratily\Container\Builder\Value\Lazy;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Value\Injection;
 use Fratily\Container\Builder\Exception\LockedException;
 
 /**
@@ -22,104 +23,113 @@ use Fratily\Container\Builder\Exception\LockedException;
 class LazyNew extends AbstractLazy{
 
     /**
-     * @var string|LazyInterface
+     * @var string|LazyInterface|null
      */
     private $class;
 
     /**
-     * @var mixed[]
+     * @var Injection|null
      */
-    private $parameters = [];
+    private $injection;
 
     /**
-     * @var mixed[]
+     * {@inheritdoc}
      */
-    private $types      = [];
-
-    /**
-     * Constructor
-     *
-     * @param   string|LazyInterface  $class
-     *  クラス名
-     */
-    public function __construct($class){
-        if(!(is_string($class) && class_exists($class)) && !$this->isLazyObject($class)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->class    = $class;
+    protected static function getDefaultType(): string{
+        return "object";
     }
 
     /**
      * {@inheritdoc}
      */
-    public function load(Container $container){
-        $class  = $this->isLazyObject($this->class)
-            ? $this->class->load($container, "string")
-            : $this->class
-        ;
+    protected static function getAllowTypes(): ?array{
+        return ["object"];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected static function reliefTypeCheck(string $type): bool{
+        return class_exists($type) || interface_exists($type);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function lock(){
+        if(null !== $this->injection){
+            $this->injection->lock();
+        }
+
+        return parent::lock();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function loadValue(Container $container){
+        if(null === $this->class){
+            throw new Exception\SettingIsNotCompletedException();
+        }
+
+        $class  = LazyResolver::resolve($container, $this->class);
 
         if(!class_exists($class)){
-            throw new LazyException;
+            throw new Exception\SettingIsNotCompletedException();
         }
 
-        return $container
-            ->getResolver()
-            ->getClassResolver($class)
-            ->getInstanceGenerator()
-            ->generate($container, $this->parameters, $this->types)
-        ;
+        return $container->new($class, $this->injection);
     }
 
     /**
-     * パラメータ自動解決用の値を追加する
+     * クラス名を設定する
      *
-     * @param   string  $key
-     *  ポジションもしくはパラメータ名
-     * @param   mixed   $value
-     *  値
-     *
-     * @return  $this
-     *
-     * @throws  Exception\LockedException
-     */
-    public function parameter($key, $value){
-        if($this->isLocked()){
-            throw new LockedException();
-        }
-
-        if(!is_int($key) && !is_string($key)){
-            throw new \InvalidArgumentException;
-        }
-
-        $this->parameters[$key] = $value;
-
-        return $this;
-    }
-
-    /**
-     * 型名自動解決用の値を追加する
-     *
-     * @param   string  $class
+     * @param   string|LazyInterface    $class
      *  クラス名
-     * @param   object|LazyInterface    $value
-     *  値
      *
      * @return  $this
      *
-     * @throws Exception\LockedException
+     * @throws  LockedException
+     * @throws  \ReflectionException
      */
-    public function type(string $class, $value){
+    public function class($class){
         if($this->isLocked()){
             throw new LockedException();
         }
 
-        if(!class_exists($class)){
-            throw new \InvalidArgumentException;
+        if(
+            is_string($class)
+            && !(
+                static::isLazyObject($$class)
+                && "string" === $class->getType()
+            )
+        ){
+            throw new \InvalidArgumentException();
         }
 
-        $this->types[$class]    = $value;
+        if(is_string($class) && !(new \ReflectionClass($class))->isInstantiable()){
+            throw new \InvalidArgumentException();
+        }
+
+        $this->class    = $class;
 
         return $this;
+    }
+
+    /**
+     * 依存性定義インスタンスを取得する
+     *
+     * @return  Injection
+     */
+    public function injection(){
+        if($this->isLocked()){
+            throw new LockedException();
+        }
+
+        if(null === $this->injection){
+            $this->injection    = new Injection();
+        }
+
+        return $this->injection;
     }
 }
