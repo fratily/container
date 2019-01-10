@@ -63,23 +63,6 @@ final class Type{
             return false;
         }
 
-        // もし配列指定なら再帰的にチェックを行う
-        if("[]" === substr($type, -2)){
-            if(!is_array($value)){
-                return false;
-            }
-
-            $type   = substr($type, 0, -2);
-
-            foreach($value as $_value){
-                if(!self::valid($type, $_value)){
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         if(array_key_exists($type, self::$validators)){
             $validator  = self::$validators[$type];
 
