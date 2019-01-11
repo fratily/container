@@ -14,6 +14,7 @@
 namespace Fratily\Container\Builder;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Value\LazyBuilder;
 
 /**
  *
@@ -69,6 +70,15 @@ abstract class AbstractProvider{
      */
     final public function injection(string $id){
         return $this->builder->injection($id);
+    }
+
+    /**
+     * 遅延ビルダーを取得する
+     *
+     * @return  LazyBuilder
+     */
+    final public function lazy(){
+        return $this->builder->getLazyBuilder();
     }
 
     /**

@@ -14,6 +14,8 @@
 namespace Fratily\Container\Builder;
 
 use Fratily\Container\Container;
+use Fratily\Container\Builder\Value\LazyBuilder;
+
 
 /**
  *
@@ -21,6 +23,11 @@ use Fratily\Container\Container;
 class ContainerBuilder implements LockableInterface{
 
     use LockableTrait;
+
+    /**
+     * @var LazyBuilder;
+     */
+    private $lazy;
 
     /**
      * @var Value\Service[]
@@ -33,9 +40,19 @@ class ContainerBuilder implements LockableInterface{
     private $parameters = [];
 
     /**
-     * @var Value\Injection
+     * @var Value\Injection[]
      */
     private $injections = [];
+
+    /**
+     * Constructor
+     *
+     * @param   LazyBuilder $lazy
+     *  遅延ビルダー
+     */
+    public function __construct(LazyBuilder $lazy){
+        return $this->lazy  = $lazy;
+    }
 
     /**
      * {@inheritdoc}
@@ -54,6 +71,15 @@ class ContainerBuilder implements LockableInterface{
         }
 
         $this->locked   = true;
+    }
+
+    /**
+     * 遅延ビルダーを取得する
+     *
+     * @return  LazyBuilder
+     */
+    public function getLazyBuilder(){
+        return $this->lazy;
     }
 
     /**
