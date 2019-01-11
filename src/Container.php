@@ -13,6 +13,7 @@
  */
 namespace Fratily\Container;
 
+use Fratily\Container\Builder\LazyBuilder;
 use Fratily\Container\Builder\Value\Injection;
 use Fratily\Container\Builder\Value\Type;
 use Fratily\Container\Builder\Value\Lazy\LazyResolver;
@@ -37,6 +38,11 @@ class Container implements ContainerInterface{
     private $resolver;
 
     /**
+     * @var LazyBuilder
+     */
+    private $lazyBuilder;
+
+    /**
      *@var object[]
      */
     private $services   = [];
@@ -53,9 +59,16 @@ class Container implements ContainerInterface{
      *  リポジトリ
      * @param   string  $resolver
      *  リゾルバクラス名
+     * @param   LazyBuilder $lazyBuilder
+     *  遅延取得インスタンスビルダー
      */
-    public function __construct(Repository $repository, string $resolver = Resolver::class){
+    public function __construct(
+        Repository $repository,
+        string $resolver = Resolver::class,
+        LazyBuilder $lazyBuilder = null
+    ){
         $this->repository   = $repository;
+        $this->lazyBuilder  = $lazyBuilder ?? new LazyBuilder();
 
         if(
             !class_exists($resolver)
@@ -83,6 +96,15 @@ class Container implements ContainerInterface{
      */
     public function getResolver(){
         return $this->resolver;
+    }
+
+    /*
+     * 遅延取得インスタンスビルダーを取得する
+     *
+     * @return  LazyBuilder
+     */
+    public function getLazyBuilder(){
+        return $this->lazyBuilder;
     }
 
     /**
