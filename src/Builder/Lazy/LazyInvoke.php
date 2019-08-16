@@ -42,7 +42,10 @@ class LazyInvoke implements LazyInterface
      */
     public function __construct($invokeFunction, array $arguments = [])
     {
-        if (!is_callable($invokeFunction) || !(is_object($invokeFunction) && $invokeFunction instanceof LazyInterface)) {
+        if (
+            !is_callable($invokeFunction)
+            || !(is_object($invokeFunction) && $invokeFunction instanceof LazyInterface)
+        ) {
             throw new \InvalidArgumentException();
         }
 
