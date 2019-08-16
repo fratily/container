@@ -116,7 +116,7 @@ class InstanceGenerator
             );
         }
 
-        $this->ExecuteInjectionPropety($container, $instance);
+        $this->executeInjectionProperty($container, $instance);
         $this->ExecuteInjectionSetter($container, $instance);
 
         if ($this->singleton) {
@@ -187,7 +187,7 @@ class InstanceGenerator
      *
      * @return  void
      */
-    protected function ExecuteInjectionPropety(Container $container, $instance)
+    protected function executeInjectionProperty(Container $container, $instance)
     {
         $class      = $this->getReflection();
         $unified    = $this->getClassResolver()->getUnifiedProperties();
@@ -230,7 +230,7 @@ class InstanceGenerator
      *
      * @return  void
      */
-    protected function ExecuteInjectionSetter(Container $container, $instance)
+    protected function executeInjectionSetter(Container $container, $instance)
     {
         $unified    = $this->getClassResolver()->getUnifiedSetters();
 
