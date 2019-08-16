@@ -16,7 +16,8 @@ namespace Fratily\Container\Builder\Value;
 /**
  *
  */
-final class Type{
+final class Type
+{
 
     /**
      * @var callable[]
@@ -51,11 +52,12 @@ final class Type{
      *
      * @return  bool
      */
-    public static function valid(string $type, $value){
+    public static function valid(string $type, $value)
+    {
         // OR指定ならそれぞれについて調べる
-        if(false !== strpos($type, "|")){
-            foreach(explode("|", $type) as $_type){
-                if(self::valid($_type, $value)){
+        if (false !== strpos($type, "|")) {
+            foreach (explode("|", $type) as $_type) {
+                if (self::valid($_type, $value)) {
                     return true;
                 }
             }
@@ -63,7 +65,7 @@ final class Type{
             return false;
         }
 
-        if(array_key_exists($type, self::$validators)){
+        if (array_key_exists($type, self::$validators)) {
             $validator  = self::$validators[$type];
 
             return (bool) $validator($value);
@@ -86,11 +88,12 @@ final class Type{
      *
      * @return  void
      */
-    public static function addType(string $type, callable $validator){
+    public static function addType(string $type, callable $validator)
+    {
         $type   = ":" . $type;
 
-        if(array_key_exists($type, self::$validators)){
-            throw new \InvalidArgumentException;
+        if (array_key_exists($type, self::$validators)) {
+            throw new \InvalidArgumentException();
         }
 
         self::$validators[$type]    = $validator;
@@ -101,7 +104,8 @@ final class Type{
      *
      * @return  true
      */
-    public static function isMixed(){
+    public static function isMixed()
+    {
         return true;
     }
 }

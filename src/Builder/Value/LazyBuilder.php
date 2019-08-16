@@ -26,14 +26,16 @@ use Fratily\Container\Builder\Value\Lazy\LazyPlain;
 /**
  *
  */
-class LazyBuilder{
+class LazyBuilder
+{
 
     /**
      * 内部値の遅延解決を行う配列(連想配列)を生成する
      *
      * @return  LazyArray
      */
-    public function array(){
+    public function array()
+    {
         return new LazyArray();
     }
 
@@ -42,7 +44,8 @@ class LazyBuilder{
      *
      * @return  LazyCallback
      */
-    public function callback(){
+    public function callback()
+    {
         return new LazyCallback();
     }
 
@@ -51,7 +54,8 @@ class LazyBuilder{
      *
      * @return  LazyGet
      */
-    public function get(){
+    public function get()
+    {
         return new LazyGet();
     }
 
@@ -60,7 +64,8 @@ class LazyBuilder{
      *
      * @return  LazyGetParameter
      */
-    public function getParameter(){
+    public function getParameter()
+    {
         return new LazyGetParameter();
     }
 
@@ -69,7 +74,8 @@ class LazyBuilder{
      *
      * @return  LazyGetTagged
      */
-    public function getTagged(){
+    public function getTagged()
+    {
         return new LazyGetTagged();
     }
 
@@ -78,7 +84,8 @@ class LazyBuilder{
      *
      * @return  LazyGetTaggedParameter
      */
-    public function getTaggedParameter(){
+    public function getTaggedParameter()
+    {
         return new LazyGetTaggedParameter();
     }
 
@@ -87,7 +94,8 @@ class LazyBuilder{
      *
      * @return  LazyInvoke
      */
-    public function invoke(){
+    public function invoke()
+    {
         return new LazyInvoke();
     }
 
@@ -96,7 +104,8 @@ class LazyBuilder{
      *
      * @return  LazyNew
      */
-    public function new(){
+    public function new()
+    {
         return new LazyNew();
     }
 
@@ -105,7 +114,8 @@ class LazyBuilder{
      *
      * @return  LazyPlain
      */
-    public function plain(){
+    public function plain()
+    {
         return new LazyPlain();
     }
 }

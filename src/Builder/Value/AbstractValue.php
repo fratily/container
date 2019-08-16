@@ -18,7 +18,8 @@ use Fratily\Container\Container;
 use Fratily\Container\Builder\LockableTrait;
 use Fratily\Container\Builder\Exception\LockedException;
 
-abstract class AbstractValue implements ValueInterface{
+abstract class AbstractValue implements ValueInterface
+{
 
     use LockableTrait;
 
@@ -52,22 +53,25 @@ abstract class AbstractValue implements ValueInterface{
      *
      * @return  bool
      */
-    public function isLazy(){
+    public function isLazy()
+    {
         return is_object($this->value) && $this->value instanceof LazyInterface;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function get(){
+    public function get()
+    {
         return $this->value;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function set($value){
-        if($this->isLocked()){
+    public function set($value)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
@@ -79,20 +83,22 @@ abstract class AbstractValue implements ValueInterface{
     /**
      * {@inheritdoc}
      */
-    public function getType(){
+    public function getType()
+    {
         return $this->type;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setType(string $type, bool $overwritable = false){
-        if($this->isLocked()){
+    public function setType(string $type, bool $overwritable = false)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(!$this->typeOverwritable){
-            throw new \InvalidArgumentException;
+        if (!$this->typeOverwritable) {
+            throw new \InvalidArgumentException();
         }
 
         $this->type             = $type;
@@ -104,20 +110,22 @@ abstract class AbstractValue implements ValueInterface{
     /**
      * {@inheritdoc}
      */
-    public function getTags(){
+    public function getTags()
+    {
         return array_keys($this->tags);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addTag(string $tag){
-        if($this->isLocked()){
+    public function addTag(string $tag)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(1 !== preg_match(Container::REGEX_KEY, $tag)){
-            throw new \InvalidArgumentException;
+        if (1 !== preg_match(Container::REGEX_KEY, $tag)) {
+            throw new \InvalidArgumentException();
         }
 
         $this->tags[$tag]   = true;
@@ -130,7 +138,8 @@ abstract class AbstractValue implements ValueInterface{
      *
      * @return  string[]
      */
-    public function getAliases(){
+    public function getAliases()
+    {
         return array_keys($this->aliases);
     }
 
@@ -142,15 +151,15 @@ abstract class AbstractValue implements ValueInterface{
      *
      * @return  $this
      */
-    public function addAlias(string $alias){
+    public function addAlias(string $alias)
+    {
         $alias  = ltrim($alias, "\\");
 
-        if(
-            1 !== preg_match(Container::REGEX_KEY, $alias)
+        if (1 !== preg_match(Container::REGEX_KEY, $alias)
             && !class_exists($alias)
             && !interface_exists($alias)
-        ){
-            throw new \InvalidArgumentException;
+        ) {
+            throw new \InvalidArgumentException();
         }
 
         $this->aliases[$alias]  = true;
@@ -166,8 +175,9 @@ abstract class AbstractValue implements ValueInterface{
      *
      * @return  $this
      */
-    public function removeAlias(string $alias){
-        if(array_key_exists($alias, $this->aliases)){
+    public function removeAlias(string $alias)
+    {
+        if (array_key_exists($alias, $this->aliases)) {
             unset($this->aliases[$alias]);
         }
 

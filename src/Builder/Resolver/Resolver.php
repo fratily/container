@@ -18,7 +18,8 @@ use Fratily\Container\Builder\Lazy;
 /**
  *
  */
-class Resolver{
+class Resolver
+{
 
     use LockTrait;
 
@@ -40,10 +41,11 @@ class Resolver{
     /**
      * {@inheritdoc}
      */
-    public function lock(){
+    public function lock()
+    {
         $this->lock = true;
 
-        foreach($this->classes as $class){
+        foreach ($this->classes as $class) {
             $class->lock();
         }
 
@@ -58,18 +60,19 @@ class Resolver{
      *
      * @return  ClassResolver
      */
-    public function getClassResolver(string $class){
-        if(!class_exists($class) && !interface_exists($class) && !trait_exists($class)){
+    public function getClassResolver(string $class)
+    {
+        if (!class_exists($class) && !interface_exists($class) && !trait_exists($class)) {
             throw new \InvalidArgumentException();
         }
 
-        if(!array_key_exists($class, $this->classes)){
+        if (!array_key_exists($class, $this->classes)) {
             $reflection = new \ReflectionClass($class);
             $class      = $reflection->getName();
 
             $this->classes[$class]  = new ClassResolver($this, $reflection);
 
-            if($this->locked()){
+            if ($this->locked()) {
                 $this->classes[$class]->lock();
             }
         }
@@ -87,7 +90,8 @@ class Resolver{
      *
      * return CallbackInvoker
      */
-    public function createCallbackInvoker(callable $callback){
+    public function createCallbackInvoker(callable $callback)
+    {
         return new CallbackInvoker($this, $callback);
     }
 
@@ -99,7 +103,8 @@ class Resolver{
      *
      * @return  object|null
      */
-    public function getType(string $type){
+    public function getType(string $type)
+    {
         return $this->types[$type] ?? null;
     }
 
@@ -111,7 +116,8 @@ class Resolver{
      *
      * @return  bool
      */
-    public function hasType(string $class){
+    public function hasType(string $class)
+    {
         return array_key_exists($class, $this->types);
     }
 
@@ -125,16 +131,17 @@ class Resolver{
      *
      * @return  $this
      */
-    public function addType(string $type, $value){
-        if($this->locked()){
+    public function addType(string $type, $value)
+    {
+        if ($this->locked()) {
             throw new Exception\LockedException("Container is locked.");
         }
 
-        if(!class_exists($type) && !interface_exists($type)){
+        if (!class_exists($type) && !interface_exists($type)) {
             throw new \InvalidArgumentException();
         }
 
-        if(!is_object($value)){
+        if (!is_object($value)) {
             throw new \InvalidArgumentException();
         }
 
@@ -153,7 +160,8 @@ class Resolver{
      *
      * @return  mixed
      */
-    public function getShareValue(string $name){
+    public function getShareValue(string $name)
+    {
         return $this->shareVals[$name] ?? null;
     }
 
@@ -165,7 +173,8 @@ class Resolver{
      *
      * @return  bool
      */
-    public function hasShareValue(string $name){
+    public function hasShareValue(string $name)
+    {
         return array_key_exists($name, $this->shareVals);
     }
 
@@ -179,8 +188,9 @@ class Resolver{
      *
      * @return  $this
      */
-    public function addShareValue(string $name, $value){
-        if($this->locked()){
+    public function addShareValue(string $name, $value)
+    {
+        if ($this->locked()) {
             throw new Exception\LockedException("Container is locked.");
         }
 
@@ -207,10 +217,10 @@ class Resolver{
         \ReflectionFunctionAbstract $function,
         array $parameters = [],
         array $types = []
-    ){
+    ) {
         $result = [];
 
-        foreach($function->getParameters() as $param){
+        foreach ($function->getParameters() as $param) {
             $pos    = $param->getPosition();
             $name   = $param->getName();
             $target = $function instanceof \ReflectionMethod
@@ -218,47 +228,45 @@ class Resolver{
                 : $function->getName()
             ;
 
-            if(array_key_exists($param->getPosition(), $parameters)){
+            if (array_key_exists($param->getPosition(), $parameters)) {
                 $result[]   = $parameters[$param->getPosition()];
                 continue;
             }
 
-            if(array_key_exists($param->getName(), $parameters)){
+            if (array_key_exists($param->getName(), $parameters)) {
                 $result[]   = $parameters[$param->getName()];
                 continue;
             }
 
-            if(null !== ($class = $param->getClass())){ // もし型宣言のクラスが不正なら例外発生
-                if(array_key_exists($class->getName(), $types)){
-                    if(null === $types[$class->getName()] && $param->allowsNull()){
+            if (null !== ($class = $param->getClass())) { // もし型宣言のクラスが不正なら例外発生
+                if (array_key_exists($class->getName(), $types)) {
+                    if (null === $types[$class->getName()] && $param->allowsNull()) {
                         $result[]   = null;
                         continue;
                     }
 
-                    if(
-                        is_object($types[$class->getName()])
+                    if (is_object($types[$class->getName()])
                         && is_a($types[$class->getName()], $class->getName())
-                    ){
+                    ) {
                         $result[]   = $types[$class->getName()];
                         continue;
                     }
 
-                    if(
-                        $param->isDefaultValueAvailable()
+                    if ($param->isDefaultValueAvailable()
                         && $types[$class->getName()] === $param->getDefaultValue()
-                    ){
+                    ) {
                         $result[]   = $types[$class->getName()];
                         continue;
                     }
                 }
 
-                if($this->hasType($class->getName())){
+                if ($this->hasType($class->getName())) {
                     $result[]   = $this->getType($class->getName());
                     continue;
                 }
 
-                if(!$param->isDefaultValueAvailable()){
-                    if(!$param->allowsNull() && !$class->isInstantiable()){
+                if (!$param->isDefaultValueAvailable()) {
+                    if (!$param->allowsNull() && !$class->isInstantiable()) {
                         throw new Exception\RequireParameterNotDefinedException(
                             "The parameter \${$name}({$pos}) of {$target}() cannot be resolved."
                         );
@@ -273,12 +281,12 @@ class Resolver{
                 }
             }
 
-            if($param->isDefaultValueAvailable()){
+            if ($param->isDefaultValueAvailable()) {
                 $result[]   = $param->getDefaultValue();
                 continue;
             }
 
-            if($param->allowsNull()){
+            if ($param->allowsNull()) {
                 $result[]   = null;
                 continue;
             }

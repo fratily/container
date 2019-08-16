@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Value\Lazy\LazyInterface;
 /**
  *
  */
-class Resolver{
+class Resolver
+{
 
     /**
      * @var Container
@@ -32,7 +33,8 @@ class Resolver{
      * @param   Container   $container
      *  サービスコンテナ
      */
-    public function __construct(Container $container){
+    public function __construct(Container $container)
+    {
         $this->container    = $container;
     }
 
@@ -41,7 +43,8 @@ class Resolver{
      *
      * @return  Container
      */
-    protected function getContainer(){
+    protected function getContainer()
+    {
         return $this->container;
     }
 
@@ -53,7 +56,8 @@ class Resolver{
      *
      * @return  bool
      */
-    public function isInstantiable(string $class){
+    public function isInstantiable(string $class)
+    {
         return class_exists($class) && (new \ReflectionClass($class))->isInstantiable();
     }
 
@@ -76,26 +80,25 @@ class Resolver{
         array $positions,
         array $names,
         array $types
-    ){
+    ) {
         $result = [];
 
-        foreach($function->getParameters() as $parameter){
-            try{
+        foreach ($function->getParameters() as $parameter) {
+            try {
                 $value  = $this->resolveParameter($parameter, $positions, $names, $types);
-            }catch(\Exception $e){
+            } catch (\Exception $e) {
                 throw new Exception\ParameterUnresolvedException(
                     "The value of {$this->getParameterInfoText($parameter)}"
-                        . " could not be resolved."
-                    ,
+                        . " could not be resolved.",
                     0,
                     $e
                 );
             }
 
-            if($parameter->hasType()){
+            if ($parameter->hasType()) {
                 // check value type
 
-                if(null === $value && !$parameter->allowsNull()){
+                if (null === $value && !$parameter->allowsNull()) {
                     throw new Exception\ParameterUnresolvedException();
                 }
             }
@@ -127,44 +130,43 @@ class Resolver{
         array $positions,
         array $names,
         array $types
-    ){
+    ) {
         $class  = null;
 
-        if(array_key_exists($parameter->getPosition(), $positions)){
+        if (array_key_exists($parameter->getPosition(), $positions)) {
             return $positions[$parameter->getPosition()];
         }
 
-        if(array_key_exists($parameter->getName(), $names)){
+        if (array_key_exists($parameter->getName(), $names)) {
             return $names[$parameter->getName()];
         }
 
-        if($parameter->hasType() && !$parameter->getType()->isBuiltin()){
-            try{
+        if ($parameter->hasType() && !$parameter->getType()->isBuiltin()) {
+            try {
                 $class  = $parameter->getClass();
-            }catch(\ReflectionException $e){
+            } catch (\ReflectionException $e) {
                 throw new Exception\InvalidParameterDefinedException(
                     "Type specification of {$this->getParameterInfoText($parameter)}"
-                        . " is invalid."
-                    ,
+                        . " is invalid.",
                     0,
                     $e
                 );
             }
 
-            if(array_key_exists($class->getName(), $types)){
+            if (array_key_exists($class->getName(), $types)) {
                 return $types[$class->getName()];
             }
 
-            if($this->getContainer()->has($class->getName())){
+            if ($this->getContainer()->has($class->getName())) {
                 return LazyBuilder::lazyGet($class->getName());
             }
         }
 
-        if($parameter->isDefaultValueAvailable()){
+        if ($parameter->isDefaultValueAvailable()) {
             return $parameter->getDefaultValue();
         }
 
-        if(!$parameter->allowsNull() && null !== $class && $class->isInstantiable()){
+        if (!$parameter->allowsNull() && null !== $class && $class->isInstantiable()) {
             return LazyBuilder::lazyNew($class->getName());
         }
 
@@ -179,7 +181,8 @@ class Resolver{
      *
      * @return  string
      */
-    public function getParameterInfoText(\ReflectionParameter $parameter){
+    public function getParameterInfoText(\ReflectionParameter $parameter)
+    {
         $func   = $parameter->getDeclaringFunction();
         $posStr = str_repeat("\$.., ", $parameter->getPosition());
         $target = $func instanceof \ReflectionMethod

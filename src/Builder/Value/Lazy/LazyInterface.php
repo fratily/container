@@ -19,7 +19,8 @@ use Fratily\Container\Builder\LockableInterface;
 /**
  *
  */
-interface LazyInterface extends LockableInterface{
+interface LazyInterface extends LockableInterface
+{
 
     /**
      * Constructor

@@ -16,7 +16,8 @@ namespace Fratily\Container\Builder\Resolver;
 /**
  *
  */
-class ClassResolver{
+class ClassResolver
+{
 
     use LockTrait;
 
@@ -83,7 +84,8 @@ class ClassResolver{
      * @param   \ReflectionClass    $reflection
      *  依存を定義する対象クラスのリフレクションオブジェクト
      */
-    public function __construct(Resolver $resolver, \ReflectionClass $reflection){
+    public function __construct(Resolver $resolver, \ReflectionClass $reflection)
+    {
         $this->resolver     = $resolver;
         $this->reflection   = $reflection;
     }
@@ -91,10 +93,11 @@ class ClassResolver{
     /**
      * {@inheritdoc}
      */
-    public function lock(){
+    public function lock()
+    {
         $this->lock = true;
 
-        if(null !== $this->instanceGenerator){
+        if (null !== $this->instanceGenerator) {
             $this->instanceGenerator->lock();
         }
 
@@ -106,14 +109,15 @@ class ClassResolver{
      *
      * @return  InstanceGenerator
      */
-    public function getInstanceGenerator(){
-        if(null === $this->instanceGenerator){
+    public function getInstanceGenerator()
+    {
+        if (null === $this->instanceGenerator) {
             $this->instanceGenerator    = new InstanceGenerator(
                 $this->resolver,
                 $this->reflection->getName()
             );
 
-            if($this->locked()){
+            if ($this->locked()) {
                 $this->instanceGenerator->lock();
             }
         }
@@ -126,7 +130,8 @@ class ClassResolver{
      *
      * @return  \ReflectionClass
      */
-    public function getReflection(){
+    public function getReflection()
+    {
         return $this->reflection;
     }
 
@@ -140,7 +145,8 @@ class ClassResolver{
      *  もし存在しなければnullが返る。値にnullを指定しているのか確認するには
      *  hasParameter()メソッドを利用する。
      */
-    public function getPositionParameter(int $pos){
+    public function getPositionParameter(int $pos)
+    {
         return $this->posParameters[$pos] ?? null;
     }
 
@@ -154,7 +160,8 @@ class ClassResolver{
      *  もし存在しなければnullが返る。値にnullを指定しているのか確認するには
      *  hasParameter()メソッドを利用する。
      */
-    public function getNameParameter(string $name){
+    public function getNameParameter(string $name)
+    {
         return $this->nameParameters[$name] ?? null;
     }
 
@@ -163,7 +170,8 @@ class ClassResolver{
      *
      * @return  mixed[]
      */
-    public function getPostionParameters(){
+    public function getPostionParameters()
+    {
         return $this->posParameters;
     }
 
@@ -172,7 +180,8 @@ class ClassResolver{
      *
      * @return  mixed[]
      */
-    public function getNameParameters(){
+    public function getNameParameters()
+    {
         return $this->nameParameters;
     }
 
@@ -184,7 +193,8 @@ class ClassResolver{
      *
      * @return  bool
      */
-    public function hasPositionParameter(int $pos){
+    public function hasPositionParameter(int $pos)
+    {
         return array_key_exists($pos, $this->posParameters);
     }
 
@@ -196,7 +206,8 @@ class ClassResolver{
      *
      * @return  bool
      */
-    public function hasNameParameter(string $name){
+    public function hasNameParameter(string $name)
+    {
         return array_key_exists($name, $this->nameParameters);
     }
 
@@ -212,12 +223,13 @@ class ClassResolver{
      *
      * @throws  \InvalidArgumentException
      */
-    public function addPositionParameter(int $pos, $value){
-        if($this->locked()){
+    public function addPositionParameter(int $pos, $value)
+    {
+        if ($this->locked()) {
             throw new Exception\LockedException("Container is locked.");
         }
 
-        if($pos < 0){
+        if ($pos < 0) {
             throw new \InvalidArgumentException();
         }
 
@@ -236,8 +248,9 @@ class ClassResolver{
      *
      * @return  $this
      */
-    public function addNameParameter(string $name, $value){
-        if($this->locked()){
+    public function addNameParameter(string $name, $value)
+    {
+        if ($this->locked()) {
             throw new Exception\LockedException("Container is locked.");
         }
 
@@ -256,7 +269,8 @@ class ClassResolver{
      *  もし存在しなければnullが返る。明示的にnullを指定しているのか
      *  確認するには、hasSetter()メソッドを利用する。
      */
-    public function getSetter(string $method){
+    public function getSetter(string $method)
+    {
         return $this->setters[$method] ?? null;
     }
 
@@ -265,7 +279,8 @@ class ClassResolver{
      *
      * @return  mixed[]
      */
-    public function getSetters(){
+    public function getSetters()
+    {
         return $this->setters;
     }
 
@@ -277,7 +292,8 @@ class ClassResolver{
      *
      * @return  bool
      */
-    public function hasSetter(string $method){
+    public function hasSetter(string $method)
+    {
         return array_key_exists($method, $this->setters);
     }
 
@@ -295,22 +311,21 @@ class ClassResolver{
      *
      * @throws  \InvalidArgumentException
      */
-    public function addSetter(string $name, $value){
-        if($this->locked()){
+    public function addSetter(string $name, $value)
+    {
+        if ($this->locked()) {
             throw new Exception\LockedException("Container is locked.");
         }
 
-        if(
-            !$this->reflection->hasMethod($name)
+        if (!$this->reflection->hasMethod($name)
 //            && !$this->reflection->hasMethod("__call")
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
-        if(
-            $this->reflection->getMethod($name)->isStatic()
+        if ($this->reflection->getMethod($name)->isStatic()
             || !$this->reflection->getMethod($name)->isPublic()
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
@@ -329,7 +344,8 @@ class ClassResolver{
      *  もし存在しなければnullが返る。明示的にnullを指定しているのか
      *  確認するには、hasSetter()メソッドを利用する。
      */
-    public function getProperty(string $name){
+    public function getProperty(string $name)
+    {
         return $this->properties[$name] ?? $this->privateProperties[$name] ?? null;
     }
 
@@ -338,7 +354,8 @@ class ClassResolver{
      *
      * @return  mixed[]
      */
-    public function getProperties(){
+    public function getProperties()
+    {
         return $this->properties;
     }
 
@@ -350,7 +367,8 @@ class ClassResolver{
      *
      * @return  bool
      */
-    public function hasProperty(string $name){
+    public function hasProperty(string $name)
+    {
         return array_key_exists($name, $this->properties)
             || array_key_exists($name, $this->privateProperties)
         ;
@@ -370,25 +388,25 @@ class ClassResolver{
      *
      * @throws  \InvalidArgumentException
      */
-    public function addProperty(string $name, $value){
-        if($this->locked()){
+    public function addProperty(string $name, $value)
+    {
+        if ($this->locked()) {
             throw new Exception\LockedException("Container is locked.");
         }
 
-        if(
-            !$this->reflection->hasProperty($name)
+        if (!$this->reflection->hasProperty($name)
 //            && !$this->reflection->hasMethod("__set")
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
-        if($this->reflection->getProperty($name)->isStatic()){
+        if ($this->reflection->getProperty($name)->isStatic()) {
             throw new \InvalidArgumentException();
         }
 
-        if($this->reflection->getProperty($name)->isPrivate()){
+        if ($this->reflection->getProperty($name)->isPrivate()) {
             $this->properties[$name]    = $value;
-        }else{
+        } else {
             $this->privateProperties[$name] = $value;
         }
 
@@ -403,11 +421,12 @@ class ClassResolver{
      *
      * @return  mixed[]
      */
-    public function getUnifiedParameters(bool $considerInterface = true){
-        if(null === $this->unifiedParameters){
+    public function getUnifiedParameters(bool $considerInterface = true)
+    {
+        if (null === $this->unifiedParameters) {
             $this->unifiedParameters    = [];
 
-            if(false !== ($parent = $this->reflection->getParentClass())){
+            if (false !== ($parent = $this->reflection->getParentClass())) {
                 $this->unifiedParameters    = array_merge(
                     $this->unifiedParameters,
                     $this->resolver
@@ -416,10 +435,10 @@ class ClassResolver{
                 );
             }
 
-            if($considerInterface){
-                foreach($this->reflection->getInterfaceNames() as $interface){
+            if ($considerInterface) {
+                foreach ($this->reflection->getInterfaceNames() as $interface) {
                     $this->unifiedParameters    = array_merge(
-                    $this->unifiedParameters,
+                        $this->unifiedParameters,
                         $this->resolver
                             ->getClassResolver($interface)
                             ->getUnifiedParameters(false)
@@ -427,7 +446,7 @@ class ClassResolver{
                 }
             }
 
-            foreach($this->reflection->getTraitNames() as $trait){
+            foreach ($this->reflection->getTraitNames() as $trait) {
                 $this->unifiedParameters    = array_merge(
                     $this->unifiedParameters,
                     $this->resolver
@@ -453,11 +472,12 @@ class ClassResolver{
      *
      * @return  mixed[]
      */
-    public function getUnifiedSetters(bool $considerInterface = true){
-        if(null === $this->unifiedSetters){
+    public function getUnifiedSetters(bool $considerInterface = true)
+    {
+        if (null === $this->unifiedSetters) {
             $this->unifiedSetters   = [];
 
-            if(false !== ($parent = $this->reflection->getParentClass())){
+            if (false !== ($parent = $this->reflection->getParentClass())) {
                 $this->unifiedSetters   = array_merge(
                     $this->unifiedSetters,
                     $this->resolver
@@ -466,10 +486,10 @@ class ClassResolver{
                 );
             }
 
-            if($considerInterface){
-                foreach($this->reflection->getInterfaceNames() as $interface){
+            if ($considerInterface) {
+                foreach ($this->reflection->getInterfaceNames() as $interface) {
                     $this->unifiedSetters   = array_merge(
-                    $this->unifiedSetters,
+                        $this->unifiedSetters,
                         $this->resolver
                             ->getClassResolver($interface)
                             ->getUnifiedSetters(false)
@@ -477,7 +497,7 @@ class ClassResolver{
                 }
             }
 
-            foreach($this->reflection->getTraitNames() as $trait){
+            foreach ($this->reflection->getTraitNames() as $trait) {
                 $this->unifiedSetters   = array_merge(
                     $this->unifiedSetters,
                     $this->resolver
@@ -500,11 +520,12 @@ class ClassResolver{
      *
      * @return  mixed[]
      */
-    public function getUnifiedProperties(){
-        if(null === $this->unifiedProperties){
+    public function getUnifiedProperties()
+    {
+        if (null === $this->unifiedProperties) {
             $this->unifiedProperties    = [];
 
-            if(false !== ($parent = $this->reflection->getParentClass())){
+            if (false !== ($parent = $this->reflection->getParentClass())) {
                 $this->unifiedProperties    = array_merge(
                     $this->unifiedProperties,
                     $this->resolver
@@ -513,7 +534,7 @@ class ClassResolver{
                 );
             }
 
-            foreach($this->reflection->getTraitNames() as $trait){
+            foreach ($this->reflection->getTraitNames() as $trait) {
                 $this->unifiedProperties    = array_merge(
                     $this->unifiedProperties,
                     $this->resolver

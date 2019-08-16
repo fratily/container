@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Value\LazyBuilder;
 /**
  *
  */
-abstract class AbstractProvider{
+abstract class AbstractProvider
+{
 
     /**
      * @var ContainerBuilder
@@ -32,7 +33,8 @@ abstract class AbstractProvider{
      * @param   ContainerBuilder    $builder
      *  サービスコンテナビルダー
      */
-    final public function __construct(ContainerBuilder $builder){
+    final public function __construct(ContainerBuilder $builder)
+    {
         $this->builder  = $builder;
     }
 
@@ -44,7 +46,8 @@ abstract class AbstractProvider{
      *
      * @return  Value\Service
      */
-    final public function service(string $id){
+    final public function service(string $id)
+    {
         return $this->builder->service($id);
     }
 
@@ -56,7 +59,8 @@ abstract class AbstractProvider{
      *
      * @return  Value\Parameter
      */
-    final public function parameter(string $id){
+    final public function parameter(string $id)
+    {
         return $this->builder->parameter($id);
     }
 
@@ -68,7 +72,8 @@ abstract class AbstractProvider{
      *
      * @return  Value\Injection
      */
-    final public function injection(string $id){
+    final public function injection(string $id)
+    {
         return $this->builder->injection($id);
     }
 
@@ -77,7 +82,8 @@ abstract class AbstractProvider{
      *
      * @return  LazyBuilder
      */
-    final public function lazy(){
+    final public function lazy()
+    {
         return $this->builder->getLazyBuilder();
     }
 
@@ -89,7 +95,8 @@ abstract class AbstractProvider{
      *
      * @return  void
      */
-    public function build(array $options): void{
+    public function build(array $options): void
+    {
     }
 
     /**
@@ -100,6 +107,7 @@ abstract class AbstractProvider{
      *
      * @return  void
      */
-    public function modify(Container $container): void{
+    public function modify(Container $container): void
+    {
     }
 }

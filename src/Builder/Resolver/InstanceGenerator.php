@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Lazy\LazyResolver;
 /**
  *
  */
-class InstanceGenerator{
+class InstanceGenerator
+{
 
     use LockTrait;
 
@@ -51,11 +52,11 @@ class InstanceGenerator{
      * @param   string  $class
      *  クラス名
      */
-    public function __construct(Resolver $resolver, string $class){
-        if(
-            !class_exists($class)
+    public function __construct(Resolver $resolver, string $class)
+    {
+        if (!class_exists($class)
             || !$resolver->getClassResolver($class)->getReflection()->isInstantiable()
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
@@ -73,8 +74,9 @@ class InstanceGenerator{
      *
      * @throws  Exception\LockedException
      */
-    public function setIsSingleton(bool $singleton){
-        if($this->locked()){
+    public function setIsSingleton(bool $singleton)
+    {
+        if ($this->locked()) {
             throw new Exception\LockedException("Container is locked.");
         }
 
@@ -95,15 +97,16 @@ class InstanceGenerator{
      *
      * @return  object
      */
-    public function generate(Container $container, array $parameters = [], array $types = []){
-        if($this->singleton && null !== $this->instance){
+    public function generate(Container $container, array $parameters = [], array $types = [])
+    {
+        if ($this->singleton && null !== $this->instance) {
             return $this->instance;
         }
 
         $instance       = $this->getReflection()->newInstanceWithoutConstructor();
         $constructor    = $this->getReflection()->getConstructor();
 
-        if(null !== $constructor){
+        if (null !== $constructor) {
             $constructor->invokeArgs(
                 $instance,
                 LazyResolver::resolveLazyArray(
@@ -116,7 +119,7 @@ class InstanceGenerator{
         $this->ExecuteInjectionPropety($container, $instance);
         $this->ExecuteInjectionSetter($container, $instance);
 
-        if($this->singleton){
+        if ($this->singleton) {
             $this->instance = $instance;
         }
 
@@ -128,7 +131,8 @@ class InstanceGenerator{
      *
      * @return  \ReflectionClass
      */
-    protected function getReflection(){
+    protected function getReflection()
+    {
         return $this->resolver->getClassResolver($this->class)->getReflection();
     }
 
@@ -137,7 +141,8 @@ class InstanceGenerator{
      *
      * @return  ClassResolver
      */
-    protected function getClassResolver(){
+    protected function getClassResolver()
+    {
         return $this->resolver->getClassResolver($this->class);
     }
 
@@ -155,11 +160,11 @@ class InstanceGenerator{
      * @throws  \ReflectionException
      *  型宣言に使用したクラスが存在しない場合などにスローされる
      */
-    protected function resolveParameter(array $parameters = [], array $types = []){
-        if(
-            null === $this->getReflection()->getConstructor()
+    protected function resolveParameter(array $parameters = [], array $types = [])
+    {
+        if (null === $this->getReflection()->getConstructor()
             || !$this->getReflection()->getConstructor()->isPublic()
-        ){
+        ) {
             return [];
         }
 
@@ -167,8 +172,7 @@ class InstanceGenerator{
             $this->getReflection()->getConstructor(),
             $parameters
                 + $this->getClassResolver()->getUnifiedParameters()
-                + $this->getClassResolver()->getPostionParameters()
-            ,
+                + $this->getClassResolver()->getPostionParameters(),
             $types
         );
     }
@@ -183,15 +187,16 @@ class InstanceGenerator{
      *
      * @return  void
      */
-    protected function ExecuteInjectionPropety(Container $container, $instance){
+    protected function ExecuteInjectionPropety(Container $container, $instance)
+    {
         $class      = $this->getReflection();
         $unified    = $this->getClassResolver()->getUnifiedProperties();
 
-        do{
+        do {
             $resolver   = $this->resolver->getClassResolver($class->getName());
 
-            foreach($class->getProperties(\ReflectionProperty::IS_PRIVATE) as $prop){
-                if(!$prop->isStatic() && $resolver->hasProperty($prop->getName())){
+            foreach ($class->getProperties(\ReflectionProperty::IS_PRIVATE) as $prop) {
+                if (!$prop->isStatic() && $resolver->hasProperty($prop->getName())) {
                     $prop->setAccessible(true);
                     $prop->setValue(
                         $instance,
@@ -202,9 +207,9 @@ class InstanceGenerator{
                     );
                 }
             }
-        }while(false !== ($class = $class->getParentClass()));
+        } while (false !== ($class = $class->getParentClass()));
 
-        foreach($unified as $name => $value){
+        foreach ($unified as $name => $value) {
             $prop   = $this->getReflection()->getProperty($name);
 
             $prop->setAccessible(true);
@@ -225,10 +230,11 @@ class InstanceGenerator{
      *
      * @return  void
      */
-    protected function ExecuteInjectionSetter(Container $container, $instance){
+    protected function ExecuteInjectionSetter(Container $container, $instance)
+    {
         $unified    = $this->getClassResolver()->getUnifiedSetters();
 
-        foreach($unified as $name => $value){
+        foreach ($unified as $name => $value) {
             $reflection = $this->getReflection()->getMethod($name);
 
             $reflection->invoke(

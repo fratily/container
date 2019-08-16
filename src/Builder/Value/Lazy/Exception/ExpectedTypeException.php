@@ -13,5 +13,6 @@
  */
 namespace Fratily\Container\Builder\Value\Lazy\Exception;
 
-class ExpectedTypeException extends LazyException{
+class ExpectedTypeException extends LazyException
+{
 }

@@ -16,7 +16,8 @@ namespace Fratily\Container\Builder;
 /**
  *
  */
-trait LockableTrait{
+trait LockableTrait
+{
 
     /**
      * @var bool
@@ -28,7 +29,8 @@ trait LockableTrait{
      *
      * @return  $this
      */
-    public function lock(){
+    public function lock()
+    {
         $this->locked = true;
 
         return $this;
@@ -39,7 +41,8 @@ trait LockableTrait{
      *
      * @return  bool
      */
-    public function isLocked(): bool{
+    public function isLocked(): bool
+    {
         return $this->locked;
     }
 }

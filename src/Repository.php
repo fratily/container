@@ -20,7 +20,8 @@ use Fratily\Container\Builder\Value\Injection;
 /**
  *
  */
-class Repository{
+class Repository
+{
 
     /**
      * @var Service[]
@@ -67,42 +68,43 @@ class Repository{
      * @param   Injection[] $injections
      *  DI設定IDをキーとした連想配列
      */
-    public function __construct(array $services, array $parameters, array $injections){
+    public function __construct(array $services, array $parameters, array $injections)
+    {
         $this->services     = $services;
         $this->parameters   = $parameters;
         $this->injections   = $injections;
 
         // せっかくAbstractValueで抽象化しているんだから処理をまとめたい
-        foreach($this->services as $id => $service){
-            foreach($service->getTags() as $tag){
-                if(!array_key_exists($tag, $this->taggedServiceLists)){
+        foreach ($this->services as $id => $service) {
+            foreach ($service->getTags() as $tag) {
+                if (!array_key_exists($tag, $this->taggedServiceLists)) {
                     $this->taggedServiceLists[$tag] = [];
                 }
 
                 $this->taggedServiceLists[$tag][]   = $id;
             }
 
-            foreach($service->getAliases() as $alias){
-                if(array_key_exists($alias, $this->aliasedServices)){
-                    throw new \LogicException;
+            foreach ($service->getAliases() as $alias) {
+                if (array_key_exists($alias, $this->aliasedServices)) {
+                    throw new \LogicException();
                 }
 
                 $this->aliasedServices[$alias]  = $id;
             }
         }
 
-        foreach($this->parameters as $id => $parameter){
-            foreach($parameter->getTags() as $tag){
-                if(!array_key_exists($tag, $this->taggedParameterLists)){
+        foreach ($this->parameters as $id => $parameter) {
+            foreach ($parameter->getTags() as $tag) {
+                if (!array_key_exists($tag, $this->taggedParameterLists)) {
                     $this->taggedParameterLists[$tag]  = [];
                 }
 
                 $this->taggedParameterLists[$tag][]    = $id;
             }
 
-            foreach($parameter->getAliases() as $alias){
-                if(array_key_exists($alias, $this->aliasedParameters)){
-                    throw new \LogicException;
+            foreach ($parameter->getAliases() as $alias) {
+                if (array_key_exists($alias, $this->aliasedParameters)) {
+                    throw new \LogicException();
                 }
 
                 $this->aliasedParameters[$alias]    = $id;
@@ -115,7 +117,8 @@ class Repository{
      *
      * @return  Service[]
      */
-    public function getServices(){
+    public function getServices()
+    {
         return $this->services;
     }
 
@@ -127,7 +130,8 @@ class Repository{
      *
      * @return  string[]
      */
-    public function getServiceIdsWithTagged(string $tag){
+    public function getServiceIdsWithTagged(string $tag)
+    {
         return array_key_exists($tag, $this->taggedServiceLists)
             ? $this->taggedServiceLists[$tag]
             : []
@@ -144,15 +148,16 @@ class Repository{
      *
      * @throws  \LogicException
      */
-    public function getService(string $id){
+    public function getService(string $id)
+    {
         $id = ltrim($id, "\\");
 
-        if(array_key_exists($id, $this->aliasedServices)){
+        if (array_key_exists($id, $this->aliasedServices)) {
             $id = $this->aliasedParameters[$id];
         }
 
-        if(!array_key_exists($id, $this->services)){
-            throw new \LogicException;
+        if (!array_key_exists($id, $this->services)) {
+            throw new \LogicException();
         }
 
         return $this->services[$id];
@@ -166,7 +171,8 @@ class Repository{
      *
      * @return  bool
      */
-    public function hasService(string $id){
+    public function hasService(string $id)
+    {
         $id = ltrim($id, "\\");
 
         return
@@ -180,7 +186,8 @@ class Repository{
      *
      * @return  Parameter[]
      */
-    public function getParameters(){
+    public function getParameters()
+    {
         return $this->parameters;
     }
 
@@ -192,7 +199,8 @@ class Repository{
      *
      * @return  string[]
      */
-    public function getParameterIdsWithTagged(string $tag){
+    public function getParameterIdsWithTagged(string $tag)
+    {
         return array_key_exists($tag, $this->taggedParameterLists)
             ? $this->taggedParameterLists[$tag]
             : []
@@ -209,13 +217,14 @@ class Repository{
      *
      * @throws  \LogicException
      */
-    public function getParameter(string $id){
-        if(array_key_exists($id, $this->aliasedParameters)){
+    public function getParameter(string $id)
+    {
+        if (array_key_exists($id, $this->aliasedParameters)) {
             $id = $this->aliasedParameters[$id];
         }
 
-        if(!array_key_exists($id, $this->parameters)){
-            throw new \LogicException;
+        if (!array_key_exists($id, $this->parameters)) {
+            throw new \LogicException();
         }
 
         return $this->parameters[$id];
@@ -229,7 +238,8 @@ class Repository{
      *
      * @return  bool
      */
-    public function hasParameter(string $id){
+    public function hasParameter(string $id)
+    {
         return
             array_key_exists($id, $this->parameters)
             || array_key_exists($id, $this->aliasedParameters)
@@ -241,7 +251,8 @@ class Repository{
      *
      * @return  Injection[]
      */
-    public function getInjections(){
+    public function getInjections()
+    {
         return $this->injections;
     }
 
@@ -253,21 +264,22 @@ class Repository{
      *
      * @return  Injection[]
      */
-    public function getInjectionsFromClass(string $class){
-        if(!class_exists($class)){
+    public function getInjectionsFromClass(string $class)
+    {
+        if (!class_exists($class)) {
             throw new \InvalidArgumentException();
         }
 
         $injections = [];
 
-        do{
-            if($this->hasInjection($class)){
+        do {
+            if ($this->hasInjection($class)) {
                 $injections[]   = $this->getInjection($class);
             }
-        }while(false !== ($class = get_parent_class($class)));
+        } while (false !== ($class = get_parent_class($class)));
 
-        foreach(class_implements($class) as $interface){
-            if($this->hasInjection($interface)) {
+        foreach (class_implements($class) as $interface) {
+            if ($this->hasInjection($interface)) {
                 $injections[]   = $this->getInjection($interface);
             }
         }
@@ -285,11 +297,12 @@ class Repository{
      *
      * @throws  \LogicException
      */
-    public function getInjection(string $id){
+    public function getInjection(string $id)
+    {
         $id = ltrim($id, "\\");
 
-        if(!array_key_exists($id, $this->injections)){
-            throw new \LogicException;
+        if (!array_key_exists($id, $this->injections)) {
+            throw new \LogicException();
         }
 
         return $this->injections[$id];
@@ -303,7 +316,8 @@ class Repository{
      *
      * @return  bool
      */
-    public function hasInjection(string $id){
+    public function hasInjection(string $id)
+    {
         return array_key_exists($id, $this->injections);
     }
 }

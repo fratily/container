@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyGetParameter extends AbstractLazy{
+class LazyGetParameter extends AbstractLazy
+{
 
     /**
      * @var string|LazyInterface|null
@@ -29,8 +30,9 @@ class LazyGetParameter extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
-        if(null === $this->id){
+    public function loadValue(Container $container)
+    {
+        if (null === $this->id) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
@@ -47,15 +49,15 @@ class LazyGetParameter extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function id($id){
-        if($this->isLocked()){
+    public function id($id)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(
-            !is_string($id)
+        if (!is_string($id)
             && !(static::isLazyObject($id) && "string" === $id->getType())
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 

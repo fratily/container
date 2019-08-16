@@ -18,5 +18,6 @@ use Psr\Container\NotFoundExceptionInterface;
 /**
  *
  */
-class ParameterNotFoundException extends \LogicException implements NotFoundExceptionInterface{
+class ParameterNotFoundException extends \LogicException implements NotFoundExceptionInterface
+{
 }

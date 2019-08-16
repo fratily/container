@@ -20,7 +20,8 @@ use Fratily\Container\Builder\Value\LazyBuilder;
 /**
  *
  */
-class ContainerBuilder implements LockableInterface{
+class ContainerBuilder implements LockableInterface
+{
 
     use LockableTrait;
 
@@ -50,23 +51,25 @@ class ContainerBuilder implements LockableInterface{
      * @param   LazyBuilder $lazy
      *  遅延ビルダー
      */
-    public function __construct(LazyBuilder $lazy){
+    public function __construct(LazyBuilder $lazy)
+    {
         return $this->lazy  = $lazy;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function lock(){
-        foreach($this->services as $service){
+    public function lock()
+    {
+        foreach ($this->services as $service) {
             $service->lock();
         }
 
-        foreach($this->parameters as $parameter){
+        foreach ($this->parameters as $parameter) {
             $parameter->lock();
         }
 
-        foreach($this->injections as $injection){
+        foreach ($this->injections as $injection) {
             $injection->lock();
         }
 
@@ -78,7 +81,8 @@ class ContainerBuilder implements LockableInterface{
      *
      * @return  LazyBuilder
      */
-    public function getLazyBuilder(){
+    public function getLazyBuilder()
+    {
         return $this->lazy;
     }
 
@@ -87,7 +91,8 @@ class ContainerBuilder implements LockableInterface{
      *
      * @return  Value\Service[]
      */
-    public function getServices(){
+    public function getServices()
+    {
         return $this->services;
     }
 
@@ -99,29 +104,29 @@ class ContainerBuilder implements LockableInterface{
      *
      * @return  Value\Service
      */
-    public function service(string $id){
-        if($this->isLocked()){
-            throw new Exception\LockedException;
+    public function service(string $id)
+    {
+        if ($this->isLocked()) {
+            throw new Exception\LockedException();
         }
 
         $id = ltrim($id, "\\");
 
-        if(!array_key_exists($id, $this->services)){
-            if(
-                1 !== preg_match(Container::REGEX_KEY, $id)
+        if (!array_key_exists($id, $this->services)) {
+            if (1 !== preg_match(Container::REGEX_KEY, $id)
                 && !class_exists($id)
                 && !interface_exists($id)
-            ){
-                throw new \InvalidArgumentException;
+            ) {
+                throw new \InvalidArgumentException();
             }
 
-            if(array_key_exists($id, $this->parameters)){
-                throw new \InvalidArgumentException;
+            if (array_key_exists($id, $this->parameters)) {
+                throw new \InvalidArgumentException();
             }
 
             $this->services[$id]    = new Value\Service();
 
-            if(class_exists($id) || interface_exists($id)){
+            if (class_exists($id) || interface_exists($id)) {
                 $this->services[$id]->setType($id, false);
             }
         }
@@ -134,7 +139,8 @@ class ContainerBuilder implements LockableInterface{
      *
      * @return  Value\Parameter[]
      */
-    public function getParameters(){
+    public function getParameters()
+    {
         return $this->parameters;
     }
 
@@ -146,18 +152,19 @@ class ContainerBuilder implements LockableInterface{
      *
      * @return  Value\Parameter
      */
-    public function parameter(string $id){
-        if($this->isLocked()){
-            throw new Exception\LockedException;
+    public function parameter(string $id)
+    {
+        if ($this->isLocked()) {
+            throw new Exception\LockedException();
         }
 
-        if(!array_key_exists($id, $this->parameters)){
-            if(1 !== preg_match(Container::REGEX_KEY, $id)){
-                throw new \InvalidArgumentException;
+        if (!array_key_exists($id, $this->parameters)) {
+            if (1 !== preg_match(Container::REGEX_KEY, $id)) {
+                throw new \InvalidArgumentException();
             }
 
-            if(array_key_exists($id, $this->services)){
-                throw new \InvalidArgumentException;
+            if (array_key_exists($id, $this->services)) {
+                throw new \InvalidArgumentException();
             }
 
             $this->parameters[$id]  = new Value\Parameter();
@@ -171,7 +178,8 @@ class ContainerBuilder implements LockableInterface{
      *
      * @return  Value\Injection[]
      */
-    public function getInjections(){
+    public function getInjections()
+    {
         return $this->injections;
     }
 
@@ -183,20 +191,20 @@ class ContainerBuilder implements LockableInterface{
      *
      * @return  Value\Injection
      */
-    public function injection(string $id){
-        if($this->isLocked()){
-            throw new Exception\LockedException;
+    public function injection(string $id)
+    {
+        if ($this->isLocked()) {
+            throw new Exception\LockedException();
         }
 
         $id = ltrim($id, "\\");
 
-        if(!array_key_exists($id, $this->injections)){
-            if(
-                1 !== preg_match(Container::REGEX_KEY, $id)
+        if (!array_key_exists($id, $this->injections)) {
+            if (1 !== preg_match(Container::REGEX_KEY, $id)
                 && !class_exists($id)
                 && !interface_exists($id)
-            ){
-                throw new \InvalidArgumentException;
+            ) {
+                throw new \InvalidArgumentException();
             }
 
             $this->injections[$id]   = new Value\Injection();

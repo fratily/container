@@ -18,5 +18,6 @@ use Psr\Container\ContainerExceptionInterface;
 /**
  *
  */
-class InvalidParameterDefinedException extends \LogicException implements ContainerExceptionInterface{
+class InvalidParameterDefinedException extends \LogicException implements ContainerExceptionInterface
+{
 }

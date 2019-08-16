@@ -20,7 +20,8 @@ use Fratily\Container\Builder\Value\Type;
 /**
  *
  */
-abstract class AbstractLazy implements LazyInterface{
+abstract class AbstractLazy implements LazyInterface
+{
 
     use LockableTrait;
 
@@ -37,7 +38,8 @@ abstract class AbstractLazy implements LazyInterface{
      *
      * @return  bool
      */
-    final protected static function isLazyObject($value){
+    final protected static function isLazyObject($value)
+    {
         return is_object($value) && $value instanceof LazyInterface;
     }
 
@@ -51,7 +53,8 @@ abstract class AbstractLazy implements LazyInterface{
      *
      * @return  bool
      */
-    final protected static function isValid(string $type, $value){
+    final protected static function isValid(string $type, $value)
+    {
         return Type::valid($type, $value);
     }
 
@@ -60,7 +63,8 @@ abstract class AbstractLazy implements LazyInterface{
      *
      * @return  string
      */
-    protected static function getDefaultType(): string{
+    protected static function getDefaultType(): string
+    {
         return "mixed";
     }
 
@@ -71,7 +75,8 @@ abstract class AbstractLazy implements LazyInterface{
      *
      * @return  string[]|null
      */
-    protected static function getAllowTypes(): ?array{
+    protected static function getAllowTypes(): ?array
+    {
         return null;
     }
 
@@ -83,21 +88,22 @@ abstract class AbstractLazy implements LazyInterface{
      *
      * @return  bool
      */
-    protected static function reliefTypeCheck(string $type): bool{
+    protected static function reliefTypeCheck(string $type): bool
+    {
         return true;
     }
 
     /**
      * {@inheritdoc}
      */
-    final public function __construct(string $type = null){
+    final public function __construct(string $type = null)
+    {
         $type   = $type ?? static::getDefaultType();
 
-        if(
-            null !== static::getAllowTypes()
+        if (null !== static::getAllowTypes()
             && !in_array($type, static::getAllowTypes())
-        ){
-            if(!static::reliefTypeCheck($type)){
+        ) {
+            if (!static::reliefTypeCheck($type)) {
                 throw new \InvalidArgumentException();
             }
         }
@@ -108,19 +114,21 @@ abstract class AbstractLazy implements LazyInterface{
     /**
      * {@inheritdoc}
      */
-    final public function getType(){
+    final public function getType()
+    {
         return $this->type;
     }
 
     /**
      * {@inheritdoc}
      */
-    final public function load(Container $container){
+    final public function load(Container $container)
+    {
         $this->lock();
 
         $value  = $this->loadValue($container);
 
-        if(!static::isValid($this->getType(), $value)){
+        if (!static::isValid($this->getType(), $value)) {
             throw new Exception\ExpectedTypeException();
         }
 

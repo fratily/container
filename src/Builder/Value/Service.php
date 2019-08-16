@@ -16,22 +16,24 @@ namespace Fratily\Container\Builder\Value;
 /**
  *
  */
-final class Service extends AbstractValue{
+final class Service extends AbstractValue
+{
 
     /**
      * {@inheritdoc}
      */
-    public function set($value){
-        if(is_string($value)){
-            if(!class_exists($value)){
-                throw new \InvalidArgumentException;
+    public function set($value)
+    {
+        if (is_string($value)) {
+            if (!class_exists($value)) {
+                throw new \InvalidArgumentException();
             }
 
             $value  = new Lazy\LazyNew($value);
         }
 
-        if(!is_object($value)){
-            throw new \InvalidArgumentException;
+        if (!is_object($value)) {
+            throw new \InvalidArgumentException();
         }
 
         return parent::set($value);
@@ -40,9 +42,10 @@ final class Service extends AbstractValue{
     /**
      * {@inheritdoc}
      */
-    public function setType(string $type, bool $overwritable = false){
-        if(!class_exists($type) && !interface_exists($type)){
-            throw new \InvalidArgumentException;
+    public function setType(string $type, bool $overwritable = false)
+    {
+        if (!class_exists($type) && !interface_exists($type)) {
+            throw new \InvalidArgumentException();
         }
 
         parent::setType($type, $overwritable);

@@ -18,7 +18,8 @@ use Fratily\Container\Builder\ContainerBuilder;
 /**
  *
  */
-class ContainerFactory{
+class ContainerFactory
+{
 
     /**
      * @var string[]
@@ -35,7 +36,8 @@ class ContainerFactory{
      *
      * @return  Container
      */
-    public function create(array $options = [], string $resolver = Resolver::class){
+    public function create(array $options = [], string $resolver = Resolver::class)
+    {
         $builder    = new ContainerBuilder();
         $providers  = [];
 
@@ -74,8 +76,9 @@ class ContainerFactory{
      *
      * @return  $this
      */
-    public function add(string $provider, bool $prepend = false){
-        if(!is_subclass_of($provider, Builder\AbstractProvider::class)){
+    public function add(string $provider, bool $prepend = false)
+    {
+        if (!is_subclass_of($provider, Builder\AbstractProvider::class)) {
             $class = Builder\AbstractProvider::class;
             throw new \InvalidArgumentException(
                 "{$provider} is not a provider class. The provider class must"
@@ -83,9 +86,9 @@ class ContainerFactory{
             );
         }
 
-        if($prepend){
+        if ($prepend) {
             array_unshift($this->providers, $provider);
-        }else{
+        } else {
             $this->providers[]  = $provider;
         }
 

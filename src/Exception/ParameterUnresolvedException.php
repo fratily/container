@@ -18,5 +18,6 @@ use Psr\Container\ContainerExceptionInterface;
 /**
  *
  */
-class ParameterUnresolvedException extends \LogicException implements ContainerExceptionInterface{
+class ParameterUnresolvedException extends \LogicException implements ContainerExceptionInterface
+{
 }

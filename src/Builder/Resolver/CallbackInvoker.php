@@ -20,7 +20,8 @@ use Fratily\Reflection\ReflectionCallable;
 /**
  *
  */
-class CallbackInvoker{
+class CallbackInvoker
+{
 
     /**
      * @var Resolver
@@ -40,7 +41,8 @@ class CallbackInvoker{
      * @param   callable    $callback
      *  実行するコールバック
      */
-    public function __construct(Resolver $resolver, callable $callback){
+    public function __construct(Resolver $resolver, callable $callback)
+    {
         $this->resolver = $resolver;
         $this->callback = $callback;
     }
@@ -57,7 +59,8 @@ class CallbackInvoker{
      *
      * @return  mixed
      */
-    public function invoke(Container $container, array $parameters = [], array $types = []){
+    public function invoke(Container $container, array $parameters = [], array $types = [])
+    {
         $reflection = new ReflectionCallable($this->callback);
 
         return call_user_func_array(

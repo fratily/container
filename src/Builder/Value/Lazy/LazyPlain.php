@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyPlain extends AbstractLazy{
+class LazyPlain extends AbstractLazy
+{
 
     /**
      * @var mixed
@@ -29,7 +30,8 @@ class LazyPlain extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
+    public function loadValue(Container $container)
+    {
         return $this->value;
     }
 
@@ -42,8 +44,9 @@ class LazyPlain extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function value($value){
-        if($this->isLocked()){
+    public function value($value)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 

@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyGet extends AbstractLazy{
+class LazyGet extends AbstractLazy
+{
 
     /**
      * @var string|LazyInterface|null
@@ -29,29 +30,33 @@ class LazyGet extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultType(): string{
+    protected static function getDefaultType(): string
+    {
         return "object";
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function getAllowTypes(): ?array{
+    protected static function getAllowTypes(): ?array
+    {
         return ["object"];
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function reliefTypeCheck(string $type): bool{
+    protected static function reliefTypeCheck(string $type): bool
+    {
         return class_exists($type) || interface_exists($type);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
-        if(null === $this->id){
+    public function loadValue(Container $container)
+    {
+        if (null === $this->id) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
@@ -68,15 +73,15 @@ class LazyGet extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function id($id){
-        if($this->isLocked()){
+    public function id($id)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(
-            !is_string($id)
+        if (!is_string($id)
             && !(static::isLazyObject($id) && "string" === $id->getType())
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 

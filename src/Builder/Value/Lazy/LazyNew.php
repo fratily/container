@@ -20,7 +20,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyNew extends AbstractLazy{
+class LazyNew extends AbstractLazy
+{
 
     /**
      * @var string|LazyInterface|null
@@ -35,29 +36,33 @@ class LazyNew extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultType(): string{
+    protected static function getDefaultType(): string
+    {
         return "object";
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function getAllowTypes(): ?array{
+    protected static function getAllowTypes(): ?array
+    {
         return ["object"];
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function reliefTypeCheck(string $type): bool{
+    protected static function reliefTypeCheck(string $type): bool
+    {
         return class_exists($type) || interface_exists($type);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function lock(){
-        if(null !== $this->injection){
+    public function lock()
+    {
+        if (null !== $this->injection) {
             $this->injection->lock();
         }
 
@@ -67,14 +72,15 @@ class LazyNew extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
-        if(null === $this->class){
+    public function loadValue(Container $container)
+    {
+        if (null === $this->class) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
         $class  = LazyResolver::resolve($container, $this->class);
 
-        if(!class_exists($class)){
+        if (!class_exists($class)) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
@@ -92,22 +98,22 @@ class LazyNew extends AbstractLazy{
      * @throws  LockedException
      * @throws  \ReflectionException
      */
-    public function class($class){
-        if($this->isLocked()){
+    public function class($class)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(
-            is_string($class)
+        if (is_string($class)
             && !(
                 static::isLazyObject($$class)
                 && "string" === $class->getType()
             )
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
-        if(is_string($class) && !(new \ReflectionClass($class))->isInstantiable()){
+        if (is_string($class) && !(new \ReflectionClass($class))->isInstantiable()) {
             throw new \InvalidArgumentException();
         }
 
@@ -121,12 +127,13 @@ class LazyNew extends AbstractLazy{
      *
      * @return  Injection
      */
-    public function injection(){
-        if($this->isLocked()){
+    public function injection()
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(null === $this->injection){
+        if (null === $this->injection) {
             $this->injection    = new Injection();
         }
 

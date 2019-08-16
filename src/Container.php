@@ -23,7 +23,8 @@ use Psr\Container\ContainerInterface;
 /**
  *
  */
-class Container implements ContainerInterface{
+class Container implements ContainerInterface
+{
 
     const REGEX_KEY = "/\A[A-Z_][0-9A-Z_]*(\.[A-Z_][0-9A-Z_]*)*\z/i";
 
@@ -66,14 +67,13 @@ class Container implements ContainerInterface{
         Repository $repository,
         string $resolver = Resolver::class,
         LazyBuilder $lazyBuilder = null
-    ){
+    ) {
         $this->repository   = $repository;
         $this->lazyBuilder  = $lazyBuilder ?? new LazyBuilder();
 
-        if(
-            !class_exists($resolver)
+        if (!class_exists($resolver)
             || !(Resolver::class === $resolver || is_subclass_of($resolver, Resolver::class))
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
@@ -85,7 +85,8 @@ class Container implements ContainerInterface{
      *
      * @return  Repository
      */
-    public function getRepository(){
+    public function getRepository()
+    {
         return $this->repository;
     }
 
@@ -94,7 +95,8 @@ class Container implements ContainerInterface{
      *
      * @return  Resolver
      */
-    public function getResolver(){
+    public function getResolver()
+    {
         return $this->resolver;
     }
 
@@ -103,7 +105,8 @@ class Container implements ContainerInterface{
      *
      * @return  LazyBuilder
      */
-    public function getLazyBuilder(){
+    public function getLazyBuilder()
+    {
         return $this->lazyBuilder;
     }
 
@@ -119,8 +122,9 @@ class Container implements ContainerInterface{
      *
      * @throws  \InvalidArgumentException
      */
-    public function new(string $class, Injection $addendInjection = null){
-        if(!$this->getResolver()->isInstantiable($class)){
+    public function new(string $class, Injection $addendInjection = null)
+    {
+        if (!$this->getResolver()->isInstantiable($class)) {
             throw new \InvalidArgumentException();
         }
 
@@ -129,11 +133,11 @@ class Container implements ContainerInterface{
         $reflection = new \ReflectionClass($class);
         $injections = $this->getRepository()->getInjectionsFromClass($class);
 
-        if(null !== $addendInjection){
+        if (null !== $addendInjection) {
             array_unshift($injections, $addendInjection);
         }
 
-        if(null !== $reflection->getConstructor()){
+        if (null !== $reflection->getConstructor()) {
             $positions      = [];
             $names          = [];
             $types          = [];
@@ -142,8 +146,8 @@ class Container implements ContainerInterface{
                 : null
             ;
 
-            foreach($injections as $injection){
-                if($addendInjection === $injection || $mainInjection === $injection){
+            foreach ($injections as $injection) {
+                if ($addendInjection === $injection || $mainInjection === $injection) {
                     $positions  += $injection->getParameters(Injection::PARAM_POS);
                 }
 
@@ -151,14 +155,14 @@ class Container implements ContainerInterface{
                 $types  += $injection->getParameters(Injection::PARAM_TYPE);
             }
 
-            try{
+            try {
                 $parameters = $this->getResolver()->resolveFunctionParameters(
                     $reflection->getConstructor(),
                     $positions,
                     $names,
                     $types
                 );
-            }catch(\Exception $e){
+            } catch (\Exception $e) {
                 throw new Exception\ClassInstantiationException(
                     "Failed to resolve parameters of {$class}::__construct().",
                     0,
@@ -167,16 +171,15 @@ class Container implements ContainerInterface{
             }
         }
 
-        try{
+        try {
             $instance   = null === $parameters
                 ? $reflection->newInstance()
                 : $reflection->newInstanceArgs(LazyResolver::resolveArray($parameters))
             ;
-        }catch(\TypeError | \ArgumentCountError $e){
-            if(
-                $class === $e->getTrace()[0]["class"]
+        } catch (\TypeError | \ArgumentCountError $e) {
+            if ($class === $e->getTrace()[0]["class"]
                 && "__construct" === $e->getTrace()[0]["function"]
-            ){
+            ) {
                 throw new Exception\ClassInstantiationException(
                     "Failed to resolve parameters of {$class}::__construct().",
                     0,
@@ -187,8 +190,8 @@ class Container implements ContainerInterface{
             throw $e;
         }
 
-        foreach($injections as $injection){
-            foreach($injection->getSetters() as $method => $args){
+        foreach ($injections as $injection) {
+            foreach ($injection->getSetters() as $method => $args) {
                 call_user_func_array(
                     [$instance, $method],
                     LazyResolver::resolveArray($this, $args)
@@ -218,15 +221,15 @@ class Container implements ContainerInterface{
         array $positions,
         array $names,
         array $types
-    ){
-        try{
+    ) {
+        try {
             $parameters = $this->getResolver()->resolveFunctionParameters(
                 (new ReflectionCallable($callback))->getReflection(),
                 $positions,
                 $names,
                 $types
             );
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             throw new \Exception("", 0, $e);
         }
 
@@ -238,13 +241,14 @@ class Container implements ContainerInterface{
     /**
      * {@inheritdoc}
      */
-    public function get($id){
-        if(!is_string($id)){
+    public function get($id)
+    {
+        if (!is_string($id)) {
             throw new \InvalidArgumentException();
         }
 
-        if(!array_key_exists($id, $this->services)){
-            if(!$this->has($id)){
+        if (!array_key_exists($id, $this->services)) {
+            if (!$this->has($id)) {
                 throw new Exception\ServiceNotFoundException();
             }
 
@@ -254,11 +258,11 @@ class Container implements ContainerInterface{
                 : $service->get()
             ;
 
-            if(!Type::valid($service->getType(), $value)){
+            if (!Type::valid($service->getType(), $value)) {
                 throw new \LogicException();
             }
 
-            if(!is_object($value)){
+            if (!is_object($value)) {
                 throw new \LogicException();
             }
 
@@ -278,13 +282,14 @@ class Container implements ContainerInterface{
      *
      * @return  object[]
      */
-    public function getWithTagged(string $tag, bool $useId4Index = false){
+    public function getWithTagged(string $tag, bool $useId4Index = false)
+    {
         $services   = [];
 
-        foreach($this->getRepository()->getServiceIdsWithTagged($tag) as $id){
-            if($useId4Index){
+        foreach ($this->getRepository()->getServiceIdsWithTagged($tag) as $id) {
+            if ($useId4Index) {
                 $services[$id]  = $this->get($id);
-            }else{
+            } else {
                 $services[]     = $this->get($id);
             }
         }
@@ -297,8 +302,9 @@ class Container implements ContainerInterface{
      *
      * @throws  \InvalidArgumentException
      */
-    public function has($id){
-        if(!is_string($id)){
+    public function has($id)
+    {
+        if (!is_string($id)) {
             throw new \InvalidArgumentException();
         }
 
@@ -313,9 +319,10 @@ class Container implements ContainerInterface{
      *
      * @return  mixed
      */
-    public function getParameter(string $id){
-        if(!array_key_exists($id, $this->parameters)){
-            if(!$this->hasParameter($id)){
+    public function getParameter(string $id)
+    {
+        if (!array_key_exists($id, $this->parameters)) {
+            if (!$this->hasParameter($id)) {
                 throw new Exception\ParameterNotFoundException();
             }
 
@@ -325,7 +332,7 @@ class Container implements ContainerInterface{
                 : $parameter->get()
             ;
 
-            if(!Type::valid($parameter->getType(), $value)){
+            if (!Type::valid($parameter->getType(), $value)) {
                 throw new \LogicException();
             }
 
@@ -346,13 +353,14 @@ class Container implements ContainerInterface{
      *
      * @return  mixed[]
      */
-    public function getParameterWithTagged(string $tag, bool $useId4Index = false){
+    public function getParameterWithTagged(string $tag, bool $useId4Index = false)
+    {
         $parameters = [];
 
-        foreach($this->getRepository()->getParameterIdsWithTagged($tag) as $id){
-            if($useId4Index){
+        foreach ($this->getRepository()->getParameterIdsWithTagged($tag) as $id) {
+            if ($useId4Index) {
                 $parameters[$id]    = $this->get($id);
-            }else{
+            } else {
                 $parameters[]       = $this->get($id);
             }
         }
@@ -368,7 +376,8 @@ class Container implements ContainerInterface{
      *
      * @return  bool
      */
-    public function hasParameter(string $id){
+    public function hasParameter(string $id)
+    {
         return $this->getRepository()->hasParameter($id);
     }
 }

@@ -17,7 +17,8 @@ use Fratily\Container\Builder\LockableInterface;
 use Fratily\Container\Builder\LockableTrait;
 use Fratily\Container\Builder\Exception\LockedException;
 
-class Injection implements LockableInterface{
+class Injection implements LockableInterface
+{
 
     use LockableTrait;
 
@@ -44,7 +45,8 @@ class Injection implements LockableInterface{
      */
     private $isTrait;
 
-    public function __construct(bool $isTrait = false){
+    public function __construct(bool $isTrait = false)
+    {
         $this->isTrait  = $isTrait;
     }
 
@@ -56,9 +58,10 @@ class Injection implements LockableInterface{
      *
      * @return  mixed[]
      */
-    public function getParameters(string $paramType = self::PARAM_POS){
-        if(!array_key_exists($paramType, $this->parameters)){
-            throw new \InvalidArgumentException;
+    public function getParameters(string $paramType = self::PARAM_POS)
+    {
+        if (!array_key_exists($paramType, $this->parameters)) {
+            throw new \InvalidArgumentException();
         }
 
         return $this->parameters[$paramType];
@@ -74,25 +77,26 @@ class Injection implements LockableInterface{
      *
      * @return  $this
      */
-    public function parameter($key, $value){
-        if($this->isLocked()){
+    public function parameter($key, $value)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if($this->isTrait){
-            throw new \LogicException;
+        if ($this->isTrait) {
+            throw new \LogicException();
         }
 
-        if(!is_int($key) && !is_string($key)){
-            throw new \InvalidArgumentException;
+        if (!is_int($key) && !is_string($key)) {
+            throw new \InvalidArgumentException();
         }
 
         $paramType  = self::PARAM_POS;
 
-        if(is_string($key)){
-            if(class_exists($key) || interface_exists($key)){
+        if (is_string($key)) {
+            if (class_exists($key) || interface_exists($key)) {
                 $paramType  = self::PARAM_TYPE;
-            }else{
+            } else {
                 $paramType  = self::PARAM_NAME;
             }
         }
@@ -107,7 +111,8 @@ class Injection implements LockableInterface{
      *
      * @return  array[]
      */
-    public function getSetters(){
+    public function getSetters()
+    {
         return $this->setters;
     }
 
@@ -121,8 +126,9 @@ class Injection implements LockableInterface{
      *
      * @return  $this
      */
-    public function setter(string $method, ...$args){
-        if($this->isLocked()){
+    public function setter(string $method, ...$args)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 

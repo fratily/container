@@ -18,7 +18,8 @@ use Fratily\Container\Container;
 /**
  *
  */
-class LazyResolver{
+class LazyResolver
+{
 
     /**
      * 値が遅延解決インスタンスなら解決を行う
@@ -30,7 +31,8 @@ class LazyResolver{
      *
      * @return  mixed
      */
-    public static function resolve(Container $container, $value){
+    public static function resolve(Container $container, $value)
+    {
         return (is_object($value) && $value instanceof LazyInterface)
             ? $value->load($container)
             : $value
@@ -47,7 +49,8 @@ class LazyResolver{
      *
      * @return  mixed[]
      */
-    public static function resolveArray(Container $container, array $value){
+    public static function resolveArray(Container $container, array $value)
+    {
         return array_map(
             [static::class, "resolve"],
             array_fill(0, count($value), $container),
@@ -65,7 +68,8 @@ class LazyResolver{
      *
      * @return  mixed
      */
-    public static function resolveLazy(Container $container, $val){
+    public static function resolveLazy(Container $container, $val)
+    {
         return static::resolve($container, $val);
     }
 
@@ -79,7 +83,8 @@ class LazyResolver{
      *
      * @return  mixed[]
      */
-    public static function resolveLazyArray(Container $container, array $value){
+    public static function resolveLazyArray(Container $container, array $value)
+    {
         return static::resolveArray($container, $value);
     }
 }

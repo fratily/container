@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyGetTaggedParameter extends AbstractLazy{
+class LazyGetTaggedParameter extends AbstractLazy
+{
 
     /**
      * @var string|LazyInterface|null
@@ -29,22 +30,25 @@ class LazyGetTaggedParameter extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultType(): string{
+    protected static function getDefaultType(): string
+    {
         return "array";
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function getAllowTypes(): ?array{
+    protected static function getAllowTypes(): ?array
+    {
         return ["array"];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
-        if(null === $this->tag){
+    public function loadValue(Container $container)
+    {
+        if (null === $this->tag) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
@@ -63,15 +67,15 @@ class LazyGetTaggedParameter extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function tag($tag){
-        if($this->isLocked()){
+    public function tag($tag)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(
-            !is_string($tag)
+        if (!is_string($tag)
             && !(static::isLazyObject($tag) && "string" === $tag->getType())
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 

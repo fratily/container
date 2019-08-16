@@ -18,5 +18,6 @@ use Psr\Container\ContainerExceptionInterface;
 /**
  *
  */
-class LockedException extends \LogicException implements ContainerExceptionInterface{
+class LockedException extends \LogicException implements ContainerExceptionInterface
+{
 }

@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyArray extends AbstractLazy{
+class LazyArray extends AbstractLazy
+{
 
     /**
      * @var array
@@ -29,22 +30,25 @@ class LazyArray extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultType(): string{
+    protected static function getDefaultType(): string
+    {
         return "array";
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function getAllowTypes(): ?array{
+    protected static function getAllowTypes(): ?array
+    {
         return ["array"];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
-        if(null === $this->value){
+    public function loadValue(Container $container)
+    {
+        if (null === $this->value) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
@@ -61,8 +65,9 @@ class LazyArray extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function value(array $value){
-        if($this->isLocked()){
+    public function value(array $value)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
@@ -87,7 +92,8 @@ class LazyArray extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function array(...$vars){
+    public function array(...$vars)
+    {
         return $this->value($vars);
     }
 }

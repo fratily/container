@@ -16,7 +16,8 @@ namespace Fratily\Container\Builder;
 /**
  *
  */
-interface LockableInterface{
+interface LockableInterface
+{
 
     /**
      * ロックする

@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-interface ValueInterface extends LockableInterface{
+interface ValueInterface extends LockableInterface
+{
 
     /**
      * 値を取得する

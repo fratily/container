@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyCallback extends AbstractLazy{
+class LazyCallback extends AbstractLazy
+{
 
     /**
      * @var callable|LazyInterface|null
@@ -34,22 +35,25 @@ class LazyCallback extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultType(): string{
+    protected static function getDefaultType(): string
+    {
         return "callable";
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function getAllowTypes(): ?array{
+    protected static function getAllowTypes(): ?array
+    {
         return ["callable"];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
-        if(null === $this->callback){
+    public function loadValue(Container $container)
+    {
+        if (null === $this->callback) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
@@ -69,18 +73,18 @@ class LazyCallback extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function callback($callback){
-        if($this->isLocked()){
+    public function callback($callback)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(
-            !is_callable($callback)
+        if (!is_callable($callback)
             && !(
                 static::isLazyObject($callback)
                 && "callable" === $callback->getType()
             )
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
@@ -98,19 +102,19 @@ class LazyCallback extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function args($args){
-        if($this->isLocked()){
+    public function args($args)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(
-            !is_array($args)
+        if (!is_array($args)
             && !(
                 $this->isLazyObject($args)
                 && "array" === $args->getType()
             )
-        ){
-            throw new \InvalidArgumentException;
+        ) {
+            throw new \InvalidArgumentException();
         }
 
         $this->args = $args;

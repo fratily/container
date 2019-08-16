@@ -13,5 +13,6 @@
  */
 namespace Fratily\Container\Builder\Value\Lazy\Exception;
 
-class LazyException extends \Exception{
+class LazyException extends \Exception
+{
 }

@@ -13,5 +13,6 @@
  */
 namespace Fratily\Container\Builder\Value\Lazy\Exception;
 
-class SettingIsNotCompletedException extends LazyException{
+class SettingIsNotCompletedException extends LazyException
+{
 }

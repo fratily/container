@@ -19,7 +19,8 @@ use Fratily\Container\Builder\Exception\LockedException;
 /**
  *
  */
-class LazyInvoke extends AbstractLazy{
+class LazyInvoke extends AbstractLazy
+{
 
     /**
      * @var callable|LazyInterface|null
@@ -44,22 +45,25 @@ class LazyInvoke extends AbstractLazy{
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultType(): string{
+    protected static function getDefaultType(): string
+    {
         return "callable";
     }
 
     /**
      * {@inheritdoc}
      */
-    protected static function getAllowTypes(): ?array{
+    protected static function getAllowTypes(): ?array
+    {
         return ["callable"];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function loadValue(Container $container){
-        if(null === $this->callback){
+    public function loadValue(Container $container)
+    {
+        if (null === $this->callback) {
             throw new Exception\SettingIsNotCompletedException();
         }
 
@@ -81,18 +85,18 @@ class LazyInvoke extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function callback($callback){
-        if($this->isLocked()){
+    public function callback($callback)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if(
-            !is_callable($callback)
+        if (!is_callable($callback)
             && !(
                 static::isLazyObject($callback)
                 && "callable" === $callback->getType()
             )
-        ){
+        ) {
             throw new \InvalidArgumentException();
         }
 
@@ -113,8 +117,9 @@ class LazyInvoke extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function position(int $position, $value){
-        if($this->isLocked()){
+    public function position(int $position, $value)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
@@ -135,8 +140,9 @@ class LazyInvoke extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function name(string $name, $value){
-        if($this->isLocked()){
+    public function name(string $name, $value)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
@@ -157,27 +163,28 @@ class LazyInvoke extends AbstractLazy{
      *
      * @throws  LockedException
      */
-    public function type(string $class, $value){
-        if($this->isLocked()){
+    public function type(string $class, $value)
+    {
+        if ($this->isLocked()) {
             throw new LockedException();
         }
 
         $class  = ltrim($class, "\\");
 
-        if(!class_exists($class) && !interface_exists($class)){
-            throw new \InvalidArgumentException;
+        if (!class_exists($class) && !interface_exists($class)) {
+            throw new \InvalidArgumentException();
         }
 
-        if(!is_object($value)){
-            throw new \InvalidArgumentException;
+        if (!is_object($value)) {
+            throw new \InvalidArgumentException();
         }
 
-        if(static::isLazyObject($value)){
-            if(!$value instanceof $class){
+        if (static::isLazyObject($value)) {
+            if (!$value instanceof $class) {
                 throw new \InvalidArgumentException();
             }
-        }else{
-            if($class !== $value->getType()){
+        } else {
+            if ($class !== $value->getType()) {
                 throw new \InvalidArgumentException();
             }
         }
