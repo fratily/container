@@ -13,203 +13,172 @@
  */
 namespace Fratily\Container\Builder;
 
-use Fratily\Container\Container;
-use Fratily\Container\Builder\Value\LazyBuilder;
-
+use Fratily\Container\Builder\Exception\LockedException;
 
 /**
  *
  */
 class ContainerBuilder implements LockableInterface
 {
-
-    use LockableTrait;
-
     /**
-     * @var LazyBuilder;
+     * @var bool
      */
-    private $lazy;
+    private $locked = false;
 
     /**
-     * @var Value\Service[]
-     */
-    private $services   = [];
-
-    /**
-     * @var Value\Parameter[]
-     */
-    private $parameters = [];
-
-    /**
-     * @var Value\Injection[]
+     * @var Injection[]
      */
     private $injections = [];
 
     /**
-     * Constructor
-     *
-     * @param   LazyBuilder $lazy
-     *  遅延ビルダー
+     * @var Parameter[]
      */
-    public function __construct(LazyBuilder $lazy)
+    private $parameters = [];
+
+    /**
+     * @var Service[]
+     */
+    private $services   = [];
+
+    /**
+     * {@inheritdoc}
+     */
+    public function lock(): void
     {
-        return $this->lazy  = $lazy;
+        if (!$this->locked) {
+            $this->locked = true;
+
+            foreach ($this->injections as $injection) {
+                $injection->lock();
+            }
+
+            foreach ($this->parameters as $parameter) {
+                $parameter->lock();
+            }
+
+            foreach ($this->services as $service) {
+                $service->lock();
+            }
+        }
     }
 
     /**
      * {@inheritdoc}
      */
-    public function lock()
+    public function isLocked(): bool
     {
-        foreach ($this->services as $service) {
-            $service->lock();
-        }
-
-        foreach ($this->parameters as $parameter) {
-            $parameter->lock();
-        }
-
-        foreach ($this->injections as $injection) {
-            $injection->lock();
-        }
-
-        $this->locked   = true;
+        return $this->locked;
     }
 
     /**
-     * 遅延ビルダーを取得する
+     * Returns the Injection by class name.
      *
-     * @return  LazyBuilder
+     * @return Injection[]
      */
-    public function getLazyBuilder()
+    public function getInjections(): array
     {
-        return $this->lazy;
+        return $this->injections;
     }
 
     /**
-     * サービスのリストを取得する
+     * Returns the Injection.
      *
-     * @return  Value\Service[]
+     * If the instance is undefined, return the newly generated one.
+     *
+     * @param string $class The class name
+     *
+     * @return Injection
      */
-    public function getServices()
+    public function injection(string $class): Injection
     {
-        return $this->services;
-    }
+        if ("\\" === substr($class, 0, 1)) {
+            throw new \InvalidArgumentException();
+        }
 
-    /**
-     * サービスを取得する
-     *
-     * @param   string  $id
-     *  サービスID
-     *
-     * @return  Value\Service
-     */
-    public function service(string $id)
-    {
+        if (!class_exists($class) && !interface_exists($class)) {
+            throw new \InvalidArgumentException();
+        }
+
         if ($this->isLocked()) {
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
-        $id = ltrim($id, "\\");
-
-        if (!array_key_exists($id, $this->services)) {
-            if (1 !== preg_match(Container::REGEX_KEY, $id)
-                && !class_exists($id)
-                && !interface_exists($id)
-            ) {
-                throw new \InvalidArgumentException();
-            }
-
-            if (array_key_exists($id, $this->parameters)) {
-                throw new \InvalidArgumentException();
-            }
-
-            $this->services[$id]    = new Value\Service();
-
-            if (class_exists($id) || interface_exists($id)) {
-                $this->services[$id]->setType($id, false);
-            }
+        if (!isset($this->injections[$class])) {
+            $this->injections[$class] = new Injection();
         }
 
-        return $this->services[$id];
+        return $this->injections[$class];
     }
 
     /**
-     * パラメーターのリストを取得する
+     * Returns the parameters by id.
      *
-     * @return  Value\Parameter[]
+     * @return Parameter[]
      */
-    public function getParameters()
+    public function getParameters(): array
     {
         return $this->parameters;
     }
 
     /**
-     * パラメーターを取得する
+     * Returns the Parameter.
      *
-     * @param   string  $id
-     *  パラメーターID
+     * If the instance is undefined, return the newly generated one.
      *
-     * @return  Value\Parameter
+     * @param string $id The id
+     *
+     * @return Parameter
      */
-    public function parameter(string $id)
+    public function parameter(string $id): Parameter
     {
-        if ($this->isLocked()) {
-            throw new Exception\LockedException();
+        if (isset($this->services[$id])) {
+            throw new \InvalidArgumentException();
         }
 
-        if (!array_key_exists($id, $this->parameters)) {
-            if (1 !== preg_match(Container::REGEX_KEY, $id)) {
-                throw new \InvalidArgumentException();
-            }
+        if ($this->isLocked()) {
+            throw new LockedException();
+        }
 
-            if (array_key_exists($id, $this->services)) {
-                throw new \InvalidArgumentException();
-            }
-
-            $this->parameters[$id]  = new Value\Parameter();
+        if (!isset($this->parameters[$id])) {
+            $this->parameters[$id] = new Parameter();
         }
 
         return $this->parameters[$id];
     }
 
     /**
-     * DI設定のリストを取得する
+     * Returns the services by id.
      *
-     * @return  Value\Injection[]
+     * @return Service[]
      */
-    public function getInjections()
+    public function getServices(): array
     {
-        return $this->injections;
+        return $this->services;
     }
 
     /**
-     * DI設定を取得する
+     * Returns the Service.
      *
-     * @param   string  $id
-     *  クラス名もしくはサービスID
+     * If the instance is undefined, return the newly generated one.
      *
-     * @return  Value\Injection
+     * @param string $id The id
+     *
+     * @return Service
      */
-    public function injection(string $id)
+    public function service(string $id): Service
     {
+        if (isset($this->parameters[$id])) {
+            throw new \InvalidArgumentException();
+        }
+
         if ($this->isLocked()) {
-            throw new Exception\LockedException();
+            throw new LockedException();
         }
 
-        $id = ltrim($id, "\\");
-
-        if (!array_key_exists($id, $this->injections)) {
-            if (1 !== preg_match(Container::REGEX_KEY, $id)
-                && !class_exists($id)
-                && !interface_exists($id)
-            ) {
-                throw new \InvalidArgumentException();
-            }
-
-            $this->injections[$id]   = new Value\Injection();
+        if (!isset($this->services[$id])) {
+            $this->services[$id] = new Service();
         }
 
-        return $this->injections[$id];
+        return $this->services[$id];
     }
 }

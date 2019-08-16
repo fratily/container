@@ -15,8 +15,8 @@ namespace Fratily\Tests\Container;
 
 use Fratily\Container\Container;
 use Fratily\Container\Resolver;
-use Fratily\Container\Builder\Value\LazyBuilder;
-use Fratily\Container\Builder\Value\Lazy\LazyInterface;
+use Fratily\Container\Builder\LazyBuilder;
+use Fratily\Container\Builder\Lazy\LazyInterface;
 
 /**
  *

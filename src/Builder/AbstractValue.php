@@ -11,16 +11,15 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Value;
+namespace Fratily\Container\Builder;
 
-use Fratily\Container\Builder\Value\Lazy\LazyInterface;
+use Fratily\Container\Builder\Lazy\LazyInterface;
 use Fratily\Container\Container;
 use Fratily\Container\Builder\LockableTrait;
 use Fratily\Container\Builder\Exception\LockedException;
 
-abstract class AbstractValue implements ValueInterface
+abstract class AbstractValue implements Value\ValueInterface
 {
-
     use LockableTrait;
 
     /**

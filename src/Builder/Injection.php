@@ -11,15 +11,12 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Value;
+namespace Fratily\Container\Builder;
 
-use Fratily\Container\Builder\LockableInterface;
-use Fratily\Container\Builder\LockableTrait;
 use Fratily\Container\Builder\Exception\LockedException;
 
 class Injection implements LockableInterface
 {
-
     use LockableTrait;
 
     const PARAM_POS     = "pos";

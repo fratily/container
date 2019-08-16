@@ -16,7 +16,7 @@ namespace Fratily\Container;
 use Fratily\Container\Builder\LazyBuilder;
 use Fratily\Container\Builder\Value\Injection;
 use Fratily\Container\Builder\Value\Type;
-use Fratily\Container\Builder\Value\Lazy\LazyResolver;
+use Fratily\Container\Builder\Lazy\LazyResolver;
 use Fratily\Reflection\ReflectionCallable;
 use Psr\Container\ContainerInterface;
 

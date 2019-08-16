@@ -18,18 +18,17 @@ namespace Fratily\Container\Builder;
  */
 interface LockableInterface
 {
-
     /**
-     * ロックする
+     * Lock an instance.
      *
-     * @return  $this
+     * @return void
      */
-    public function lock();
+    public function lock(): void;
 
     /**
-     * ロックされているか確認する
+     * Returns if the instance is locked.
      *
-     * @return  bool
+     * @return bool
      */
     public function isLocked(): bool;
 }

@@ -13,8 +13,8 @@
  */
 namespace Fratily\Container;
 
-use Fratily\Container\Builder\Value\LazyBuilder;
-use Fratily\Container\Builder\Value\Lazy\LazyInterface;
+use Fratily\Container\Builder\LazyBuilder;
+use Fratily\Container\Builder\Lazy\LazyInterface;
 
 /**
  *

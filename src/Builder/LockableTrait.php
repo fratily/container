@@ -18,28 +18,25 @@ namespace Fratily\Container\Builder;
  */
 trait LockableTrait
 {
-
     /**
      * @var bool
      */
     private $locked = false;
 
     /**
-     * ロックする
+     * Lock an instance.
      *
-     * @return  $this
+     * @return void
      */
-    public function lock()
+    public function lock(): void
     {
         $this->locked = true;
-
-        return $this;
     }
 
     /**
-     * ロックされているか確認する
+     * Returns if the instance is locked.
      *
-     * @return  bool
+     * @return bool
      */
     public function isLocked(): bool
     {

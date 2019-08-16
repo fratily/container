@@ -14,7 +14,7 @@
 namespace Fratily\Container\Builder;
 
 use Fratily\Container\Container;
-use Fratily\Container\Builder\Value\LazyBuilder;
+use Fratily\Container\Builder\LazyBuilder;
 
 /**
  *

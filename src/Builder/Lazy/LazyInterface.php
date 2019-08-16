@@ -11,23 +11,22 @@
  * @license     MIT
  * @since       1.0.0
  */
-namespace Fratily\Container\Builder\Value;
+namespace Fratily\Container\Builder\Lazy;
+
+use Fratily\Container\Container;
+use Fratily\Container\Builder\LockableInterface;
 
 /**
  *
  */
-final class Parameter extends AbstractValue
+interface LazyInterface extends LockableInterface
 {
-
     /**
-     * {@inheritdoc}
+     * Returns lazy resolved value.
+     *
+     * @param Container $container The DI container
+     *
+     * @return mixed
      */
-    public function addAlias(string $alias)
-    {
-        if (class_exists($alias) || interface_exists($alias)) {
-            throw new \InvalidArgumentException();
-        }
-
-        return parent::addAlias($alias);
-    }
+    public function load(Container $container);
 }
