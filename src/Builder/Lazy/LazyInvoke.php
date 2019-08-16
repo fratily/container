@@ -60,8 +60,7 @@ class LazyInvoke implements LazyInterface
         return call_user_func_array(
             (is_object($this->invokeFunction) && $this->invokeFunction instanceof LazyInterface)
                 ? $this->invokeFunction->load($container)
-                : $this->invokeFunction
-            ,
+                : $this->invokeFunction,
             array_map(
                 function ($value) use ($container) {
                     return (is_object($value) && $value instanceof LazyInterface)
