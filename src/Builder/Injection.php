@@ -15,115 +15,117 @@ namespace Fratily\Container\Builder;
 
 use Fratily\Container\Builder\Exception\LockedException;
 
+/**
+ *
+ */
 class Injection implements LockableInterface
 {
     use LockableTrait;
 
-    const PARAM_POS     = "pos";
-    const PARAM_NAME    = "name";
-    const PARAM_TYPE    = "type";
+    public const POSITION = "position";
+    public const NAME     = "name";
+    public const TYPE     = "type";
 
     /**
-     * @var mixed[][]
+     * @var array[]
      */
-    private $parameters = [
-        self::PARAM_POS     => [],
-        self::PARAM_NAME    => [],
-        self::PARAM_TYPE    => [],
+    private $arguments = [
+        self::POSITION => [],
+        self::NAME     => [],
+        self::TYPE     => [],
     ];
 
     /**
      * @var array[]
      */
-    private $setters    = [];
+    private $setters   = [];
 
     /**
-     * @var bool
-     */
-    private $isTrait;
-
-    public function __construct(bool $isTrait = false)
-    {
-        $this->isTrait  = $isTrait;
-    }
-
-    /**
-     * パラメーターを取得する
+     * Returns arguments.
      *
-     * @param   string  $paramType
-     *  パラメータータイプ
+     * @param string $type The arguments injection type
      *
-     * @return  mixed[]
+     * @return mixed[]
      */
-    public function getParameters(string $paramType = self::PARAM_POS)
+    public function getArguments(string $type): array
     {
-        if (!array_key_exists($paramType, $this->parameters)) {
+        if (!isset($this->arguments[$type])) {
             throw new \InvalidArgumentException();
         }
 
-        return $this->parameters[$paramType];
+        return $this->arguments[$type];
     }
 
     /**
-     * パラメーターを設定する
+     * Set arguments.
      *
-     * @param   int|string  $key
-     *  キー
-     * @param   mixed   $value
-     *  値
+     * @param mixed[] $arguments The arguments
      *
-     * @return  $this
+     * @return $this
      */
-    public function parameter($key, $value)
+    public function setArguments(array $arguments): Injection
     {
         if ($this->isLocked()) {
             throw new LockedException();
         }
 
-        if ($this->isTrait) {
-            throw new \LogicException();
+        $arguments = array_values($arguments);
+        array_unshift($arguments, "dummy");
+        unset($arguments[0]);
+
+        $this->arguments[self::POSITION] = array_values($arguments);
+
+        return $this;
+    }
+
+    /**
+     * Adds argument.
+     *
+     * @param int|string $key   The argument key
+     * @param mixed      $value The value
+     *
+     * @return $this
+     */
+    public function addArgument($key, $value): Injection
+    {
+        if ($this->isLocked()) {
+            throw new LockedException();
         }
 
         if (!is_int($key) && !is_string($key)) {
             throw new \InvalidArgumentException();
         }
 
-        $paramType  = self::PARAM_POS;
-
-        if (is_string($key)) {
-            if (class_exists($key) || interface_exists($key)) {
-                $paramType  = self::PARAM_TYPE;
-            } else {
-                $paramType  = self::PARAM_NAME;
-            }
+        if (is_int($key)) {
+            $this->arguments[self::POSITION][$key] = $value;
+        } elseif (class_exists($key) || interface_exists($key)) {
+            $this->arguments[self::TYPE][$key] = $value;
+        } else {
+            $this->arguments[self::NAME][$key] = $value;
         }
-
-        $this->parameters[$paramType][$key]  = $value;
 
         return $this;
     }
 
     /**
-     * セッターメソッドをキーとした引数配列のリストを取得する
+     * Returns setters arguments.
      *
-     * @return  array[]
+     * @return array[]
      */
-    public function getSetters()
+    public function getSetters(): array
     {
         return $this->setters;
     }
 
     /**
-     * セッターを設定する
+     * Add setter.
      *
-     * @param   string  $method
-     *  メソッド名
-     * @param   mixed   ...$args
-     *  引数
+     * @param string $method The setter method name
+     * @param array  $args   The setter arguments
      *
-     * @return  $this
+     * @return $this
      */
-    public function setter(string $method, ...$args)
+    public function addSetter(string $method, array $args): Injection
     {
         if ($this->isLocked()) {
             throw new LockedException();

@@ -14,6 +14,8 @@
 namespace Fratily\Container\Builder;
 
 use Fratily\Container\Builder\Exception\LockedException;
+use Fratily\Container\Builder\Lazy\LazyInterface;
+use Fratily\Container\Builder\Lazy\LazyInvoke;
 use Fratily\Container\Builder\Lazy\LazyNew;
 
 /**
@@ -39,6 +41,16 @@ final class Service implements LockableInterface
     private $aliases = [];
 
     /**
+     * Returns the value.
+     *
+     * @return mixed
+     */
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    /**
      * Set the value.
      *
      * @param object $value The value
@@ -55,17 +67,39 @@ final class Service implements LockableInterface
     /**
      * Set the value by class name.
      *
-     * @param string $class The class name
+     * @param string|LazyInterface $class The class name
      *
      * @return $this
      */
-    public function setValueByClass(string $class): Service
+    public function setValueByClass($class): Service
     {
-        if (!class_exists($class)) {
+        if (
+            !(is_string($class) && class_exists($class))
+            && !(is_object($class) && $class instanceof LazyInterface)
+        ) {
             throw new \InvalidArgumentException();
         }
 
-        return $this->setValue(new LazyNew());
+        return $this->setValue(new LazyNew($class));
+    }
+
+    /**
+     * Set the value by factory callback.
+     *
+     * @param callable|LazyInterface $factory The factory
+     *
+     * @return $this
+     */
+    public function setValueByFactory($factory): Service
+    {
+        if (
+            !(is_callable($factory))
+            && !(is_object($factory) && $factory instanceof LazyInterface)
+        ) {
+            throw new \InvalidArgumentException();
+        }
+
+        return $this->setValue(new LazyInvoke($factory));
     }
 
     /**
