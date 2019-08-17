@@ -13,311 +13,207 @@
  */
 namespace Fratily\Container;
 
-use Fratily\Container\Builder\Value\Service;
-use Fratily\Container\Builder\Value\Parameter;
-use Fratily\Container\Builder\Value\Injection;
+use Fratily\Container\Builder\ContainerBuilder;
+use Fratily\Container\Builder\Injection;
+use Fratily\Container\Builder\Parameter;
+use Fratily\Container\Builder\Service;
 
 /**
  *
  */
 class Repository
 {
-
     /**
-     * @var Service[]
+     * @var ContainerBuilder
      */
-    private $services;
-
-    /**
-     * @var Parameter[]
-     */
-    private $parameters;
-
-    /**
-     * @var Injection[]
-     */
-    private $injections;
-
-    /**
-     * @var string[]
-     */
-    private $aliasedServices    = [];
-
-    /**
-     * @var string[]
-     */
-    private $aliasedParameters  = [];
+    private $builder;
 
     /**
      * @var string[][]
      */
-    private $taggedServiceLists     = [];
+    private $parameterIdListByTag = [];
 
     /**
      * @var string[][]
      */
-    private $taggedParameterLists   = [];
+    private $serviceIdListByTag   = [];
 
     /**
      * Constructor
      *
-     * @param   Service[]   $services
-     *  サービスIDをキーとした連想配列
-     * @param   Parameter[] $parameters
-     *  パラメータIDをキーとした連想配列
-     * @param   Injection[] $injections
-     *  DI設定IDをキーとした連想配列
+     * @param ContainerBuilder $builder The container builder
      */
-    public function __construct(array $services, array $parameters, array $injections)
+    public function __construct(ContainerBuilder $builder)
     {
-        $this->services     = $services;
-        $this->parameters   = $parameters;
-        $this->injections   = $injections;
-
-        // せっかくAbstractValueで抽象化しているんだから処理をまとめたい
-        foreach ($this->services as $id => $service) {
-            foreach ($service->getTags() as $tag) {
-                if (!array_key_exists($tag, $this->taggedServiceLists)) {
-                    $this->taggedServiceLists[$tag] = [];
-                }
-
-                $this->taggedServiceLists[$tag][]   = $id;
-            }
-
-            foreach ($service->getAliases() as $alias) {
-                if (array_key_exists($alias, $this->aliasedServices)) {
-                    throw new \LogicException();
-                }
-
-                $this->aliasedServices[$alias]  = $id;
-            }
-        }
-
-        foreach ($this->parameters as $id => $parameter) {
-            foreach ($parameter->getTags() as $tag) {
-                if (!array_key_exists($tag, $this->taggedParameterLists)) {
-                    $this->taggedParameterLists[$tag]  = [];
-                }
-
-                $this->taggedParameterLists[$tag][]    = $id;
-            }
-
-            foreach ($parameter->getAliases() as $alias) {
-                if (array_key_exists($alias, $this->aliasedParameters)) {
-                    throw new \LogicException();
-                }
-
-                $this->aliasedParameters[$alias]    = $id;
-            }
-        }
-    }
-
-    /**
-     * サービスの一覧を取得する
-     *
-     * @return  Service[]
-     */
-    public function getServices()
-    {
-        return $this->services;
-    }
-
-    /**
-     * タグ付けされたサービスのIDリストを取得する
-     *
-     * @param   string  $tag
-     *  タグ
-     *
-     * @return  string[]
-     */
-    public function getServiceIdsWithTagged(string $tag)
-    {
-        return array_key_exists($tag, $this->taggedServiceLists)
-            ? $this->taggedServiceLists[$tag]
-            : []
-        ;
-    }
-
-    /**
-     * サービスを取得する
-     *
-     * @param   string  $id
-     *  サービスID
-     *
-     * @return  Service
-     *
-     * @throws  \LogicException
-     */
-    public function getService(string $id)
-    {
-        $id = ltrim($id, "\\");
-
-        if (array_key_exists($id, $this->aliasedServices)) {
-            $id = $this->aliasedParameters[$id];
-        }
-
-        if (!array_key_exists($id, $this->services)) {
-            throw new \LogicException();
-        }
-
-        return $this->services[$id];
-    }
-
-    /**
-     * サービスが存在するか確認する
-     *
-     * @param   string  $id
-     *  サービスID
-     *
-     * @return  bool
-     */
-    public function hasService(string $id)
-    {
-        $id = ltrim($id, "\\");
-
-        return
-            array_key_exists($id, $this->services)
-            || array_key_exists($id, $this->aliasedServices)
-        ;
-    }
-
-    /**
-     * パラメーターのリストを取得する
-     *
-     * @return  Parameter[]
-     */
-    public function getParameters()
-    {
-        return $this->parameters;
-    }
-
-    /**
-     * タグ付けされたパラメーターのIDリストを取得する
-     *
-     * @param   string  $tag
-     *  タグ
-     *
-     * @return  string[]
-     */
-    public function getParameterIdsWithTagged(string $tag)
-    {
-        return array_key_exists($tag, $this->taggedParameterLists)
-            ? $this->taggedParameterLists[$tag]
-            : []
-        ;
-    }
-
-    /**
-     * パラメーターを取得する
-     *
-     * @param   string  $id
-     *  パラメーターID
-     *
-     * @return  Parameter
-     *
-     * @throws  \LogicException
-     */
-    public function getParameter(string $id)
-    {
-        if (array_key_exists($id, $this->aliasedParameters)) {
-            $id = $this->aliasedParameters[$id];
-        }
-
-        if (!array_key_exists($id, $this->parameters)) {
-            throw new \LogicException();
-        }
-
-        return $this->parameters[$id];
-    }
-
-    /**
-     * パラメーターが存在するか確認する
-     *
-     * @param   string  $id
-     *  パラメーターID
-     *
-     * @return  bool
-     */
-    public function hasParameter(string $id)
-    {
-        return
-            array_key_exists($id, $this->parameters)
-            || array_key_exists($id, $this->aliasedParameters)
-        ;
-    }
-
-    /**
-     * DI設定のリストを取得する
-     *
-     * @return  Injection[]
-     */
-    public function getInjections()
-    {
-        return $this->injections;
-    }
-
-    /**
-     * 指定クラスに関連するDI設定のリストを取得する
-     *
-     * @param   string  $class
-     *  クラス名
-     *
-     * @return  Injection[]
-     */
-    public function getInjectionsFromClass(string $class)
-    {
-        if (!class_exists($class)) {
+        if (!$builder->isLocked()) {
             throw new \InvalidArgumentException();
         }
 
-        $injections = [];
+        $this->builder = $builder;
 
-        do {
-            if ($this->hasInjection($class)) {
-                $injections[]   = $this->getInjection($class);
-            }
-        } while (false !== ($class = get_parent_class($class)));
+        foreach ($this->builder->getParameters() as $id => $parameter) {
+            foreach ($parameter->getTags() as $tag) {
+                if (!isset($this->parameterIdListByTag[$tag])) {
+                    $this->parameterIdListByTag[$tag] = [];
+                }
 
-        foreach (class_implements($class) as $interface) {
-            if ($this->hasInjection($interface)) {
-                $injections[]   = $this->getInjection($interface);
+                $this->parameterIdListByTag[$tag][] = $id;
             }
         }
 
-        return $injections;
+        foreach ($this->builder->getServices() as $id => $service) {
+            foreach ($service->getTags() as $tag) {
+                if (!isset($this->serviceIdListByTag[$tag])) {
+                    $this->serviceIdListByTag[$tag] = [];
+                }
+
+                $this->serviceIdListByTag[$tag][] = $id;
+            }
+        }
     }
 
     /**
-     * DI設定を取得する
+     * Returns the parameters by id.
      *
-     * @param   string  $id
-     *  DI設定ID
-     *
-     * @return  Injection
-     *
-     * @throws  \LogicException
+     * @return Parameter[]
      */
-    public function getInjection(string $id)
+    public function getParameters(): array
     {
-        $id = ltrim($id, "\\");
+        return $this->builder->getParameters();
+    }
 
-        if (!array_key_exists($id, $this->injections)) {
+    /**
+     * Returns the parameter.
+     *
+     * @param string $id The parameter id
+     *
+     * @return Parameter
+     */
+    public function getParameter(string $id): Parameter
+    {
+        if (!$this->hasParameter($id)) {
             throw new \LogicException();
         }
 
-        return $this->injections[$id];
+        return $this->getParameters()[$id];
     }
 
     /**
-     * DI設定が存在するか確認する
+     * Returns the tagged parameter id list.
      *
-     * @param   string  $id
-     *  DI設定ID
+     * @param string $tag The tag name
      *
-     * @return  bool
+     * @return string[]
      */
-    public function hasInjection(string $id)
+    public function getParameterIdListByTag(string $tag): array
     {
-        return array_key_exists($id, $this->injections);
+        return isset($this->parameterIdListByTag[$tag])
+            ? $this->parameterIdListByTag[$tag]
+            : []
+        ;
+    }
+
+    /**
+     * Return true if parameter is defined.
+     *
+     * @param string $id The parameter id
+     *
+     * @return bool
+     */
+    public function hasParameter(string $id): bool
+    {
+        return isset($this->getParameters()[$id]);
+    }
+
+
+    /**
+     * Returns the services by id.
+     *
+     * @return Service[]
+     */
+    public function getServices(): array
+    {
+        return $this->builder->getServices();
+    }
+
+    /**
+     * Returns the service.
+     *
+     * @param string $id The service id
+     *
+     * @return Service
+     */
+    public function getService(string $id): Service
+    {
+        if (!$this->hasService($id)) {
+            throw new \LogicException();
+        }
+
+        return $this->getServices()[$id];
+    }
+
+    /**
+     * Returns the tagged service id list.
+     *
+     * @param string $tag The tag name
+     *
+     * @return string[]
+     */
+    public function getServiceIdListByTag(string $tag): array
+    {
+        return isset($this->serviceIdListByTag[$tag])
+            ? $this->serviceIdListByTag[$tag]
+            : []
+        ;
+    }
+
+    /**
+     * Return true if service is defined.
+     *
+     * @param string $id The service id
+     *
+     * @return bool
+     */
+    public function hasService(string $id): bool
+    {
+        return isset($this->getServices()[$id]);
+    }
+
+    /**
+     * Returns the Injection by class name.
+     *
+     * @return Injection[]
+     */
+    public function getInjections(): array
+    {
+        return $this->builder->getInjections();
+    }
+
+    /**
+     * Returns the Injection.
+     *
+     * @param string $class The class name
+     *
+     * @return Injection
+     */
+    public function getInjection(string $class): Injection
+    {
+        if (!$this->hasInjection($class)) {
+            throw new \LogicException();
+        }
+
+        return $this->getInjections()[$class];
+    }
+
+    /**
+     * Return true if Injection is defined.
+     *
+     * @param string $class The class name
+     *
+     * @return bool
+     */
+    public function hasInjection(string $class): bool
+    {
+        return isset($this->getInjections()[$class]);
     }
 }

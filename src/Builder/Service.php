@@ -33,12 +33,7 @@ final class Service implements LockableInterface
     /**
      * @var bool[]
      */
-    private $tags    = [];
-
-    /**
-     * @var bool[]
-     */
-    private $aliases = [];
+    private $tags = [];
 
     /**
      * Returns the value.
@@ -126,34 +121,6 @@ final class Service implements LockableInterface
         }
 
         $this->tags[$tag] = true;
-
-        return $this;
-    }
-
-    /**
-     * Returns aliases.
-     *
-     * @return string[]
-     */
-    public function getAliases(): array
-    {
-        return array_keys($this->aliases);
-    }
-
-    /**
-     * Adds alias.
-     *
-     * @param string $alias The alias name
-     *
-     * @return $this
-     */
-    public function addAlias(string $alias): Service
-    {
-        if ($this->isLocked()) {
-            throw new LockedException();
-        }
-
-        $this->aliases[$alias] = true;
 
         return $this;
     }

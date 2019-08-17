@@ -23,7 +23,7 @@ class ContainerBuilder implements LockableInterface
     /**
      * @var bool
      */
-    private $locked = false;
+    private $locked     = false;
 
     /**
      * @var Injection[]
@@ -47,6 +47,12 @@ class ContainerBuilder implements LockableInterface
     {
         if (!$this->locked) {
             $this->locked = true;
+
+            $conflict = array_intersect_key($this->services, $this->parameters);
+
+            if (0 !== count($conflict)) {
+                throw new \LogicException();
+            }
 
             foreach ($this->injections as $injection) {
                 $injection->lock();

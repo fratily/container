@@ -13,6 +13,7 @@
  */
 namespace Fratily\Container;
 
+use Fratily\Container\Builder\AbstractProvider;
 use Fratily\Container\Builder\ContainerBuilder;
 
 /**
@@ -20,46 +21,46 @@ use Fratily\Container\Builder\ContainerBuilder;
  */
 class ContainerFactory
 {
+    /**
+     * @var \SplPriorityQueue|AbstractProvider[]
+     */
+    private $providers;
 
     /**
-     * @var string[]
+     * Constructor.
      */
-    private $providers  = [];
-
-    /**
-     * コンテナを生成する
-     *
-     * @param   mixed[] $options
-     * オプションの連想配列
-     * @param   string  $resolver
-     *  リゾルバクラス名
-     *
-     * @return  Container
-     */
-    public function create(array $options = [], string $resolver = Resolver::class)
+    public function __construct()
     {
-        $builder    = new ContainerBuilder();
-        $providers  = [];
+        $this->providers = new \SplPriorityQueue();
+    }
+
+    /**
+     * Create Container.
+     *
+     * @param string $resolver The resolver class name
+     *
+     * @return Container
+     */
+    public function create(string $resolver = Resolver::class): Container
+    {
+        if (
+            !class_exists($resolver)
+            || !(Resolver::class === $resolver || is_subclass_of($resolver, Resolver::class))
+        ) {
+            throw new \InvalidArgumentException();
+        }
+
+        $builder = new ContainerBuilder();
 
         foreach ($this->providers as $provider) {
-            $provider   = new $provider($builder);
-            $provider[] = $provider;
-
-            $provider->build($options);
+            $provider->build($builder);
         }
 
         $builder->lock();
 
-        $container  = new Container(
-            new Repository(
-                $builder->getServices(),
-                $builder->getParameters(),
-                $builder->getInjections()
-            ),
-            $resolver
-        );
+        $container  = new Container(new Repository($builder), $resolver);
 
-        foreach ($providers as $provider) {
+        foreach ($this->providers as $provider) {
             $provider->modify($container);
         }
 
@@ -67,30 +68,16 @@ class ContainerFactory
     }
 
     /**
-     * プロバイダを追加する
+     * Adds provider.
      *
-     * @param   string  $provider
-     *  プロバイダークラス名
-     * @param   bool    $prepend
-     *  先頭に追加するか
+     * @param AbstractProvider $provider The provider
+     * @param int              $priority The provider priority
      *
-     * @return  $this
+     * @return $this
      */
-    public function add(string $provider, bool $prepend = false)
+    public function add(AbstractProvider $provider, int $priority): ContainerFactory
     {
-        if (!is_subclass_of($provider, Builder\AbstractProvider::class)) {
-            $class = Builder\AbstractProvider::class;
-            throw new \InvalidArgumentException(
-                "{$provider} is not a provider class. The provider class must"
-                . " be a subclass of {$class}."
-            );
-        }
-
-        if ($prepend) {
-            array_unshift($this->providers, $provider);
-        } else {
-            $this->providers[]  = $provider;
-        }
+        $this->providers->insert($provider, $priority);
 
         return $this;
     }
