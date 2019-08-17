@@ -13,10 +13,6 @@
  */
 namespace Fratily\Container;
 
-use Fratily\Container\Builder\LazyBuilder;
-use Fratily\Container\Builder\Value\Injection;
-use Fratily\Container\Builder\Value\Type;
-use Fratily\Container\Builder\Lazy\LazyResolver;
 use Fratily\Reflection\ReflectionCallable;
 use Psr\Container\ContainerInterface;
 
@@ -25,9 +21,6 @@ use Psr\Container\ContainerInterface;
  */
 class Container implements ContainerInterface
 {
-
-    const REGEX_KEY = "/\A[A-Z_][0-9A-Z_]*(\.[A-Z_][0-9A-Z_]*)*\z/i";
-
     /**
      * @var Repository
      */
@@ -37,11 +30,6 @@ class Container implements ContainerInterface
      * @var Resolver
      */
     private $resolver;
-
-    /**
-     * @var LazyBuilder
-     */
-    private $lazyBuilder;
 
     /**
      *@var object[]
@@ -54,60 +42,34 @@ class Container implements ContainerInterface
     private $parameters = [];
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param   Repository  $repository
-     *  リポジトリ
-     * @param   string  $resolver
-     *  リゾルバクラス名
-     * @param   LazyBuilder $lazyBuilder
-     *  遅延取得インスタンスビルダー
+     * @param Repository $repository The repository
+     * @param Resolver   $resolver   The resolver
      */
-    public function __construct(
-        Repository $repository,
-        string $resolver = Resolver::class,
-        LazyBuilder $lazyBuilder = null
-    ) {
-        $this->repository   = $repository;
-        $this->lazyBuilder  = $lazyBuilder ?? new LazyBuilder();
-
-        if (!class_exists($resolver)
-            || !(Resolver::class === $resolver || is_subclass_of($resolver, Resolver::class))
-        ) {
-            throw new \InvalidArgumentException();
-        }
-
-        $this->resolver = new $resolver($this);
+    public function __construct(Repository $repository, Resolver $resolver) {
+        $this->repository = $repository;
+        $this->resolver   = $resolver;
     }
 
     /**
-     * リポジトリを取得する
+     * Returns the repository.
      *
-     * @return  Repository
+     * @return Repository
      */
-    public function getRepository()
+    public function getRepository(): Repository
     {
         return $this->repository;
     }
 
     /**
-     * リゾルバを取得する
+     * Returns the resolver.
      *
-     * @return  Resolver
+     * @return Resolver
      */
-    public function getResolver()
+    public function getResolver(): Resolver
     {
         return $this->resolver;
-    }
-
-    /*
-     * 遅延取得インスタンスビルダーを取得する
-     *
-     * @return  LazyBuilder
-     */
-    public function getLazyBuilder()
-    {
-        return $this->lazyBuilder;
     }
 
     /**

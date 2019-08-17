@@ -13,52 +13,60 @@
  */
 namespace Fratily\Container;
 
-use Fratily\Container\Builder\LazyBuilder;
-use Fratily\Container\Builder\Lazy\LazyInterface;
-
 /**
  *
  */
 class Resolver
 {
-
     /**
-     * @var Container
+     * @var Container|null
      */
     private $container;
 
     /**
-     * Constructor
+     * Returns the container.
      *
-     * @param   Container   $container
-     *  サービスコンテナ
+     * @return Container
      */
-    public function __construct(Container $container)
+    protected function getContainer(): Container
     {
-        $this->container    = $container;
-    }
+        if (null === $this->container) {
+            throw new \LogicException();
+        }
 
-    /**
-     * サービスコンテナを取得する
-     *
-     * @return  Container
-     */
-    protected function getContainer()
-    {
         return $this->container;
     }
 
     /**
-     * クラスがインスタンス化可能か確認する
+     * Set container.
      *
-     * @param   string $class
-     *  クラス名
+     * @param Container $container The container
      *
-     * @return  bool
+     * @return void
      */
-    public function isInstantiable(string $class)
+    public function setContainer(Container $container): void
     {
-        return class_exists($class) && (new \ReflectionClass($class))->isInstantiable();
+        if (null !== $this->container) {
+            throw new \LogicException();
+        }
+
+        $this->container = $container;
+    }
+
+    /**
+     * Returns true if specified class can be instantiated.
+     *
+     * @param string $class The class name
+     *
+     * @return bool
+     */
+    public function isInstantiable(string $class): bool
+    {
+        try {
+            return class_exists($class) && (new \ReflectionClass($class))->isInstantiable();
+        } catch (\ReflectionException $e) {
+            throw new \LogicException("", 0, $e);
+        }
     }
 
     /**

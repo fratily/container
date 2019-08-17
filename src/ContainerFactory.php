@@ -37,11 +37,11 @@ class ContainerFactory
     /**
      * Create Container.
      *
-     * @param string $resolver The resolver class name
+     * @param Resolver $resolver The resolver
      *
      * @return Container
      */
-    public function create(string $resolver = Resolver::class): Container
+    public function create(Resolver $resolver): Container
     {
         if (
             !class_exists($resolver)
@@ -58,7 +58,9 @@ class ContainerFactory
 
         $builder->lock();
 
-        $container  = new Container(new Repository($builder), $resolver);
+        $container = new Container(new Repository($builder), $resolver);
+
+        $resolver->setContainer($container);
 
         foreach ($this->providers as $provider) {
             $provider->modify($container);
