@@ -49,7 +49,7 @@ class LazyGetParameterByTag implements LazyInterface
     {
         $this->lock();
 
-        return $container->getParameterWithTagged(
+        return $container->getParametersByTag(
             (is_object($this->tag) && $this->tag instanceof LazyInterface)
                 ? $this->tag->load($container)
                 : $this->tag

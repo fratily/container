@@ -13,6 +13,9 @@
  */
 namespace Fratily\Container;
 
+use Fratily\Container\Builder\Injection;
+use Fratily\Container\Builder\Lazy\LazyArray;
+use Fratily\Container\Builder\Lazy\LazyInterface;
 use Fratily\Reflection\ReflectionCallable;
 use Psr\Container\ContainerInterface;
 
@@ -73,91 +76,85 @@ class Container implements ContainerInterface
     }
 
     /**
-     * インスタンスを生成する
+     * Return new instance.
      *
-     * @param   string $class
-     *  対象クラス名
-     * @param   Injection $addendInjection
-     *  追加DI設定
+     * @param string         $class               The class name
+     * @param Injection|null $additionalInjection The additional Injection
      *
-     * @return  object
-     *
-     * @throws  \InvalidArgumentException
+     * @return object
      */
-    public function new(string $class, Injection $addendInjection = null)
+    public function new(string $class, Injection $additionalInjection = null)
     {
-        if (!$this->getResolver()->isInstantiable($class)) {
+        if (!class_exists($class)) {
+            throw new \InvalidArgumentException();
+        }
+
+        $reflection = null;
+
+        try {
+            $reflection = new \ReflectionClass($class);
+        } catch (\ReflectionException $e) {
+            throw new \LogicException("", 0, $e);
+        }
+
+        if (!$reflection->isInstantiable()) {
             throw new \InvalidArgumentException();
         }
 
         $instance   = null;
-        $parameters = null;
-        $reflection = new \ReflectionClass($class);
-        $injections = $this->getRepository()->getInjectionsFromClass($class);
+        $injections = $this->getRepository()->getInjectionsByClasses(
+            $this->getResolver()->getRelationClasses($class)
+        );
 
-        if (null !== $addendInjection) {
-            array_unshift($injections, $addendInjection);
+        if (null !== $additionalInjection) {
+            array_unshift($injections, $additionalInjection);
         }
 
         if (null !== $reflection->getConstructor()) {
-            $positions      = [];
-            $names          = [];
-            $types          = [];
-            $mainInjection  = $this->getRepository()->hasInjection($class)
+            $positions = [];
+            $names     = [];
+            $types     = [];
+
+            $classInjection = $this->getRepository()->hasInjection($class)
                 ? $this->getRepository()->getInjection($class)
                 : null
             ;
 
             foreach ($injections as $injection) {
-                if ($addendInjection === $injection || $mainInjection === $injection) {
-                    $positions  += $injection->getParameters(Injection::PARAM_POS);
+                if ($additionalInjection === $injection || $classInjection === $injection) {
+                    $positions += $injection->getArguments(Injection::POSITION);
                 }
 
-                $names  += $injection->getParameters(Injection::PARAM_NAME);
-                $types  += $injection->getParameters(Injection::PARAM_TYPE);
+                $names += $injection->getArguments(Injection::NAME);
+                $types += $injection->getArguments(Injection::TYPE);
             }
 
-            try {
-                $parameters = $this->getResolver()->resolveFunctionParameters(
+            $arguments = new LazyArray(
+                $this->getResolver()->resolveArguments(
                     $reflection->getConstructor(),
                     $positions,
                     $names,
                     $types
-                );
-            } catch (\Exception $e) {
-                throw new Exception\ClassInstantiationException(
-                    "Failed to resolve parameters of {$class}::__construct().",
-                    0,
-                    $e
-                );
-            }
+                )
+            );
+
+            $instance = $reflection->newInstanceArgs($arguments->load($this));
+        } else {
+            $instance = $reflection->newInstance();
         }
 
-        try {
-            $instance   = null === $parameters
-                ? $reflection->newInstance()
-                : $reflection->newInstanceArgs(LazyResolver::resolveArray($parameters))
-            ;
-        } catch (\TypeError | \ArgumentCountError $e) {
-            if ($class === $e->getTrace()[0]["class"]
-                && "__construct" === $e->getTrace()[0]["function"]
-            ) {
-                throw new Exception\ClassInstantiationException(
-                    "Failed to resolve parameters of {$class}::__construct().",
-                    0,
-                    $e
-                );
-            }
-
-            throw $e;
-        }
+        $calledSetters = [];
 
         foreach ($injections as $injection) {
             foreach ($injection->getSetters() as $method => $args) {
-                call_user_func_array(
-                    [$instance, $method],
-                    LazyResolver::resolveArray($this, $args)
-                );
+                if (!isset($calledSetters[$method])) {
+                    call_user_func_array(
+                        [$instance, $method],
+                        (new LazyArray($args))->load($this)
+                    );
+                }
+
+                $calledSetters[$method] = ($calledSetters[$method] ?? 0) + 1;
             }
         }
 
@@ -165,39 +162,25 @@ class Container implements ContainerInterface
     }
 
     /**
-     * コールバックを実行しその結果を取得する
+     * Execute callback and returns that returns.
      *
-     * @param   callable    $callback
-     *  実行対象コールバック
-     * @param   mixed[] $positions
-     *  ポジション指定パラメータ値リスト
-     * @param   mixed[] $names
-     *  名前指定パラメータ値リスト
-     * @param   mixed[] $types
-     *  クラス型指定パラメータ値リスト
+     * @param callable $callback  The callback
+     * @param mixed[]  $positions The argument values by position
+     * @param mixed[]  $names     The argument values by name
+     * @param mixed[]  $types     The argument values by type
      *
-     * @return  mixed
+     * @return mixed
      */
-    public function invoke(
-        callable $callback,
-        array $positions,
-        array $names,
-        array $types
-    ) {
-        try {
-            $parameters = $this->getResolver()->resolveFunctionParameters(
+    public function invoke(callable $callback, array $positions, array $names, array $types) {
+        return call_user_func_array(
+            $callback,
+            $this->getResolver()->resolveArguments(
                 (new ReflectionCallable($callback))->getReflection(),
                 $positions,
                 $names,
                 $types
-            );
-        } catch (\Exception $e) {
-            throw new \Exception("", 0, $e);
-        }
-
-        // TypeErrorやInvalidArgumentExceptionをキャッチしたいが、
-        // コールバックの中の別の関数で発生することもありうるのでできない。
-        return call_user_func_array($callback, $parameters);
+            )
+        );
     }
 
     /**
@@ -209,51 +192,42 @@ class Container implements ContainerInterface
             throw new \InvalidArgumentException();
         }
 
-        if (!array_key_exists($id, $this->services)) {
+        if (!isset($this->services[$id])) {
             if (!$this->has($id)) {
                 throw new Exception\ServiceNotFoundException();
             }
 
-            $service    = $this->getRepository()->getService($id);
-            $value      = $service->isLazy()
-                ? $service->get()->load($this)
-                : $service->get()
-            ;
+            $service = $this->getRepository()->getService($id)->getValue();
 
-            if (!Type::valid($service->getType(), $value)) {
+            if (is_object($service)) {
+                if ($service instanceof LazyInterface) {
+                    $service = $service->load($this);
+                }
+            }
+
+            if (!is_object($service)) {
                 throw new \LogicException();
             }
 
-            if (!is_object($value)) {
-                throw new \LogicException();
-            }
-
-            $this->services[$id]    = $value;
+            $this->services[$id] = $service;
         }
 
         return $this->services[$id];
     }
 
     /**
-     * タグ付けられたサービスの配列を取得する
+     * Returns services by tag.
      *
-     * @param   string  $tag
-     *  タグ
-     * @param   bool    $useId4Index
-     *  返り値のキーにサービスIDを使用するか
+     * @param string $tag The tag
      *
-     * @return  object[]
+     * @return object[]
      */
-    public function getWithTagged(string $tag, bool $useId4Index = false)
+    public function getByTag(string $tag): array
     {
-        $services   = [];
+        $services = [];
 
-        foreach ($this->getRepository()->getServiceIdsWithTagged($tag) as $id) {
-            if ($useId4Index) {
-                $services[$id]  = $this->get($id);
-            } else {
-                $services[]     = $this->get($id);
-            }
+        foreach ($this->getRepository()->getServiceIdListByTag($tag) as $id) {
+            $services[] = $this->get($id);
         }
 
         return $services;
@@ -274,71 +248,57 @@ class Container implements ContainerInterface
     }
 
     /**
-     * パラメーターを取得する
+     * Returns parameter by id.
      *
-     * @param   string  $id
-     *  パラメーターID
+     * @param string $id The parameter id
      *
-     * @return  mixed
+     * @return mixed
      */
     public function getParameter(string $id)
     {
-        if (!array_key_exists($id, $this->parameters)) {
+        if (!isset($this->parameters[$id])) {
             if (!$this->hasParameter($id)) {
                 throw new Exception\ParameterNotFoundException();
             }
 
-            $parameter  = $this->getRepository()->getParameter($id);
-            $value      = $parameter->isLazy()
-                ? $parameter->get()->load($this)
-                : $parameter->get()
-            ;
+            $parameter = $this->getRepository()->getParameter($id)->getValue();
 
-            if (!Type::valid($parameter->getType(), $value)) {
-                throw new \LogicException();
+            if (is_object($parameter) && $parameter instanceof LazyInterface) {
+                $parameter = $parameter->load($this);
             }
 
-            $this->parameters[$id]  = $value;
+            $this->parameters[$id] = $parameter;
         }
 
         return $this->parameters[$id];
     }
 
     /**
-     * タグ付けされたパラメーターの配列を取得する
+     * Returns parameters by tag.
      *
-     * @param   string $tag
-     *  タグ名
+     * @param string $tag The tag
      *
-     * @param   bool    $useId4Index
-     *  返り値のキーにパラメーターIDを使用するか
-     *
-     * @return  mixed[]
+     * @return mixed[]
      */
-    public function getParameterWithTagged(string $tag, bool $useId4Index = false)
+    public function getParametersByTag(string $tag): array
     {
         $parameters = [];
 
-        foreach ($this->getRepository()->getParameterIdsWithTagged($tag) as $id) {
-            if ($useId4Index) {
-                $parameters[$id]    = $this->get($id);
-            } else {
-                $parameters[]       = $this->get($id);
-            }
+        foreach ($this->getRepository()->getParameterIdListByTag($tag) as $id) {
+            $parameters[] = $this->get($id);
         }
 
         return $parameters;
     }
 
     /**
-     * パラメーターが存在するか確認する
+     * Returns true if parameter is defined.
      *
-     * @param   string  $id
-     *  パラメーターID
+     * @param string $id The parameter id
      *
-     * @return  bool
+     * @return bool
      */
-    public function hasParameter(string $id)
+    public function hasParameter(string $id): bool
     {
         return $this->getRepository()->hasParameter($id);
     }

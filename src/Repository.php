@@ -73,7 +73,7 @@ class Repository
     }
 
     /**
-     * Returns the parameters by id.
+     * Returns the parameters.
      *
      * @return Parameter[]
      */
@@ -127,7 +127,7 @@ class Repository
 
 
     /**
-     * Returns the services by id.
+     * Returns the services.
      *
      * @return Service[]
      */
@@ -180,13 +180,37 @@ class Repository
     }
 
     /**
-     * Returns the Injection by class name.
+     * Returns the Injections.
      *
      * @return Injection[]
      */
     public function getInjections(): array
     {
         return $this->builder->getInjections();
+    }
+
+    /**
+     * Returns the Injections by classes.
+     *
+     * @param string[] $classes The classes
+     *
+     * @return Injection[]
+     */
+    public function getInjectionsByClasses(array $classes): array
+    {
+        $injections = [];
+
+        foreach ($classes as $class) {
+            if (!is_string($class)) {
+                throw new \InvalidArgumentException();
+            }
+
+            if ($this->hasInjection($class)) {
+                $injections[] = $this->getInjection($class);
+            }
+        }
+
+        return $injections;
     }
 
     /**

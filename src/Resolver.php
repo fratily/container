@@ -13,6 +13,9 @@
  */
 namespace Fratily\Container;
 
+use Fratily\Container\Builder\Lazy\LazyGet;
+use Fratily\Container\Builder\Lazy\LazyNew;
+
 /**
  *
  */
@@ -54,84 +57,66 @@ class Resolver
     }
 
     /**
-     * Returns true if specified class can be instantiated.
+     * Returns relation classes.
      *
      * @param string $class The class name
      *
-     * @return bool
+     * @return string[]
      */
-    public function isInstantiable(string $class): bool
+    public function getRelationClasses(string $class): array
     {
-        try {
-            return class_exists($class) && (new \ReflectionClass($class))->isInstantiable();
-        } catch (\ReflectionException $e) {
-            throw new \LogicException("", 0, $e);
+        if (!class_exists($class)) {
+            throw new \InvalidArgumentException();
         }
+
+        $classes      = [];
+        $currentClass = $class;
+
+        do{
+            $classes[] = $currentClass;
+        }while(false !== ($currentClass = get_parent_class($currentClass)));
+
+        foreach(class_implements($class) as $interface){
+            $classes[] = $interface;
+        }
+
+        return $classes;
     }
 
     /**
-     * 関数のパラメータを解決しリストを取得する
+     * Returns the function arguments.
      *
-     * @param   \ReflectionFunctionAbstract $function
-     *  対象関数のリフレクション
-     * @param   mixed[] $positions
-     *  ポジション指定パラメータ値リスト
-     * @param   mixed[] $names
-     *  名前指定パラメータ値リスト
-     * @param   mixed[] $types
-     *  クラス型指定パラメータ値リスト
+     * @param \ReflectionFunctionAbstract $reflection The function reflection
+     * @param mixed[]                     $positions  The argument values by position
+     * @param mixed[]                     $names      The argument values by name
+     * @param mixed[]                     $types      The argument values by type
      *
-     * @return  mixed[]
+     * @return mixed[]
      */
-    public function resolveFunctionParameters(
-        \ReflectionFunctionAbstract $function,
+    public function resolveArguments(
+        \ReflectionFunctionAbstract $reflection,
         array $positions,
         array $names,
         array $types
-    ) {
-        $result = [];
+    ): array {
+        $arguments = [];
 
-        foreach ($function->getParameters() as $parameter) {
-            try {
-                $value  = $this->resolveParameter($parameter, $positions, $names, $types);
-            } catch (\Exception $e) {
-                throw new Exception\ParameterUnresolvedException(
-                    "The value of {$this->getParameterInfoText($parameter)}"
-                        . " could not be resolved.",
-                    0,
-                    $e
-                );
-            }
-
-            if ($parameter->hasType()) {
-                // check value type
-
-                if (null === $value && !$parameter->allowsNull()) {
-                    throw new Exception\ParameterUnresolvedException();
-                }
-            }
-
-            $result[]   = $value;
+        foreach ($reflection->getParameters() as $parameter) {
+            $arguments[] = $this->resolveParameter($parameter, $positions, $names, $types);
         }
 
-        return $result;
+        return $arguments;
     }
 
     /**
-     * パラメータの値を解決する
+     * Resolve argument value.
      *
-     * @param   \ReflectionParameter    $parameter
-     *  パラメータのリフレクション
-     * @param   mixed[] $positions
-     *  ポジション指定パラメータ値リスト
-     * @param   mixed[] $names
-     *  名前指定パラメータ値リスト
-     * @param   mixed[] $types
-     *  クラス型指定パラメータ値リスト
+     * @param \ReflectionParameter $parameter The parameter reflection
+     * @param mixed[]              $positions The argument values by position
+     * @param mixed[]              $names     The argument values by name
+     * @param mixed[]              $types     The argument values by type
      *
-     * @return  mixed
-     *
-     * @throws  \LogicException
+     * @return mixed
      */
     public function resolveParameter(
         \ReflectionParameter $parameter,
@@ -139,8 +124,6 @@ class Resolver
         array $names,
         array $types
     ) {
-        $class  = null;
-
         if (array_key_exists($parameter->getPosition(), $positions)) {
             return $positions[$parameter->getPosition()];
         }
@@ -149,10 +132,13 @@ class Resolver
             return $names[$parameter->getName()];
         }
 
+        $class  = null;
+
         if ($parameter->hasType() && !$parameter->getType()->isBuiltin()) {
             try {
                 $class  = $parameter->getClass();
             } catch (\ReflectionException $e) {
+                // This ReflectionException is thrown if the argument type declaration is invalid.
                 throw new Exception\InvalidParameterDefinedException(
                     "Type specification of {$this->getParameterInfoText($parameter)}"
                         . " is invalid.",
@@ -166,30 +152,33 @@ class Resolver
             }
 
             if ($this->getContainer()->has($class->getName())) {
-                return LazyBuilder::lazyGet($class->getName());
+                return new LazyGet($class->getName());
             }
         }
 
         if ($parameter->isDefaultValueAvailable()) {
-            return $parameter->getDefaultValue();
+            try {
+                return $parameter->getDefaultValue();
+            } catch (\ReflectionException $e) {
+                throw new \LogicException($e->getMessage(), $e->getCode(), $e);
+            }
         }
 
         if (!$parameter->allowsNull() && null !== $class && $class->isInstantiable()) {
-            return LazyBuilder::lazyNew($class->getName());
+            return new LazyNew($class->getName());
         }
 
         return null;
     }
 
     /**
-     * パラメータの位置情報をテキストで取得する
+     * Returns parameter debug info text.
      *
-     * @param   \ReflectionParameter    $parameter
-     *  パラメーターリフレクション
+     * @param \ReflectionParameter $parameter The parameter reflection
      *
-     * @return  string
+     * @return string
      */
-    public function getParameterInfoText(\ReflectionParameter $parameter)
+    public function getParameterInfoText(\ReflectionParameter $parameter): string
     {
         $func   = $parameter->getDeclaringFunction();
         $posStr = str_repeat("\$.., ", $parameter->getPosition());

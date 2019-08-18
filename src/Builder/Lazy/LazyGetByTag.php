@@ -49,7 +49,7 @@ class LazyGetByTag implements LazyInterface
     {
         $this->lock();
 
-        return $container->getWithTagged(
+        return $container->getByTag(
             (is_object($this->tag) && $this->tag instanceof LazyInterface)
                 ? $this->tag->load($container)
                 : $this->tag
