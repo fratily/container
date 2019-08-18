@@ -72,11 +72,11 @@ class Resolver
         $classes      = [];
         $currentClass = $class;
 
-        do{
+        do {
             $classes[] = $currentClass;
-        }while(false !== ($currentClass = get_parent_class($currentClass)));
+        } while (false !== ($currentClass = get_parent_class($currentClass)));
 
-        foreach(class_implements($class) as $interface){
+        foreach (class_implements($class) as $interface) {
             $classes[] = $interface;
         }
 

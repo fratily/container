@@ -50,7 +50,8 @@ class Container implements ContainerInterface
      * @param Repository $repository The repository
      * @param Resolver   $resolver   The resolver
      */
-    public function __construct(Repository $repository, Resolver $resolver) {
+    public function __construct(Repository $repository, Resolver $resolver)
+    {
         $this->repository = $repository;
         $this->resolver   = $resolver;
     }
@@ -171,7 +172,8 @@ class Container implements ContainerInterface
      *
      * @return mixed
      */
-    public function invoke(callable $callback, array $positions, array $names, array $types) {
+    public function invoke(callable $callback, array $positions, array $names, array $types)
+    {
         return call_user_func_array(
             $callback,
             $this->getResolver()->resolveArguments(
